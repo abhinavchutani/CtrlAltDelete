@@ -127,7 +127,21 @@ def energy_detect(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
     # year level: this site × carrier × year runs at `level` × the seasonal profile (clean months only)
     ok = em[(em.rm > 0.5) & (em.rm < 2.0)]
     level = ok.groupby(["site_id", "carrier", "year"]).rm.median()
-    em["est"] = em.mmed * [level.get((s, c, y), 1.0) for s, c, y in zip(em.site_id, em.carrier, em.year)]
+    good = {(r.site_id, r.carrier, r.year * 12 + r.month - 1): r.mwh for r in ok.itertuples(index=False)}
+    prof = em.groupby(["site_id", "carrier", "month"]).mwh.median().to_dict()
+
+    def estimate(site: str, car: str, y: int, m: int) -> float:
+        """Seasonally adjusted interpolation from the clean neighbouring months; else profile × year level."""
+        i = y * 12 + m - 1
+        nb = [(j, good[(site, car, j)]) for j in (i - 1, i + 1) if (site, car, j) in good]
+        p_m = prof.get((site, car, m))
+        if nb and p_m:
+            ratios = [v / prof[(site, car, j % 12 + 1)] for j, v in nb if prof.get((site, car, j % 12 + 1))]
+            if ratios:
+                return float(p_m * sum(ratios) / len(ratios))
+        return float((p_m or np.nan) * level.get((site, car, y), 1.0))
+
+    em["est"] = [estimate(s, c, y, m) for s, c, y, m in zip(em.site_id, em.carrier, em.year, em.month)]
     u = em[em.rm >= 300].copy()
     u["fixed"] = np.where(u.mwh / 1000 / u.mmed >= 2.5, u.est, u.mwh / 1000)  # stacked unit error + spike
     s = em[(em.rm >= 2.5) & (em.rm < 300)]
@@ -135,12 +149,10 @@ def energy_detect(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
     for (site, car), g in em.groupby(["site_id", "carrier"]):
         idx = g.year * 12 + g.month - 1
         have = set(idx)
-        prof = g.groupby("month").mwh.median()
         for i in range(idx.min(), idx.max() + 1):
             if i not in have:
                 y, m = i // 12, i % 12 + 1
-                gaps.append({"record_key": f"energy:{site}:{y}-{m:02d}:{car}", "year": y,
-                             "est": float(prof.get(m, np.nan)) * level.get((site, car, y), 1.0)})
+                gaps.append({"record_key": f"energy:{site}:{y}-{m:02d}:{car}", "year": y, "est": estimate(site, car, y, m)})
     gp = pd.DataFrame(gaps, columns=["record_key", "year", "est"])
     return pd.concat([p for p in [
         _rows("energy_meter_readings", u, "unit_error", "energy_kwh_in_mwh", 0.95,
@@ -154,7 +166,7 @@ def energy_detect(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
               [{"field": "value", "old_value": v, "new_value": round(e, 3)} for v, e in zip(s.value, s.est)]),
         _rows("energy_meter_readings", gp, "missing_record", "energy_month_gap", 0.9,
               "month missing inside the site × carrier series",
-              [{"estimate_from": "same-month median × this year's level"}] * len(gp),
+              [{"estimate_from": "neighbouring months, seasonally adjusted"}] * len(gp),
               [{"field": "value", "old_value": None, "new_value": round(e, 3)} for e in gp.est]),
     ] if not p.empty], ignore_index=True)
 

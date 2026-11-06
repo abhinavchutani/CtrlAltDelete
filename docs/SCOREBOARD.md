@@ -6,13 +6,13 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 
 | G-box | Metric | Bar | Current | Status |
 |---|---|---|---|---|
-| G1 | A1 CSV | exists + valid | — | open (#12) |
-| G1 | A2 CSV | exists + valid | — | open (#12) |
+| G1 | A1 CSV | exists + valid | 133 issues, 18 types | ✅ (#12) |
+| G1 | A2 CSV | exists + valid | all 19 template rows | ✅ (#12) |
 | G1 | C1 CSV | exists + valid | 12,064 rows = template (#31/#39) | done (draft; #17 upgrades) |
 | G1 | C2 CSV | exists + valid | — | open (#18) |
 | G1 | E CSV | exists + valid | — | open (#23) |
 | G2 | A1 dev score, overall | ≥ 80 | **96.04** (all 200 dev labels; P 0.95, R 0.97) | ✅ met |
-| G2 | A2 dev score, 2023 / 2024 | ≥ 70 / ≥ 70 | **91.47 / 74.83** | ✅ met (#11); cat01 +1.1–1.7 % from soil-map share is the next lever |
+| G2 | A2 dev score, 2023 / 2024 | ≥ 70 / ≥ 70 | **91.32 / 85.88** | ✅ met; cat01 +1.1–1.7 % (soil-map peat share) is the next lever |
 | G2 | C1 backtest MAPE / nRMSE | ≤ 8 % / ≤ 0.25 | 8.16 % / 0.134 (stage features in #17: 5.6 % / 0.115 in experiment) | MAPE open, nRMSE met |
 | G2 | E dev E90–E92 | 3/3 within tolerance | **2/3** (E90 0.0 %, E92 1.7 %; E91 23 % off) | open: E91 is the A2 2024 Scope 2 market gap (+23 %), not the copilot (#47) |
 | G3 | App on real results; peat; C3 actions; click-through | done | — | open |
@@ -30,3 +30,4 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 | 2026-11-07 02:10 | #47 | E dev E90–E92 (offline stub, real 2024 inventory) | — → 2/3 | E90 6,399.9 exact, E92 175,045 vs 172,085 (1.7 %); E91 77.6 vs 62.9 (23 %, tolerance 10 %) follows A2 scope2_market |
 | 2026-11-07 01:20 | #31 | C1 backtest MAPE / nRMSE | — → 8.20 % / 0.136 | monthly→seasonal ridge + farm effect, raw survey ×3 filter (baseline 9.89 % / 0.153) |
 | 2026-11-07 01:50 | #39 | C1 backtest MAPE / nRMSE | 8.20 % → 8.16 % / 0.134 | clean_farm_survey labels |
+| 2026-11-07 01:50 | #12 PR | A2 dev 2023 / 2024 | 91.47 / 74.83 → 91.32 / 85.88 | GoO from registry, interpolated meter months, estimation-uncertainty coverage rule, Bjuv Dec-only |

@@ -24,6 +24,11 @@ from src import a_factors as F
 from src import lineage as L
 from src.db import connect, git_sha
 
+# Share of the year a site is inside the boundary (METHODOLOGY §1): Foodhills/Bjuv acquired 27 Nov 2025,
+# operations included from December 2025; not in scope before.
+EST_UNCERTAINTY = 0.05  # relative uncertainty assumed for estimated (missing / spike-replaced) meter months
+IN_SCOPE_FRACTION = {("S-BJU", 2025): 1 / 12, **{("S-BJU", y): 0.0 for y in range(2019, 2025)}}
+
 TABLES = {  # issue table_name → raw table
     "erp_purchase_lines": "raw_erp_purchase_lines", "energy_meter_readings": "raw_energy_meter_readings",
     "fuel_deliveries": "raw_fuel_deliveries", "goo_cancellations": "raw_goo_cancellations",
@@ -178,9 +183,16 @@ def canonical(con: duckdb.DuckDBPyConnection, c: dict[str, pd.DataFrame], with_o
     fy = fy.merge(stock, on=["site_id", "carrier", "year"], how="left").fillna({"stock_change": 0})
     fy["mwh"] = (fy.quantity - fy.stock_change) * fy.carrier.map(F.NCV_MWH)
     em["keys"] = em.record_key.map(lambda k: [k])
-    T["energy"] = pd.concat([em[["site_id", "year", "carrier", "mwh", "keys"]], fy[["site_id", "year", "carrier", "mwh", "keys"]]], ignore_index=True)
+    em["est_mwh"] = np.where(em.correction_ids.fillna("") != "", em.mwh, 0.0)  # months we had to estimate or fix
+    fy["est_mwh"] = 0.0
+    T["energy"] = pd.concat([em[["site_id", "year", "carrier", "mwh", "keys", "est_mwh"]],
+                             fy[["site_id", "year", "carrier", "mwh", "keys", "est_mwh"]]], ignore_index=True)
     T["refrigerants"] = c["refrigerant_service_log"]
-    T["goo"] = c["goo_cancellations"]
+    reg = q("""SELECT beneficiary_site AS site_id, consumption_year AS year, mwh AS mwh_cancelled,
+                      CAST(substr(production_period_start, 1, 4) AS INTEGER) AS vintage_year, cancellation_id
+               FROM raw_goo_registry_statement""")
+    reg["record_key"] = "goo:" + reg.site_id + ":" + reg.year.astype(str) + ":" + reg.cancellation_id
+    T["goo"] = reg  # the registry statement is authoritative (R05); the internal log is only checked against it
     w = c["waste_transfer_notes"].copy()
     w["t"] = w.quantity / 1000
     efmap = {"anaerobic_digestion": "EF-WASTE-BIO-AD", "composting": "EF-WASTE-BIO-COMPOST", "incineration": "EF-WASTE-MIXED-INC",
@@ -226,9 +238,14 @@ def compute(T: dict, year: int) -> pd.DataFrame:
         lb = (F.GRID_FI_LB if c == "FI" else F.GRID_SE_LB)[year]
         res = (F.RESIDUAL_FI if c == "FI" else F.RESIDUAL_SE)[year]
         covered = min(mwh, goo.get(site, 0.0))
+        basis = "uncovered MWh × residual mix"
+        gap, est = mwh - covered, g.est_mwh.sum()
+        if goo.get(site, 0.0) > 0 and 0 < gap <= EST_UNCERTAINTY * est:
+            covered, basis = mwh, (f"GoO covers metered MWh; the {gap:.1f} MWh gap is within the ±{EST_UNCERTAINTY:.0%} "
+                                   f"uncertainty of {est:.0f} MWh of estimated meter months, so treated as covered")
         keys = sum(g["keys"], [])
         add("scope2_location", "purchased_electricity", site, mwh * lb, "MWh × grid average", keys, [f"grid_lb:{c}:{year}"])
-        add("scope2_market", "purchased_electricity", site, (mwh - covered) * res, "uncovered MWh × residual mix",
+        add("scope2_market", "purchased_electricity", site, (mwh - covered) * res, basis,
             keys + goo_keys.get(site, []), [f"residual:{c}:{year}"])
     heat = en[en.carrier.isin(["steam", "district_heat"])]
     hef = T["heat_suppliers"]
@@ -295,7 +312,10 @@ def compute(T: dict, year: int) -> pd.DataFrame:
     mode_ef = {"car": EF["EF-PKM-CAR"], "carpool": EF["EF-PKM-CAR"] / 2, "bus": EF["EF-PKM-BUS"], "train": EF["EF-PKM-TRAIN"],
                "bike_walk": 0.0, "ev_car": 0.03}
     for site, g in cs.groupby("site_id"):
-        per = (g.one_way_km * 2 * g.days_on_site_per_week * 46 * g["mode"].map(mode_ef).fillna(EF["EF-PKM-CAR"])).mean()
+        frac = IN_SCOPE_FRACTION.get((site, year), 1.0)
+        if frac == 0:
+            continue
+        per = frac * (g.one_way_km * 2 * g.days_on_site_per_week * 46 * g["mode"].map(mode_ef).fillna(EF["EF-PKM-CAR"])).mean()
         add("scope3", "cat07_employee_commuting", site, per * hc.get(site, 0) / 1000, "survey mean × headcount", g.record_key, ["EF-PKM-CAR", "EF-PKM-BUS"])
     sales = T["sales"][T["sales"].year == year]
     for (grp, market), g in sales.groupby(["product_group", "market"]):
@@ -370,7 +390,7 @@ def write_results(con: duckdb.DuckDBPyConnection, inv: pd.DataFrame, summary: pd
                        method=r.basis, produced_by=f"a_inventory@{sha}", lineage=lin)
         n += 1
     for s in summary.itertuples(index=False):
-        rid = f"A2:{year}:{scenario}:{s.category}"
+        rid = f"A2:{year}:{scenario}:{s.scope}:{s.category}"
         parts = [f"A2:{year}:{scenario}:{r.scope}:{r.category}:{r.line_item}" for r in inv.itertuples(index=False)
                  if (s.category.startswith(r.scope) and s.scope == "total")
                  or r.category == s.category or (s.category == "cat01_purchased_goods_services" and r.category.startswith("cat01"))]
