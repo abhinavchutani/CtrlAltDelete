@@ -23,8 +23,10 @@ def test_invented_or_computed_number_is_blocked():
     assert unsupported_numbers("6,399.94 t, which is 3.7 % of the total", TOOL) == ["3.7"]
 
 
-def test_small_integers_and_question_numbers_are_allowed():
+def test_label_integers_and_question_numbers_are_allowed():
     assert unsupported_numbers("Scope 1 in 2024, step 3", TOOL) == ["2024"]
+    assert unsupported_numbers("Scope 1+2 and categories 11 and 12 are method choices.", TOOL) == []
+    assert unsupported_numbers("1. Scope 1 is 6,400 t\n2. See category 4", TOOL) == []
     assert unsupported_numbers("Scope 1 in 2024", TOOL, question="What were Scope 1 emissions in 2024?") == []
 
 
@@ -32,3 +34,11 @@ def test_numbers_inside_returned_passages_count():
     passages = [{"passages": [{"text": "Scope 1+2: at least 4.2 % per year linear"}]}]
     assert tool_numbers(passages) >= {4.2}
     assert unsupported_numbers("The minimum is 4.2 % per year.", passages) == []
+
+
+def test_small_quantities_are_not_exempt():
+    # the review's examples (#40): small numbers with a unit or percent must come from a tool
+    assert unsupported_numbers("Peat is 10 % of farm emissions, about 6,400 t.", TOOL) == ["10"]
+    assert unsupported_numbers("Refrigerants were 7 t CO2e.", TOOL) == ["7"]
+    assert unsupported_numbers("It rose 3 percent within 12 months.", TOOL) == ["3", "12"]
+    assert unsupported_numbers("Refrigerants were 7 t CO2e.", [{"value": 7.0}]) == []
