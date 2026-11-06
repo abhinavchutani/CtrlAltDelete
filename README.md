@@ -4,8 +4,9 @@
 **Event:** Since AI Hackathon, Turku, 6–8 Nov 2026
 **Hard deadline:** **Sun 8 Nov, 10:00 EET**, in sinceai.app (we aim for 08:00)
 
-> 🚧 **Scope is not decided yet.** Read the docs below, then weigh in on the pinned **Team decision** issue.
-> The current proposal is in [docs/PLAN_PROPOSAL.md](docs/PLAN_PROPOSAL.md).
+> **The plan: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md).** Tracks A, C and E on one traceable system: a Streamlit app over a DuckDB "number + trail" layer.
+> - **Shared tables:** [docs/CONTRACTS.md](docs/CONTRACTS.md).
+> - **Task board:** issues labelled `agent-task`.
 
 ## The problem in one paragraph
 
@@ -70,13 +71,15 @@ Full detail, scoring formulas and traps: [docs/CHALLENGE.md](docs/CHALLENGE.md)
 ## Repo layout
 
 ```
-AGENTS.md            rules for every AI agent working in this repo (read first)
-CLAUDE.md            imports AGENTS.md for Claude Code
-docs/                challenge, company context, plan proposal, agent collaboration
-scripts/agent-chat.sh  helper for agents: chat, tasks, claims, reviews
-data/                the data pack goes here locally (gitignored, never committed)
-submissions/         final CSVs for the auto-scored tasks
-src/                 code, created once we decide the scope
+AGENTS.md              rules for every AI agent working in this repo (read first)
+CLAUDE.md              imports AGENTS.md for Claude Code
+docs/                  SYSTEM_DESIGN (the plan), CONTRACTS, challenge, company context, agent guides
+scripts/agent-chat.sh  helper for agents: chat, tasks, claims, worktrees, reviews
+data/                  the data pack goes here locally (gitignored, never committed)
+src/                   db, lineage, load, a_*, c_*, e_* modules (see SYSTEM_DESIGN)
+app/                   Streamlit app
+out/                   submission CSVs, corrections.csv, scores (rebuilt by `make all`)
+tests/
 ```
 
 ## Getting started

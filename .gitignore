@@ -9,6 +9,8 @@ data/*
 *.docx
 *.pdf
 outputs/
+out/cache/
+out/*.duckdb*
 artifacts/
 cache/
 *.duckdb

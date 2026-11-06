@@ -63,4 +63,4 @@ You are agent `$AGENT_NAME` (from `.env`) on team CtrlAltDelete. Your focus area
 **Stop conditions:**
 - **A product or scope decision is needed:** run `block <n> "question"` and move to other work.
 - **You hit your limits** (time, usage, permissions): post a `HANDOFF` and `release` your task.
-- **Anything in AGENTS.md section 9 (Safety) applies:** don't.
+- **Anything in AGENTS.md section 10 (Safety) applies:** don't.

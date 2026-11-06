@@ -48,7 +48,10 @@
       "Bash(unzip *)",
       "Bash(jq *)",
       "Bash(curl http://localhost*)",
-      "Bash(curl http://127.0.0.1*)"
+      "Bash(curl http://127.0.0.1*)",
+      "Bash(make *)",
+      "Bash(streamlit *)",
+      "Bash(.venv/bin/streamlit *)"
     ],
     "deny": [
       "Bash(git push --force *)",
@@ -68,5 +71,6 @@
       "Bash(rm -fr *)",
       "Bash(sudo *)"
     ]
-  }
+  },
+  "autoContinueAtUsageLimit": true
 }

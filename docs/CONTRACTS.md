@@ -1,111 +1,112 @@
-# Interfaces between lanes (DRAFT v0, applies only if we adopt PLAN_PROPOSAL.md)
+# Shared contract: DuckDB tables, keys and outputs (v1)
 
-> **Not decided yet.** Confirm or change this in issue #2 before agents build against it.
+This implements the "number + trail" contract in [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md). **To change it:** open a PR that edits this file and the code in `src/lineage.py` together, then post a `HANDOFF` to `@agent:all`.
 
-These contracts let the three lanes work in parallel overnight. The front end builds against mock files with these shapes until the real outputs land. **To change a shape:** open a PR that updates this file, and post a `HANDOFF` in the chat.
+## Files and commands
 
-## Folders and run commands
-
-- **Generated outputs** live in `outputs/`, which is gitignored and rebuilt from the pack.
-- **Each producer has one command**, which also gets listed in the README:
-
-| Command | Writes |
+| Path | What |
 |---|---|
-| `python -m src.layer1_data.run` | `outputs/layer1/` |
-| `python -m src.track_c.run` | `outputs/track_c/` |
-| `python -m src.copilot.index` | `outputs/copilot/` |
+| `out/navigator.duckdb` | The one database (gitignored). The path comes from `NAVIGATOR_DB`; default `out/navigator.duckdb` |
+| `out/*_submission.csv` | Auto-scored CSVs, named exactly as in the pack's `tasks/templates/` (committed) |
+| `out/corrections.csv` | Export of the `corrections` table (committed) |
+| `out/scores/*.json` | Dev scores from the pack's scorer (committed) |
+| `out/cache/` | LLM call cache keyed by input hash (gitignored) |
 
-- **Submission drafts** go to `outputs/submissions/`. A human copies the final versions into `submissions/`.
+**`make` targets:**
 
-## Layer 1 (Track A) → app and copilot
+| Target | Builds |
+|---|---|
+| `make load` | The `raw_*` tables |
+| `make a` | The A pipeline |
+| `make c` | The C pipeline |
+| `make e` | The E pipeline |
+| `make app` | Runs Streamlit |
+| `make all` | Every submission file from the unzipped pack |
+| `make test` | The tests |
 
-**`outputs/layer1/issues.parquet`**: one row per flagged issue.
+## Table naming
+
+- **`raw_<name>`:** a pack file loaded untouched, plus a `record_key` column in the official A1 format where one exists.
+- **`clean_<name>`:** the same table with the corrections applied (approved ones, or dev mode; see below).
+- **Track-owned working tables** use a prefix:
+  - **Data:** `a_`
+  - **Climate:** `c_`
+  - **Copilot:** `e_`
+
+## The four shared tables
+
+**`issues`**: one row per suspected data problem.
 
 | column | type | notes |
 |---|---|---|
-| issue_id | str | stable id |
-| table | str | pack table name |
-| record_key | str | format from TASKS_AND_SCORING.md |
-| year | int | |
-| issue_type | str | one of the A1 ISSUE_TYPES |
-| confidence | float | 0–1 |
-| field | str | which field is wrong |
-| observed_value | str | |
-| proposed_value | str | empty if "route to expert" |
-| rule_or_model | str | detector name |
-| evidence | str | short human-readable reason |
-| status | str | `proposed` \| `approved` \| `rejected` |
+| issue_id | VARCHAR | stable: `{rule_id}:{record_key}` |
+| table_name | VARCHAR | pack table, e.g. `erp_purchase_lines` |
+| record_key | VARCHAR | official A1 format |
+| year | INTEGER | |
+| issue_type | VARCHAR | one of the 18 A1 ISSUE_TYPES, or `observation` (never exported to A1) |
+| confidence | DOUBLE | 0–1 |
+| rule_id | VARCHAR | detector name, or `llm_triage` |
+| explanation | VARCHAR | one line, human-readable |
+| evidence | VARCHAR | JSON: the numbers the rule used |
+| proposed_fix | VARCHAR | JSON `{field, old_value, new_value}`, or empty for "route to expert" |
+| status | VARCHAR | `proposed` \| `approved` \| `rejected` \| `legitimate` (allow-listed, logged) |
+| created_by | VARCHAR | `agent:<name>` or a person |
+| created_at | TIMESTAMP | |
 
-**`outputs/layer1/audit_log.parquet`**: one row per decision on an issue.
-- **Columns:** `record_key, field, old_value, new_value, rule_or_model, evidence, proposed_by, approved_by, timestamp`.
-- **Rule:** agents write `proposed_by`; `approved_by` stays empty until a human approves.
-
-**`outputs/layer1/inventory_lines.parquet`**: one row per (year, line, source record).
+**`corrections`**: one row per applied change.
 
 | column | type | notes |
 |---|---|---|
-| year | int | |
-| scope | str | `1` \| `2_location` \| `2_market` \| `3` |
-| category | str | template category name |
-| tco2e | float | |
-| record_key | str | source record(s) |
-| activity_value | float | |
-| activity_unit | str | |
-| factor_value | float | |
-| factor_unit | str | |
-| factor_id | str | |
-| factor_source | str | |
-| corrections_applied | str | issue_ids |
+| correction_id | VARCHAR | |
+| issue_id | VARCHAR | |
+| record_key | VARCHAR | |
+| field | VARCHAR | |
+| old_value | VARCHAR | |
+| new_value | VARCHAR | |
+| reason | VARCHAR | |
+| approved_by | VARCHAR | **only a human name**, or `DEV-ASSUMED` (see below) |
+| approved_at | TIMESTAMP | |
 
-**`outputs/layer1/peat.json`**:
-```json
-{"share_organic_parcels": 0.06, "farm_footprint_tco2e": {"current_calculator": 0, "with_organic_soils": 0},
- "farms_likely_misreported": [{"farm_id": "F0001", "organic_share": 0.42, "evidence": "..."}]}
-```
+**`results`**: one row per published number.
 
-## Track C → app and copilot
+| column | type | notes |
+|---|---|---|
+| result_id | VARCHAR | stable, e.g. `A2:2025:scope3:cat1` |
+| metric | VARCHAR | e.g. `tco2e`, `yield_t_ha`, `eur_at_risk` |
+| scope | VARCHAR | e.g. `1`, `2_location`, `2_market`, `3` |
+| category | VARCHAR | inventory category, or crop / region for C |
+| year | INTEGER | |
+| scenario | VARCHAR | `actual`, `ssp126`, `ssp245`, `ssp585`, `backtest`, … |
+| value | DOUBLE | |
+| unit | VARCHAR | |
+| method | VARCHAR | short, e.g. `reference_calculator v1 + corrections` |
+| status | VARCHAR | `draft` \| `approved` \| `published` |
+| produced_by | VARCHAR | module + git short SHA |
+| created_at | TIMESTAMP | |
 
-**`outputs/track_c/replay.json`**: list of season replays.
-```json
-[{"year": 2026, "region": "SE_SKANE", "crop": "pea", "trained_on": "2018-2025",
-  "predicted_t_ha": {"p10": 2.7, "p50": 3.05, "p90": 3.4}, "actual_t_ha": 3.10,
-  "normal_t_ha": 3.5, "drivers": [{"name": "drought_flowering", "effect_pct": -9.5}]}]
-```
+**`lineage`**: the links behind a result.
 
-**`outputs/track_c/early_warning_2026.json`**: one entry per as-of date (weekly, May–Aug).
-```json
-[{"asof": "2026-07-15", "region": "SE_SKANE", "crop": "pea",
-  "p10": 2.6, "p50": 3.0, "p90": 3.3, "normal_t_ha": 3.5, "p_below_80pct": 0.31}]
-```
+| column | type | notes |
+|---|---|---|
+| result_id | VARCHAR | |
+| source_kind | VARCHAR | `record` \| `factor` \| `correction` \| `model` \| `doc` |
+| source_ref | VARCHAR | a record key, factor id, correction id, model id, or `file#section` |
+| contribution | DOUBLE | share or absolute amount, if known |
+| note | VARCHAR | |
 
-**`outputs/track_c/c2_risk.json`**: one row per region × crop × scenario.
-```json
-[{"region": "FI_SW", "crop": "pea", "scenario": "ssp585", "period": "2041-2060",
-  "mean_yield_change_pct": -8.0, "p_bad_year": 0.22, "baseline": "1991-2020"}]
-```
+## Rules
 
-**`outputs/track_c/risk_eur.json`**: precomputed grid for the "what could we do" sliders.
-```json
-{"assumptions": {"price_year": 2026, "source": "contract_prices_and_replacement_premiums.csv"},
- "rows": [{"scenario": "today|ssp126|ssp245|ssp585", "region": "SE_SKANE", "crop": "pea",
-           "irrigated_share": 0.0, "fi_share": 0.5, "buffer_area_pct": 0,
-           "expected_shortfall_t": 0, "expected_cost_eur": 0, "loss_1_in_10_eur": 0,
-           "extra_import_tco2e": 0}]}
-```
+- **A number without lineage rows is a bug.** `tests/test_lineage.py` fails if any `published` result has none.
+- **Only `published` results feed the submission CSVs, the dashboard and the copilot.**
+- **Dev mode** (`NAVIGATOR_DEV_ASSUME=1`): while humans sleep, pipelines may apply `proposed` fixes so we can score against the dev keys.
+  - Those corrections get `approved_by = 'DEV-ASSUMED'` and their results stay `draft`.
+  - Final CSVs are produced only after humans approve, in the review app.
+- **Always label results as synthetic** in the UI and docs.
 
-## API (served by `app/api`, FastAPI)
+## Hand-off tables
 
-| Method + path | Returns |
-|---|---|
-| `GET /api/health` | `{"ok": true, "data_health": {"found": n, "approved": n, "pending": n}}` |
-| `GET /api/inventory?year=2025` | Totals by scope and category, plus `lines` (paged) |
-| `GET /api/receipt?record_key=…` | Source rows, factor and corrections for one number |
-| `GET /api/issues?status=proposed` | List from `issues.parquet` |
-| `POST /api/issues/{issue_id}/decision` | Body `{"decision": "approve\|reject", "by": "name"}`. Appends to the audit log |
-| `GET /api/c/replay?year=&region=&crop=` | Entries from `replay.json` |
-| `GET /api/c/early-warning?asof=&region=&crop=` | Entries from `early_warning_2026.json` |
-| `GET /api/c/risk?scenario=&irrigated_share=&fi_share=&buffer_area_pct=` | The nearest row(s) from `risk_eur.json` |
-| `POST /api/chat` | Body `{"question": "…"}`. Returns `{"answer", "citations": [{"kind": "record\|doc", "ref", "snippet"}], "numbers": [...], "needs_approval": true}` |
-| `POST /api/chat/{answer_id}/approve` | Writes the approval to the audit log |
-
-**Mock data:** the front end keeps mock files with these shapes in `app/web/public/mock/` until the real outputs exist.
+| Table | Owner | Read by | Notes |
+|---|---|---|---|
+| `clean_farm_survey`, `clean_farm_registry` | Data | Climate | Columns as in the raw tables, plus `record_key`, `corrected_fields` |
+| `c_parcel_cell` | Climate | Climate, app | Columns: `parcel_id`, `cell_id`, `region`, `distance_km` |
+| `results` for C | Climate | app, copilot | Includes `scenario` and per-feature effects (`metric = 'feature_effect_pct'`) |

@@ -1,7 +1,6 @@
-# Plan proposal (for team discussion, not decided)
+# Early plan proposal (superseded)
 
-> Decide in the pinned **Team decision** issue (#2). Once we agree, turn the backlog at the bottom into `agent-task` issues.
-> A draft of the interfaces between lanes, if we adopt this plan, is in [CONTRACTS.md](CONTRACTS.md).
+> **Superseded by [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md), the team's decided plan.** This file is kept only for pitch ideas: the demo moments and the real-incident story. Where they differ, SYSTEM_DESIGN wins; for example, the UI is Streamlit, not React.
 
 ## The pitch in one line
 

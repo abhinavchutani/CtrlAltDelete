@@ -12,15 +12,15 @@ Each of us runs one Claude Code agent on our own laptop. The agents never talk d
 
 The rules are in [`AGENTS.md`](../AGENTS.md), the per-run routine is [`AGENT_LOOP.md`](AGENT_LOOP.md), and the interfaces between lanes are in [`CONTRACTS.md`](CONTRACTS.md).
 
-## Lanes (one per person, to be agreed in issue #2)
+## Lanes (one per person, from SYSTEM_DESIGN.md)
 
-Each agent gets a focus area through `AGENT_LANE` in its `.env`: `A`, `C`, `E`, `app` or `docs`. Example split if we follow the proposal:
+Each agent gets a focus area through `AGENT_LANE` in its `.env`: `A` (Data), `C` (Climate) or `platform` (schema, app, copilot, story).
 
 | Person | `AGENT_NAME` | `AGENT_LANE` |
 |---|---|---|
-| Abhinav | `abhinav-claude` | `C` |
-| Teammate 2 | `<name>-claude` | `A` |
-| Teammate 3 | `<name>-claude` | `app` |
+| Person 1 · Data | `<name>-claude` | `A` |
+| Person 2 · Climate | `<name>-claude` | `C` |
+| Person 3 · Platform + story | `<name>-claude` | `platform` |
 
 Lanes are preferences, not walls. An agent with nothing unblocked in its lane helps elsewhere.
 
