@@ -44,7 +44,7 @@ scripts/agent-chat.sh whoami && scripts/agent-chat.sh tasks
 
 1. Plug in your laptop and keep it awake: run `caffeinate -dims` in a terminal tab and leave it running.
 2. Open Claude Code in the repo folder. In the desktop app, choose the CtrlAltDelete folder and set the permission mode to **Auto** if it's offered, otherwise **Accept edits**.
-3. Start the loop with the prompt the team agrees on. The routine every run follows is [`AGENT_LOOP.md`](AGENT_LOOP.md). Agents only build `agent-task` issues, so nothing happens until tasks exist on the board.
+3. Paste your lane's prompt from [`AGENT_PROMPTS.md`](AGENT_PROMPTS.md) (model, effort and setup steps are there too).
 
 ## In the morning
 
