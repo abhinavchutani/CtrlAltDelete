@@ -5,7 +5,7 @@ Thresholds tuned on the public 2023–24 dev labels (no record-key-specific rule
   - ≥300×           → unit_error   (tonnes keyed as KG)         fix quantity ×1000
   - 7–14× / 0.07–0.14× (same currency as the supplier's usual) → decimal_shift   fix quantity ÷/×10
 * ERP currency: a supplier that invoices ≥80 % in one currency posts a line in another → currency_error;
-  spend lines (uom EUR) 9–14× the supplier's median amount → currency_error (SEK keyed as EUR, ÷11.4)
+  spend lines (uom EUR) ≥9× the supplier's median amount → currency_error (SEK keyed as EUR, ÷11.4)
 * ERP material: a supplier with ≥90 % of goods lines on one material books another → material_mismatch
 * ERP duplicates: same supplier, material, quantity, amount, uom → later posting is duplicate_record
 * Energy: monthly MWh vs the same month's median (seasonal profile, R03) ≥300× → unit_error (kWh, ÷1000);
@@ -98,7 +98,7 @@ def erp_detect(e: pd.DataFrame) -> pd.DataFrame:
                        [{"field": "currency", "old_value": c, "new_value": sc} for c, sc in zip(cu.currency, cu.sup_cur)]))
     taken |= set(cu.record_key)
 
-    sp = e[e.uom.eq("EUR") & (e.spend_r > 9) & (e.spend_r < 14) & ~e.record_key.isin(taken)]
+    sp = e[e.uom.eq("EUR") & (e.spend_r > 9) & ~e.record_key.isin(taken)]
     parts.append(_rows("erp_purchase_lines", sp, "currency_error", "erp_spend_sek_as_eur", 0.8,
                        [f"amount {r:.1f}× the supplier's median spend: SEK keyed as EUR" for r in sp.spend_r],
                        [{"amount": a, "supplier_median": m, "ratio": round(r, 2), "sek_per_eur": SEK_PER_EUR} for a, m, r in zip(sp.net_amount, sp.spend_med, sp.spend_r)],
@@ -124,7 +124,12 @@ def energy_detect(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
     em["mwh"] = np.where(em.unit == "kWh", em.value / 1000, em.value)
     em["mmed"] = em.groupby(["site_id", "carrier", "month"]).mwh.transform("median")
     em["rm"] = em.mwh / em.mmed
-    u = em[em.rm >= 300]
+    # year level: this site × carrier × year runs at `level` × the seasonal profile (clean months only)
+    ok = em[(em.rm > 0.5) & (em.rm < 2.0)]
+    level = ok.groupby(["site_id", "carrier", "year"]).rm.median()
+    em["est"] = em.mmed * [level.get((s, c, y), 1.0) for s, c, y in zip(em.site_id, em.carrier, em.year)]
+    u = em[em.rm >= 300].copy()
+    u["fixed"] = np.where(u.mwh / 1000 / u.mmed >= 2.5, u.est, u.mwh / 1000)  # stacked unit error + spike
     s = em[(em.rm >= 2.5) & (em.rm < 300)]
     gaps = []
     for (site, car), g in em.groupby(["site_id", "carrier"]):
@@ -134,20 +139,22 @@ def energy_detect(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
         for i in range(idx.min(), idx.max() + 1):
             if i not in have:
                 y, m = i // 12, i % 12 + 1
-                gaps.append({"record_key": f"energy:{site}:{y}-{m:02d}:{car}", "year": y, "est": float(prof.get(m, np.nan))})
+                gaps.append({"record_key": f"energy:{site}:{y}-{m:02d}:{car}", "year": y,
+                             "est": float(prof.get(m, np.nan)) * level.get((site, car, y), 1.0)})
     gp = pd.DataFrame(gaps, columns=["record_key", "year", "est"])
     return pd.concat([p for p in [
         _rows("energy_meter_readings", u, "unit_error", "energy_kwh_in_mwh", 0.95,
-              [f"{v:.0f} is {r:.0f}× the same-month median: kWh reported in the MWh column" for v, r in zip(u.value, u.rm)],
-              [{"value": v, "month_median": m} for v, m in zip(u.value, u.mmed)],
-              [{"field": "value", "old_value": v, "new_value": round(v / 1000, 3)} for v in u.value]),
+              [f"{v:.0f} is {r:.0f}× the same-month median: kWh reported in the MWh column"
+               + (" (still a spike after ÷1000 → seasonal estimate)" if f != v / 1000 else "") for v, r, f in zip(u.value, u.rm, u.fixed)],
+              [{"value": v, "month_median": m, "estimate": round(e, 3)} for v, m, e in zip(u.value, u.mmed, u.est)],
+              [{"field": "value", "old_value": v, "new_value": round(f, 3)} for v, f in zip(u.value, u.fixed)]),
         _rows("energy_meter_readings", s, "meter_spike", "energy_seasonal_spike", 0.7,
               [f"{v:.1f} MWh is {r:.1f}× the same-month median (seasonal profile checked)" for v, r in zip(s.value, s.rm)],
               [{"value": v, "month_median": m, "ratio": round(r, 2)} for v, m, r in zip(s.value, s.mmed, s.rm)],
-              [{"field": "value", "old_value": v, "new_value": round(m, 3)} for v, m in zip(s.value, s.mmed)]),
+              [{"field": "value", "old_value": v, "new_value": round(e, 3)} for v, e in zip(s.value, s.est)]),
         _rows("energy_meter_readings", gp, "missing_record", "energy_month_gap", 0.9,
               "month missing inside the site × carrier series",
-              [{"estimate_from": "same-month median"}] * len(gp),
+              [{"estimate_from": "same-month median × this year's level"}] * len(gp),
               [{"field": "value", "old_value": None, "new_value": round(e, 3)} for e in gp.est]),
     ] if not p.empty], ignore_index=True)
 
