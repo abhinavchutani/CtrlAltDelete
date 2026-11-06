@@ -5,8 +5,8 @@ Run:  python -m src.c_model            (needs `python -m src.load` and `python -
 Fast path of SYSTEM_DESIGN Track C (stage features from daily weather are #16):
 
 * Labels: farm × crop × year yields.
-  - FI: `raw_farm_survey_fi`. TEMPORARY until `clean_farm_survey` lands (#7): rows with a yield
-    outside [median/3, 3 × median] of their crop are dropped (planted ×10 shifts and similar).
+  - FI: `clean_farm_survey` (Track A's corrections applied, #7) when that table exists. Fallback
+    only: `raw_farm_survey_fi` with rows outside [median/3, 3 × median] of their crop dropped.
   - SE: Foodhills (`raw_foodhills_odlingsdata_se`), pea, yield = delivered t ÷ area ha.
 * Features, built per parcel × year and area-weighted up to the farm's crop area for training:
   Apr–Sep monthly tmean, precip, PET, hot days (Tmax ≥ 27 °C) and water balance from the parcel's
@@ -83,22 +83,32 @@ def add_seasons(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # ── labels and management ─────────────────────────────────────────────
+def survey_table(con: duckdb.DuckDBPyConnection) -> str:
+    """`clean_farm_survey` once Track A has built it, else the raw survey (fallback)."""
+    have = con.execute("SELECT 1 FROM information_schema.tables WHERE table_name = 'clean_farm_survey'").fetchone()
+    return "clean_farm_survey" if have else "raw_farm_survey_fi"
+
+
 def labels(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
-    """Farm × crop × year yields (FI survey + SE Foodhills), with an `outlier` flag (temporary filter)."""
-    fi = con.execute("""SELECT s.record_key, s.farm_id, s.crop, s.year, s.area_ha, s.yield_t_ha,
+    """Farm × crop × year yields (FI survey + SE Foodhills) with an `outlier` flag. The ×3 filter only
+    applies to rows nobody has cleaned (raw survey fallback); cleaned rows keep real crop failures."""
+    src_table = survey_table(con)
+    fi = con.execute(f"""SELECT s.record_key, s.farm_id, s.crop, s.year, s.area_ha, s.yield_t_ha,
                                s.irrigated::DOUBLE AS irrigated, s.n_mineral_kg_ha + s.n_manure_kg_ha AS n_kg_ha,
-                               s.sprays, 'FI_SW' AS region
-                        FROM raw_farm_survey_fi s""").df()
+                               s.sprays, 'FI_SW' AS region, {int(src_table == "clean_farm_survey")} AS cleaned
+                        FROM {src_table} s""").df()
     se = con.execute("""SELECT 'foodhills:' || odlar_id || ':' || skördeår AS record_key, odlar_id AS farm_id,
                                'pea' AS crop, skördeår AS year, areal_ha AS area_ha,
                                levererad_mängd_ton / areal_ha AS yield_t_ha,
                                (bevattnad = 'ja')::DOUBLE AS irrigated, kvävegiva_kg_ha::DOUBLE AS n_kg_ha,
-                               NULL::DOUBLE AS sprays, 'SE_SKANE' AS region
+                               NULL::DOUBLE AS sprays, 'SE_SKANE' AS region, 0 AS cleaned
                         FROM raw_foodhills_odlingsdata_se WHERE areal_ha > 0""").df()
     lab = pd.concat([fi, se], ignore_index=True)
     lab = lab[lab["crop"].isin(CROPS) & lab["yield_t_ha"].notna() & (lab["area_ha"] > 0)].copy()
     med = lab.groupby(["crop", "region"])["yield_t_ha"].transform("median")
-    lab["outlier"] = (lab["yield_t_ha"] > OUTLIER_FACTOR * med) | (lab["yield_t_ha"] < med / OUTLIER_FACTOR)
+    far = (lab["yield_t_ha"] > OUTLIER_FACTOR * med) | (lab["yield_t_ha"] < med / OUTLIER_FACTOR)
+    lab["outlier"] = far & (lab["cleaned"] == 0)
+    lab.attrs["survey_table"] = src_table
     return lab.reset_index(drop=True)
 
 
@@ -265,10 +275,12 @@ def build_training(con, lab, static, wx, organic, mgmt_med) -> pd.DataFrame:
     return finish_features(d, mgmt_med)
 
 
-def write_results(con, models, bt: dict, c1: pd.DataFrame) -> None:
+def write_results(con, models, bt: dict, c1: pd.DataFrame, survey: str) -> None:
     L.init_schema(con)
     by = f"c_model@{git_sha()}"
-    model_src = [L.src("model", MODEL_ID), L.src("doc", "docs/SYSTEM_DESIGN.md#track-c-weather-yield-risk")]
+    model_src = [L.src("model", MODEL_ID), L.src("doc", "docs/SYSTEM_DESIGN.md#track-c-weather-yield-risk"),
+                 L.src("doc", f"{survey}#labels", note="FI training labels"),
+                 L.src("doc", "raw_foodhills_odlingsdata_se#labels", note="SE training labels")]
     for k, v in (("production_mape_pct", bt["production_mape_pct"]["model"]), ("farm_nrmse", bt["farm_nrmse"]["model"])):
         L.write_result(con, f"C1:backtest:{k}", metric=k, value=v, unit="pct" if "pct" in k else "ratio",
                        method=f"{MODEL_ID}, train ≤{TRAIN_END}, test 2024–26", produced_by=by,
@@ -288,7 +300,8 @@ def main() -> None:
     static, wx, lab = parcel_static(con), cell_year_weather(con), labels(con)
     organic = organic_farms(con)
     mgmt_med = lab.groupby(["crop", "region"])[["irrigated", "n_kg_ha", "sprays"]].median().reset_index()
-    print(f"labels: {len(lab):,} rows, {int(lab['outlier'].sum())} dropped by the temporary ×{OUTLIER_FACTOR:g} filter")
+    print(f"labels: {len(lab):,} rows from {lab.attrs['survey_table']} + Foodhills; "
+          f"{int(lab['outlier'].sum())} dropped by the ×{OUTLIER_FACTOR:g} filter (uncleaned rows only)")
     data = build_training(con, lab, static, wx, organic, mgmt_med)
     bt = backtest(data)
     print("backtest:", json.dumps({k: bt[k] for k in ("production_mape_pct", "farm_nrmse", "n_test_rows")}))
@@ -302,7 +315,7 @@ def main() -> None:
     X[cols].to_csv(C1_PATH, index=False)
     SCORES_PATH.parent.mkdir(parents=True, exist_ok=True)
     SCORES_PATH.write_text(json.dumps(bt, indent=2, ensure_ascii=False) + "\n")
-    write_results(con, models, bt, X[cols])
+    write_results(con, models, bt, X[cols], lab.attrs["survey_table"])
     print(f"C1: {len(X):,} rows → {C1_PATH.relative_to(REPO_ROOT)}")
     print(X.groupby(["region", "crop"])["yield_t_ha_pred"].mean().round(2).to_string())
 

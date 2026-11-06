@@ -75,3 +75,11 @@ def test_c1_features_cover_template(con):
     X = M.c1_features(con, static, wx, lab, M.organic_farms(con), med)
     assert len(X) == 12064
     assert X[M.weather_cols(X)].notna().all().all()
+
+
+def test_survey_table_prefers_clean(tmp_path):
+    import duckdb
+    c = duckdb.connect(str(tmp_path / "s.duckdb"))
+    assert M.survey_table(c) == "raw_farm_survey_fi"
+    c.execute("CREATE TABLE clean_farm_survey (x INT)")
+    assert M.survey_table(c) == "clean_farm_survey"
