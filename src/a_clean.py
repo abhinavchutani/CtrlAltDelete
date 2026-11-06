@@ -17,20 +17,21 @@ import duckdb
 import pandas as pd
 
 from src import lineage as L
-from src.a_detect import farm, ops, persist
+from src.a_detect import farm, ops, ops2, persist
 from src.a_score import dev_labels, score_a1
 from src.db import connect, env
 
 COVERED = {
     "farm tables": ["farm_survey", "farm_registry"],
     "ops tables": ["erp_purchase_lines", "energy_meter_readings", "fuel_deliveries", "goo_cancellations", "refrigerant_service_log"],
-    "all covered": ["farm_survey", "farm_registry", "erp_purchase_lines", "energy_meter_readings", "fuel_deliveries", "goo_cancellations", "refrigerant_service_log"],
+    "ops2 tables": ["travel_bookings", "shipments", "waste_transfer_notes", "supplier_pcfs", "draft_report_summary", "commuting_survey"],
+    "ALL dev labels": None,
 }
 CREATED_BY = "agent:" + (env("AGENT_NAME") or "unknown")
 
 
 def propose_and_assume(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
-    cands = pd.concat([farm.detect_all(con), ops.detect_all(con)], ignore_index=True)
+    cands = pd.concat([farm.detect_all(con), ops.detect_all(con), ops2.detect_all(con)], ignore_index=True)
     if "status" not in cands:
         cands["status"] = "proposed"
     cands["status"] = cands["status"].fillna("proposed")
