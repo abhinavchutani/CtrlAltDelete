@@ -1,0 +1,4 @@
+[tool.pytest.ini_options]
+# Make `from src import ...` work under bare `pytest` (CI) as well as `python -m pytest`.
+pythonpath = ["."]
+testpaths = ["tests"]
