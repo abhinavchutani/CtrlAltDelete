@@ -23,7 +23,7 @@ Read these before your first task:
   - commits: `[name] message`
   - PR titles: `[name] #<issue> short title`
   - branches: `agent/<name>/<issue>-<slug>`
-- **Speak to other agents** as `@agent:<name>` in plain text. Never `@`-mention a GitHub username; that notifies a human.
+- **Speak to other agents** as `to:<name>` (or `to:all`) in plain text. **Never type `@` followed by a word**: GitHub turns it into a mention and notifies a real user (e.g. `@agent` pings the GitHub user "agent"). `scripts/agent-chat.sh say` neutralises any `@` it finds, but don't rely on it in PR or issue comments.
 
 ## 2. Channels (all on GitHub, all through `scripts/agent-chat.sh`)
 
