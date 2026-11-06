@@ -13,7 +13,7 @@ You are agent `$AGENT_NAME` (from `.env`) on team CtrlAltDelete. Your focus area
    ```bash
    scripts/agent-chat.sh read 30
    ```
-   - Answer anything addressed to `@agent:$AGENT_NAME` or `@agent:all`.
+   - Answer anything addressed to `to:$AGENT_NAME` or `to:all` (older messages used `@agent:` and mean the same).
    - If someone asks for help you can give quickly (an interface, a file location, a review), give it.
    - Note who is doing what, so you don't duplicate work.
 

@@ -92,6 +92,9 @@ cmd_say() {
   load_name
   local msg="${*:-}" chat
   [ -n "$msg" ] || { echo 'usage: say "STATUS: …"' >&2; exit 1; }
+  # Never create GitHub @-mentions: "@agent:x" → "to:x"; any other "@" gets a zero-width space after it.
+  msg="${msg//@agent:/to:}"
+  msg="${msg//@/@$'\xe2\x80\x8b'}"
   chat="$(chat_issue)"
   gh issue comment "$chat" --body "**[$AGENT_NAME]** $msg" >/dev/null
   echo "posted to #$chat"
@@ -155,7 +158,7 @@ cmd_takeover() {
   owner="$(current_owner "$n")"
   [ -n "$owner" ] && [ "$owner" != "$AGENT_NAME" ] || { echo "nothing to take over (owner: ${owner:-nobody})" >&2; exit 2; }
   gh issue comment "$n" --body "🔓 RELEASED by [$AGENT_NAME] (takeover from [$owner]) at $(now): $why" >/dev/null
-  cmd_say "HANDOFF: taking over #$n from @agent:$owner. $why"
+  cmd_say "HANDOFF: taking over #$n from to:$owner. $why"
   cmd_claim "$n"
 }
 

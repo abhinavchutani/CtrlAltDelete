@@ -1,6 +1,6 @@
 # Shared contract: DuckDB tables, keys and outputs (v1)
 
-This implements the "number + trail" contract in [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md). **To change it:** open a PR that edits this file and the code in `src/lineage.py` together, then post a `HANDOFF` to `@agent:all`.
+This implements the "number + trail" contract in [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md). **To change it:** open a PR that edits this file and the code in `src/lineage.py` together, then post a `HANDOFF` to `to:all`.
 
 ## Files and commands
 
