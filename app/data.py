@@ -78,6 +78,12 @@ def raw_parcels() -> pd.DataFrame:
         return pd.DataFrame()
 
 
+def flagged(issues: pd.DataFrame) -> pd.DataFrame:
+    """Real flags only: allow-listed rows (status `legitimate`, whatever their issue_type) and
+    `observation` rows are not issues."""
+    return issues[(issues["status"] != "legitimate") & (issues["issue_type"] != "observation")]
+
+
 def visible(df: pd.DataFrame, show_drafts: bool) -> pd.DataFrame:
     """Only published rows feed the dashboard, unless the reviewer asks to see drafts."""
     return df if show_drafts else df[df["status"] == "published"]

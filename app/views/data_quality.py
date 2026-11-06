@@ -4,7 +4,7 @@ from app import data
 
 st.title("Data quality")
 issues = data.q("SELECT * FROM issues")
-real = issues[issues["issue_type"] != "observation"]
+real = data.flagged(issues)
 
 c1, c2, c3 = st.columns(3)
 c1.metric("Issues found", len(real))

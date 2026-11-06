@@ -31,3 +31,11 @@ def test_page_renders(page):
         at.switch_page(page).run()
     assert not at.exception, at.exception
     assert any("MOCK DATA" in w.value for w in at.warning)
+
+
+def test_legitimate_rows_are_not_counted_as_issues():
+    import pandas as pd
+    from app import data
+    df = pd.DataFrame({"issue_type": ["unit_error", "unit_error", "observation", "meter_spike"],
+                       "status": ["proposed", "legitimate", "proposed", "approved"]})
+    assert data.flagged(df).issue_type.tolist() == ["unit_error", "meter_spike"]
