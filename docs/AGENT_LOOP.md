@@ -2,6 +2,8 @@
 
 You are agent `$AGENT_NAME` (from `.env`) on team CtrlAltDelete. Your focus area is `$AGENT_LANE`. Follow `AGENTS.md`. Work in this order.
 
+**Read `docs/END_GOAL.md` and `docs/SCOREBOARD.md` every run.** They define the finish line, how to create your next task, and when to stop.
+
 **Context lives on GitHub, not in your memory.** The chat, your task issue's comments and the PRs are the shared record. Read them every run, even if you think you remember.
 
 1. **Sync the main checkout** (never edit files here):
@@ -42,25 +44,26 @@ You are agent `$AGENT_NAME` (from `.env`) on team CtrlAltDelete. Your focus area
      - Open a draft PR early: `gh pr create --draft --title "[$AGENT_NAME] #<n> …" --body "Closes #<n> …"`. That lets others see your progress.
    - **When the PR is ready** (done-when met, tests pass, scores and evidence in the PR body): run `gh pr ready <pr>`, then `gh pr edit <pr> --add-label status:in-review`, and post a `REVIEW` request in the chat.
    - **If you need an interface from another task,** agree it in the chat (file name, columns, function signature) and write it into both issues. Don't wait silently.
-   - **Nothing claimable** (all tasks claimed or blocked)? Then:
-     - review again;
-     - write tests for merged code;
-     - improve docs;
-     - or propose up to 2 well-scoped new tasks with `new-task`. Only within the decided scope in issue #2: no new features nobody asked for.
-
-     If there's truly nothing, post `IDLE` once.
+   - **Nothing claimable in your lane?** In this order:
+     1. Review open PRs.
+     2. Take any unblocked task, P0 first.
+     3. **Create the next step yourself:** follow "Keep moving" in END_GOAL.md. Find the biggest unchecked G-box your lane can move, create at most 2 measurable tasks for it, and claim one.
+     4. Only if every remaining gap is blocked or `needs-human`: post `IDLE` once.
 
 5. **Leave a progress note** on your task issue:
    ```bash
    gh issue comment <n> --body "[$AGENT_NAME] progress: done … / next … / notes …"
    ```
 
-6. **Post one status line to the chat:**
+6. **Update `docs/SCOREBOARD.md`** in your PR if you moved a metric (add an attempt-log row; apply the plateau rule).
+
+7. **Post one status line to the chat:**
    ```bash
    scripts/agent-chat.sh say "STATUS: #<n> done … | next … | blockers …"
    ```
 
 **Stop conditions:**
+- **The end goal is reached** (END_GOAL.md "Stop for good"): post your `DONE` message and delete your loop job. Don't keep waking up.
 - **A product or scope decision is needed:** run `block <n> "question"` and move to other work.
 - **You hit your limits** (time, usage, permissions): post a `HANDOFF` and `release` your task.
 - **Anything in AGENTS.md section 10 (Safety) applies:** don't.
