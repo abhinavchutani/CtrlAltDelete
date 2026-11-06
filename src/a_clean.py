@@ -17,19 +17,28 @@ import duckdb
 import pandas as pd
 
 from src import lineage as L
-from src.a_detect import farm, persist
+from src.a_detect import farm, ops, persist
 from src.a_score import dev_labels, score_a1
 from src.db import connect, env
 
+COVERED = {
+    "farm tables": ["farm_survey", "farm_registry"],
+    "ops tables": ["erp_purchase_lines", "energy_meter_readings", "fuel_deliveries", "goo_cancellations", "refrigerant_service_log"],
+    "all covered": ["farm_survey", "farm_registry", "erp_purchase_lines", "energy_meter_readings", "fuel_deliveries", "goo_cancellations", "refrigerant_service_log"],
+}
 CREATED_BY = "agent:" + (env("AGENT_NAME") or "unknown")
 
 
 def propose_and_assume(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
-    cands = farm.detect_all(con)
+    cands = pd.concat([farm.detect_all(con), ops.detect_all(con)], ignore_index=True)
+    if "status" not in cands:
+        cands["status"] = "proposed"
+    cands["status"] = cands["status"].fillna("proposed")
     ids = persist(con, cands, CREATED_BY)
     if L.dev_mode():
-        for iid in ids:
-            L.apply_correction(con, iid, approved_by=L.DEV_ASSUMED, reason="dev-mode assumption for scoring")
+        for iid, st, fix in zip(ids, cands.status, cands.proposed_fix):
+            if st == "proposed" and isinstance(fix, dict):
+                L.apply_correction(con, iid, approved_by=L.DEV_ASSUMED, reason="dev-mode assumption for scoring")
     return cands
 
 
@@ -77,10 +86,11 @@ def main() -> None:
     con = connect()
     L.init_schema(con)
     cands = propose_and_assume(con)
-    print(cands.groupby(["table_name", "issue_type"]).size().rename("candidates (all years)").to_string())
+    print(cands.groupby(["table_name", "status", "issue_type"]).size().rename("candidates (all years)").to_string())
     print(json.dumps(build_clean(con), indent=1))
-    s = score_a1(cands, dev_labels(con), restrict_tables=["farm_survey", "farm_registry"])
-    print("dev A1 score on farm tables (2023–24):", json.dumps(s))
+    flagged, labels = cands[cands.status == "proposed"], dev_labels(con)
+    for name, tables in COVERED.items():
+        print(f"dev A1 score, {name} (2023–24):", json.dumps(score_a1(flagged, labels, restrict_tables=tables)))
 
 
 if __name__ == "__main__":
