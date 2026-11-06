@@ -134,7 +134,7 @@ def stub_answer(con: duckdb.DuckDBPyConnection, question: str, kind: str | None)
             if not res["rows"] or "sum" not in res:
                 return Answer(question, f"{NOT_IN_DATA} No results match {json.dumps(f)}.")
             v, unit = res["sum"], res.get("sum_unit", "")
-            prose = f"{v:,.1f} {unit} ({res['n_rows']} result row{'s' * (res['n_rows'] != 1)})."
+            prose = f"{v:,.1f} {unit} (sum of `{res['n_rows']}` result row{'s' * (res['n_rows'] != 1)})."
             return finish(question, prose, [res], "stub", v, unit)
     hits = e_tools.search_frameworks(question, k=3)
     if not hits["passages"]:
