@@ -5,11 +5,12 @@
 """
 from __future__ import annotations
 
-from src import a_clean
+from src import a_clean, a_triage
 
 
 def main() -> None:
     a_clean.main()
+    a_triage.main()   # grey-zone LLM triage (offline stub without a key)
 
 
 if __name__ == "__main__":
