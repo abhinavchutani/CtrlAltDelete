@@ -94,8 +94,9 @@ def clean_tables(con: duckdb.DuckDBPyConnection) -> dict[str, pd.DataFrame]:
 
 
 # ── 2. canonical tables ───────────────────────────────────────────────
-def farm_kg_per_ha(sv: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
-    """Cradle-to-farm-gate kg CO2e/ha, returned as (mineral part, organic-soil add-on for 100 % organic)."""
+def farm_components(sv: pd.DataFrame) -> dict[str, np.ndarray]:
+    """Cradle-to-farm-gate kg CO2e/ha by component (METHODOLOGY §5). `organic_full` is the drained-organic-soil
+    add-on for a 100 % organic crop area. FLAG (SBTi) = direct + indirect N2O, liming, organic soils."""
     E = F.FARM_EF
     n2o = E["n2o_n_to_n2o"] * E["n2o_gwp"]
     nmin, nman = sv.n_mineral_kg_ha.fillna(0).values, sv.n_manure_kg_ha.fillna(0).values
@@ -103,16 +104,27 @@ def farm_kg_per_ha(sv: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     yld = sv.yield_t_ha.values
     res_n = sv.crop.map(F.RESIDUE_N_PER_T).values * yld
     low = sv.fertiliser_product.fillna("").str.contains("low-carbon").values
-    fert = nmin * np.where(low, E["fert_n_prod_lowcarbon"], E["fert_n_prod"]) + p * E["fert_p_prod"] + p * 2.2 * E["fert_k_prod"]
-    direct = (nmin * E["ef1_synthetic"] + (nman + res_n) * E["ef1_organic"]) * n2o
-    indirect = ((nmin * E["frac_gasf"] + nman * E["frac_gasm"]) * E["ef4_n2o_n"] + (nmin + nman + res_n) * E["frac_leach"] * E["ef5_n2o_n"]) * n2o
-    diesel = sv.diesel_l_ha.fillna(0).values * (E["diesel_ttw"] + E["diesel_wtt"])
-    lime = sv.lime_t_ha.fillna(0).values * E["lime"] * 1000
-    sprays = sv.sprays.fillna(0).values * E["spray_pass"]
     kwh = sv.crop.map(F.KWH_PER_T).values * yld + np.where(sv.irrigated.fillna(False).astype(bool).values, 180.0, 0.0)
-    mineral = fert + direct + indirect + diesel + lime + sprays + kwh * 0.03
-    organic = E["org_soil_co2_t_ha"] * 1000 + E["org_soil_n2o_n_kg_ha"] * n2o
-    return mineral, np.full(len(sv), organic)
+    return {
+        "fertiliser": nmin * np.where(low, E["fert_n_prod_lowcarbon"], E["fert_n_prod"]) + p * E["fert_p_prod"] + p * 2.2 * E["fert_k_prod"],
+        "n2o_direct": (nmin * E["ef1_synthetic"] + (nman + res_n) * E["ef1_organic"]) * n2o,
+        "n2o_indirect": ((nmin * E["frac_gasf"] + nman * E["frac_gasm"]) * E["ef4_n2o_n"] + (nmin + nman + res_n) * E["frac_leach"] * E["ef5_n2o_n"]) * n2o,
+        "diesel": sv.diesel_l_ha.fillna(0).values * (E["diesel_ttw"] + E["diesel_wtt"]),
+        "lime": sv.lime_t_ha.fillna(0).values * E["lime"] * 1000,
+        "sprays": sv.sprays.fillna(0).values * E["spray_pass"],
+        "electricity": kwh * 0.03,
+        "organic_full": np.full(len(sv), E["org_soil_co2_t_ha"] * 1000 + E["org_soil_n2o_n_kg_ha"] * n2o),
+    }
+
+
+FLAG_COMPONENTS = ("n2o_direct", "n2o_indirect", "lime")  # + organic soils (METHODOLOGY §5)
+
+
+def farm_kg_per_ha(sv: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+    """(mineral-soil kg CO2e/ha, organic-soil add-on for a 100 % organic area)."""
+    c = farm_components(sv)
+    mineral = sum(v for k, v in c.items() if k != "organic_full")
+    return mineral, c["organic_full"]
 
 
 def farm_footprints(con: duckdb.DuckDBPyConnection, sv: pd.DataFrame, erp: pd.DataFrame,
@@ -123,18 +135,25 @@ def farm_footprints(con: duckdb.DuckDBPyConnection, sv: pd.DataFrame, erp: pd.Da
     sv = sv.merge(shares, on="record_key", how="left")
     share = sv.crop_organic_share.fillna(0).clip(0, 1)
     share = np.where(sv.soil_type_reported.str.lower().str.startswith("organic"), 1.0, share)
-    mineral, organic = farm_kg_per_ha(sv)
-    sv["kg_ha"] = mineral + (share * organic if with_organic else 0.0)
+    comp = farm_components(sv)
+    mineral = sum(v for k, v in comp.items() if k != "organic_full")
+    org = share * comp["organic_full"] if with_organic else 0.0
+    sv["kg_ha"] = mineral + org
+    sv["flag_kg_ha"] = sum(comp[k] for k in FLAG_COMPONENTS) + org
     sv["kg_per_kg"] = sv.kg_ha / (sv.yield_t_ha * 1000)
+    sv["flag_share"] = sv.flag_kg_ha / sv.kg_ha
     d = erp[erp.material_id.isin(F.CROP_MATERIAL)].copy()
     d["crop"] = d.material_id.map(F.CROP_MATERIAL)
     d = d.groupby(["supplier_id", "crop", "year"]).agg(qty_kg=("qty_kg", "sum"), keys=("record_key", list)).reset_index()
     d = d.rename(columns={"supplier_id": "farm_id"}).merge(
-        sv[["farm_id", "crop", "year", "kg_per_kg", "record_key"]].rename(columns={"record_key": "survey_key"}),
+        sv[["farm_id", "crop", "year", "kg_per_kg", "flag_share", "record_key"]].rename(columns={"record_key": "survey_key"}),
         on=["farm_id", "crop", "year"], how="left")
     avg = sv.groupby(["crop", "year"]).kg_per_kg.median()
     d["kg_per_kg"] = d.kg_per_kg.fillna(pd.Series(list(zip(d.crop, d.year))).map(avg))
+    fs = sv.groupby(["crop", "year"]).flag_share.median()
+    d["flag_share"] = d.flag_share.fillna(pd.Series(list(zip(d.crop, d.year))).map(fs))
     d["tco2e"] = d.qty_kg * d.kg_per_kg / 1000
+    d["flag_tco2e"] = d.tco2e * d.flag_share
     d["region"] = "FI_SW"
     return d
 
@@ -301,6 +320,27 @@ def summarise(inv: pd.DataFrame) -> pd.DataFrame:
            for k in ["scope1", "scope2_location", "scope2_market", "scope3"]]
     tot.append(dict(scope="memo", category="biogenic_co2_scope1", tco2e=inv.attrs.get("biogenic_co2_t", np.nan)))
     return pd.concat([s, pd.DataFrame(tot)], ignore_index=True)
+
+
+def flag_share(T: dict, year: int) -> dict:
+    """FLAG emissions (SBTi) and their share of S1 + S2 (market) + S3: contract-farm FLAG components (N2O,
+    liming, organic soils) + purchased commodities × library flag_share (METHODOLOGY §5)."""
+    inv = compute(T, year)
+    total = inv[inv.scope.isin(["scope1", "scope2_market", "scope3"])].tco2e.sum()
+    ff = T["farm_footprints"][T["farm_footprints"].year == year]
+    farm_flag = float(ff.flag_tco2e.sum())
+    lib = T["ef_library"].set_index("ef_id").flag_share.fillna(0)
+    mm = T["materials"].set_index("material_id")
+    goods = inv[(inv.category == "cat01_purchased_goods") & ~inv.line_item.str.startswith("contract_farming")]
+    commodity_flag = 0.0
+    for r in goods.itertuples(index=False):
+        mat = r.line_item.split(":")[0]
+        ef_id = mm.loc[mat].default_ef_id if mat in mm.index else None
+        commodity_flag += r.tco2e * float(lib.get(ef_id, 0.0))
+    flag = farm_flag + commodity_flag
+    return {"year": year, "flag_t": round(flag, 1), "farm_flag_t": round(farm_flag, 1),
+            "commodity_flag_t": round(commodity_flag, 1), "total_t": round(float(total), 1),
+            "flag_share_pct": round(100 * flag / total, 2)}
 
 
 def score_a2(sub: pd.DataFrame, key: pd.DataFrame) -> dict:
