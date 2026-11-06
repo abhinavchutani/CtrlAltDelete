@@ -291,7 +291,7 @@ def write_results(con, models, bt: dict, c1: pd.DataFrame, survey: str) -> None:
         L.write_result(con, f"C1:{year}:{region}:{crop}:production", metric="production_t", value=float(t),
                        unit="t", method=f"{MODEL_ID}, Σ area × predicted yield", produced_by=by,
                        category=f"{region}:{crop}", year=int(year), scenario="ssp245",
-                       lineage=model_src + [L.src("record", "tasks/templates/C1_yields_2027_2031_submission.csv"),
+                       lineage=model_src + [L.src("doc", "tasks/templates/C1_yields_2027_2031_submission.csv"),
                                             L.src("doc", "04_climate/weather_daily_1991_2060.parquet#ssp245")])
 
 
