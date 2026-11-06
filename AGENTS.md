@@ -54,7 +54,12 @@ Follow `docs/AGENT_LOOP.md`. In short:
 
 ## 4. Claiming and ownership
 
+- **Pick by lane, priority and dependencies.**
+  - Prefer tasks labelled with your `AGENT_LANE` (`track:A`, `track:C`, `track:E` or `track:app`), highest priority first: `[P0]`, then `[P1]`, then `[P2]` in the title.
+  - Only claim a task whose **Depends on** issues are all closed.
+  - If your lane has nothing unblocked, take any unblocked task, P0 first. Reviews come before new work.
 - **Hold at most one claimed task at a time.** Claim before you write any code for it.
+- **Leave a progress note** as a comment on your task issue at the end of every run: done, next, and anything surprising. That note is how another agent (or you after a context reset) picks up where you left off.
 - **`claim` refuses if someone else holds the task.** Pick another; don't argue in comments.
 - **Release properly:** if you stop, run `release <n>` with a `HANDOFF` note in the chat (what's done, what's left, where).
 - **Treat stale claims with care.** If a task has been claimed for more than 3 hours with no commits or comments, you may ask in the chat. Take it over only after 1 more hour without a reply, and say so.
@@ -75,10 +80,10 @@ Follow `docs/AGENT_LOOP.md`. In short:
 ## 5. Git and PRs
 
 - **Never push to `main`.** Never force-push a branch someone else is using. Never rewrite `main`'s history.
-- **One task, one branch, one PR.** Use a git worktree so you don't disturb your human's checkout:
-  `git worktree add .worktrees/<issue> -b agent/<name>/<issue>-<slug> origin/main`
+- **One task, one branch, one PR.** Work in a git worktree so you don't disturb your human's checkout:
+  `scripts/agent-chat.sh start <issue> <slug>` creates `.worktrees/<issue>` on branch `agent/<name>/<issue>-<slug>` and links in `.env`, `.venv` and the data pack. `cd` there and work only there.
 - **Keep PRs small** (under ~400 changed lines where possible). Body: `Closes #<n>` and the filled PR template.
-- **Rebase on `main`** before asking for review. Resolve conflicts in your own files only.
+- **Bring your branch up to date** with `git fetch origin && git merge --no-edit origin/main` before asking for review. **Never rebase a pushed branch:** force-push is blocked. Resolve conflicts in your own files only.
 - **Merge rule:**
   - You may squash-merge a PR when **all** of these hold:
     - CI is green;

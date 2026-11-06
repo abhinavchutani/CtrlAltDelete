@@ -1,63 +1,64 @@
 # Running our agents together (human guide)
 
-Each of us runs one AI agent on our own laptop. The agents never talk directly; they coordinate through GitHub:
+Each of us runs one Claude Code agent on our own laptop. The agents never talk directly; they coordinate through GitHub:
 
 | Channel | What it's for |
 |---|---|
-| 🤖 **Agent chat**, the pinned issue | A shared group chat. Each agent reads the latest messages and posts one status per run |
-| **`agent-task` issues** | The task board. Agents *claim* a task (label + comment) so two agents never build the same thing |
-| **PRs** | Every change goes through a PR that a *different* agent (or a human) reviews before merging |
-| **`needs-human`** label | Anything that needs a human decision. Check these first thing in the morning |
+| 🤖 **Agent chat** (issue #1, pinned) | A shared group chat. Agents read the last 30 messages every run and post a status |
+| **`agent-task` issues** | The task board. Agents *claim* a task (label + comment) so two never build the same thing. Each task lists its lane, priority and dependencies |
+| **Task issue comments** | Each agent leaves a progress note every run. That's the hand-over memory |
+| **PRs** | Every change. A *different* agent (or a human) reviews before merging |
+| **`needs-human`** label | Decisions for us in the morning |
 
-The rules the agents follow are in [`AGENTS.md`](../AGENTS.md). The per-run routine is [`AGENT_LOOP.md`](AGENT_LOOP.md).
+The rules are in [`AGENTS.md`](../AGENTS.md), the per-run routine is [`AGENT_LOOP.md`](AGENT_LOOP.md), and the interfaces between lanes are in [`CONTRACTS.md`](CONTRACTS.md).
 
-## One-time setup (each person)
+## Lanes (one per person, to be agreed in issue #2)
 
-1. **Repo access.** Abhinav adds you as a collaborator on GitHub.
-2. **Clone and set up:**
-   ```bash
-   git clone https://github.com/abhinavchutani/CtrlAltDelete.git && cd CtrlAltDelete
-   python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
-   cp .env.example .env    # set AGENT_NAME, e.g. sara-claude (unique per person!)
-   unzip ~/Downloads/Apetit_SinceAI2026/APETIT_CLIMATE_NATURE_NAVIGATOR_2026.zip -d data/
-   ```
-3. **GitHub CLI.** Run `gh auth login` and check it with `gh auth status`. The agent acts with **your** GitHub account. Approvals only work between *different* accounts, so each person's agent must run under their own account.
-4. **Check the helper:**
-   ```bash
-   scripts/agent-chat.sh whoami
-   scripts/agent-chat.sh read 5
-   scripts/agent-chat.sh tasks
-   ```
+Each agent gets a focus area through `AGENT_LANE` in its `.env`: `A`, `C`, `E`, `app` or `docs`. Example split if we follow the proposal:
 
-## Starting your agent for the night
+| Person | `AGENT_NAME` | `AGENT_LANE` |
+|---|---|---|
+| Abhinav | `abhinav-claude` | `C` |
+| Teammate 2 | `<name>-claude` | `A` |
+| Teammate 3 | `<name>-claude` | `app` |
 
-**Claude Code** (CLI or desktop app), opened in the repo folder:
+Lanes are preferences, not walls. An agent with nothing unblocked in its lane helps elsewhere.
 
+## One-time setup (each person, ~10 min)
+
+```bash
+git clone https://github.com/abhinavchutani/CtrlAltDelete.git && cd CtrlAltDelete
+python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+unzip ~/Downloads/Apetit_SinceAI2026/APETIT_CLIMATE_NATURE_NAVIGATOR_2026.zip -d data/
+cp .env.example .env      # set AGENT_NAME (unique!) and AGENT_LANE
+mkdir -p .claude && cp docs/claude-settings.recommended.json .claude/settings.json
+gh auth login             # your own GitHub account
+scripts/agent-chat.sh whoami && scripts/agent-chat.sh tasks
 ```
-/loop 30m Follow docs/AGENT_LOOP.md exactly.
-```
 
-**Codex, Cursor or another agent:** paste the contents of `docs/AGENT_LOOP.md` as the instruction and have it re-run every ~30 minutes. Use the tool's own scheduling or loop feature, or re-run it in a shell loop.
+- **`.claude/settings.json`** pre-approves git, gh, python, pip, pytest, npm and file edits, so your agent doesn't stall on permission prompts at 3 a.m. It also **blocks** force-push, pushing to `main`, `rm -rf`, `git reset --hard`, `git clean` and deleting issues or repos.
+- **Use your own GitHub account.** GitHub won't let an account approve its own PR, so reviews only work across people.
+- **For the copilot,** put an `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in `.env` if you have one. Without a key, the copilot task builds an offline stub and flags `needs-human`.
 
-**Before you sleep:**
-- Laptop on power and kept awake: on macOS, run `caffeinate -dims` in a terminal.
-- Your agent is allowed to edit files and run `git`, `gh`, `python` and `pytest` without asking. Otherwise it stalls on the first permission prompt.
-- Your agent is **not** allowed to run destructive commands. Keep your tool's safety settings on.
-- You've left it a lane if you want (`AGENT_LANE=C` in `.env`) so the agents split the work.
+## Before you sleep
+
+1. Plug in your laptop and keep it awake: run `caffeinate -dims` in a terminal tab and leave it running.
+2. Open Claude Code in the repo folder. In the desktop app, choose the CtrlAltDelete folder and set the permission mode to **Auto** if it's offered, otherwise **Accept edits**.
+3. Start the loop with the prompt the team agrees on. The routine every run follows is [`AGENT_LOOP.md`](AGENT_LOOP.md). Agents only build `agent-task` issues, so nothing happens until tasks exist on the board.
 
 ## In the morning
 
-1. Read the 🤖 Agent chat from the bottom up.
-2. Handle every `needs-human` issue and PR.
-3. Merge the approved PRs the agents left for humans (protected paths, `submissions/`).
-4. Re-prioritise the task board. Close or rewrite tasks that went sideways.
+1. Read 🤖 Agent chat (#1) from the bottom up.
+2. Handle `needs-human` issues and PRs.
+3. Merge approved PRs that touch protected paths.
+4. Re-prioritise the board.
 
 ## Notes and limits
 
-- **No hard protection on `main`.** The repo is private on a free plan, so GitHub branch protection isn't available. "Never push to main" is a rule the agents follow, not a lock.
-- **Claims are best-effort.** If two agents claim the same task within seconds, the first claim comment wins and the other backs off automatically.
-- **Keep it cheap and quiet:** one status message per run, small PRs, no data in issues.
-- **Labels in use:**
+- **No hard protection on `main`.** Branch protection isn't available on a free private repo; the deny rules in `.claude/settings.json` plus `AGENTS.md` are the guardrails.
+- **Claims are best-effort.** The first claim comment wins, and the other agent backs off automatically.
+- **Usage limits:** a long night of work can hit Claude plan limits. The agent then stops until the limit resets, and the loop resumes after.
+- **Labels:**
   - `agent-chat`, `agent-task`
   - `status:todo`, `status:claimed`, `status:in-review`
   - `needs-human`, `decision`

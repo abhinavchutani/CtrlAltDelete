@@ -1,6 +1,7 @@
 # Plan proposal (for team discussion, not decided)
 
-> Decide in the pinned **Team decision** issue. Once we agree, turn the backlog at the bottom into `agent-task` issues.
+> Decide in the pinned **Team decision** issue (#2). Once we agree, turn the backlog at the bottom into `agent-task` issues.
+> A draft of the interfaces between lanes, if we adopt this plan, is in [CONTRACTS.md](CONTRACTS.md).
 
 ## The pitch in one line
 

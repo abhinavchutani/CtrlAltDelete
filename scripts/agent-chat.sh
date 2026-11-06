@@ -159,6 +159,36 @@ cmd_takeover() {
   cmd_claim "$n"
 }
 
+cmd_start() {  # start ISSUE SLUG → worktree on agent/<name>/<issue>-<slug>, prints its path
+  load_name
+  local n="${1:?usage: start ISSUE slug}" slug="${2:?usage: start ISSUE slug}" owner dir br p
+  printf '%s' "$slug" | grep -Eq '^[a-z0-9][a-z0-9-]{0,40}$' || { echo "slug: lowercase letters, digits, dashes" >&2; exit 1; }
+  owner="$(current_owner "$n")"
+  [ "$owner" = "$AGENT_NAME" ] || { echo "claim #$n first (owner: ${owner:-nobody})" >&2; exit 2; }
+  dir="$MAIN_ROOT/.worktrees/$n"
+  br="agent/$AGENT_NAME/$n-$slug"
+  git -C "$MAIN_ROOT" fetch -q origin
+  if [ ! -d "$dir" ]; then
+    if git -C "$MAIN_ROOT" show-ref --verify --quiet "refs/heads/$br"; then
+      git -C "$MAIN_ROOT" worktree add -q "$dir" "$br"
+    elif git -C "$MAIN_ROOT" show-ref --verify --quiet "refs/remotes/origin/$br"; then
+      git -C "$MAIN_ROOT" worktree add -q --track -b "$br" "$dir" "origin/$br"
+    else
+      git -C "$MAIN_ROOT" worktree add -q -b "$br" "$dir" origin/main
+    fi
+  fi
+  # Share local-only, gitignored files with the worktree
+  [ -e "$dir/.env" ] || [ ! -f "$MAIN_ROOT/.env" ] || ln -s "$MAIN_ROOT/.env" "$dir/.env"
+  [ -e "$dir/.venv" ] || [ ! -d "$MAIN_ROOT/.venv" ] || ln -s "$MAIN_ROOT/.venv" "$dir/.venv"
+  mkdir -p "$dir/data"
+  for p in "$MAIN_ROOT"/data/*/; do
+    [ -d "$p" ] || continue
+    p="${p%/}"
+    [ -e "$dir/data/$(basename "$p")" ] || ln -s "$p" "$dir/data/$(basename "$p")"
+  done
+  echo "$dir"
+}
+
 cmd_reviews() {
   load_name
   gh pr list --state open --label status:in-review --limit 50 \
@@ -200,6 +230,7 @@ agent-chat.sh: coordinate AI agents through GitHub (see AGENTS.md)
   claim ISSUE                 claim a task (one at a time; first claim wins)
   release ISSUE [note]        give a task back
   takeover ISSUE "reason"     take over a stale task (see AGENTS.md §4)
+  start ISSUE slug            worktree .worktrees/ISSUE on agent/<name>/ISSUE-slug (links .env, .venv, data)
   reviews                     PRs waiting for review that you did not write
   block ISSUE "question"      label needs-human, explain, and announce in chat
   new-task "title" "body" [A|C|E|app|docs]   create a task issue
@@ -218,6 +249,7 @@ case "$cmd" in
   claim)    cmd_claim "$@" ;;
   release)  cmd_release "$@" ;;
   takeover) cmd_takeover "$@" ;;
+  start)    cmd_start "$@" ;;
   reviews)  cmd_reviews ;;
   block)    cmd_block "$@" ;;
   new-task) cmd_new_task "$@" ;;
