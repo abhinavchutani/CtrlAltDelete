@@ -95,7 +95,10 @@ def _json(x: Any) -> str:
 def _check_human(name: str, allow_dev: bool) -> None:
     """Agents never approve. DEV-ASSUMED is allowed only for corrections, only in dev mode."""
     n = (name or "").strip()
-    if not n or n.lower().startswith(("agent:", "agent-")) or n.lower().endswith("-claude"):
+    low = n.lower()
+    agent_names = {a.strip().lower() for a in (env("AGENT_NAME"),) if a.strip()}
+    if (not n or low.startswith(("agent:", "agent-")) or low.endswith(("-claude", "-agent", "-bot"))
+            or low in agent_names):
         raise ValueError(f"approver must be a human, got {name!r}")
     if n == DEV_ASSUMED and not (allow_dev and dev_mode()):
         raise ValueError("DEV-ASSUMED is only allowed for corrections when NAVIGATOR_DEV_ASSUME=1")
