@@ -36,5 +36,6 @@ def persist(con: duckdb.DuckDBPyConnection, cands: pd.DataFrame, created_by: str
             con, table_name=r.table_name, record_key=r.record_key,
             year=None if pd.isna(r.year) else int(r.year), issue_type=r.issue_type,
             confidence=float(r.confidence), rule_id=r.rule_id, explanation=r.explanation,
-            evidence=r.evidence, proposed_fix=r.proposed_fix, created_by=created_by))
+            evidence=r.evidence, proposed_fix=r.proposed_fix, created_by=created_by,
+            status=getattr(r, "status", "proposed") if isinstance(getattr(r, "status", None), str) else "proposed"))
     return ids
