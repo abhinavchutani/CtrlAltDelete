@@ -37,9 +37,10 @@ def seed(path=MOCK_DB) -> None:
         t = ISSUE_TYPES[i % len(ISSUE_TYPES)]
         key = f"erp:MOCK{i:04d}:1" if t != "soil_misreport" else f"farm_survey:MOCK{i:04d}"
         L.propose_issue(con, table_name="mock", record_key=key, year=2025, issue_type=t,
-                        confidence=round(float(rng.uniform(0.5, 0.99)), 2), rule_id=f"mock_{t}",
-                        explanation=f"MOCK {t.replace('_', ' ')} example", evidence={"mock": True, "ratio": round(float(rng.uniform(2, 1000)), 1)},
-                        proposed_fix={"field": "quantity", "old_value": 1, "new_value": 1000}, created_by=BY)
+                        confidence=round(float(rng.uniform(0.5, 0.89)), 2), rule_id=f"mock_{t}",
+                        explanation=f"MOCK {t.replace('_', ' ')} example (display only)",
+                        evidence={"mock": True, "ratio": round(float(rng.uniform(2, 1000)), 1)},
+                        proposed_fix=None, created_by=BY)  # no fix: the correctable MOCK errors are the lines below
     for i, (table, why) in enumerate(LEGIT):
         L.propose_issue(con, table_name=table, record_key=f"mock:legit:{i}", year=2025, issue_type="observation",
                         confidence=1.0, rule_id="allow_list", explanation=f"checked, legitimate: {why}",
@@ -54,8 +55,14 @@ def seed(path=MOCK_DB) -> None:
             v = round(float(rng.uniform(25, 2500)))
             L.write_result(con, lid, metric="tco2e_line", value=v, unit="t CO2e", scope=scope, category=cat,
                            year=2025, method=METHOD, produced_by=BY,
-                           lineage=[L.src("record", f"erp:MOCK{j:04d}:1"), L.src("factor", f"EF-MOCK-{cat}")])
+                           lineage=[L.src("record", f"mockline:{scope}:{cat}:{j}"), L.src("factor", f"EF-MOCK-{cat}")])
             line_ids.append((lid, v))
+            if j == 0 and len(line_ids) and scope in ("scope1", "scope3"):  # a correctable MOCK error per category
+                L.propose_issue(con, table_name="mock", record_key=f"mockline:{scope}:{cat}:{j}", year=2025,
+                                issue_type="unit_error", confidence=0.95, rule_id="mock_line_x10",
+                                explanation=f"MOCK: {cat} line keyed ×10", evidence={"mock": True, "value": v},
+                                proposed_fix={"field": "tco2e", "old_value": v, "new_value": round(v / 10, 1)},
+                                created_by=BY)
         value = sum(v for _, v in line_ids)
         totals[scope] = totals.get(scope, 0.0) + value
         L.write_result(con, f"MOCK:A2:2025:actual:{scope}:{cat}", metric="tco2e", value=value, unit="t CO2e",
@@ -95,6 +102,39 @@ def seed(path=MOCK_DB) -> None:
                        unit="EUR/yr", category=f"{action} | owner: {owner}", year=2050, scenario="ssp245",
                        method=METHOD, produced_by=BY, lineage=[L.src("model", "mock_euro_model")])
     con.close()
+
+
+def recalculate(con) -> None:
+    """MOCK recalculation: human-approved 'tco2e' corrections replace their line's value, then categories
+    and totals are re-summed (all rewritten rows go back to draft via write_result)."""
+    fixes = dict(con.execute("SELECT record_key, new_value FROM corrections WHERE field = 'tco2e' "
+                             "AND approved_by <> 'DEV-ASSUMED'").fetchall())
+    lines = con.execute("""SELECT r.result_id, r.scope, r.category, r.value, l.source_ref AS rec FROM results r
+                           JOIN lineage l USING (result_id)
+                           WHERE r.metric = 'tco2e_line' AND l.source_kind = 'record'""").df()
+    totals: dict[str, float] = {}
+    for (scope, cat), g in lines.groupby(["scope", "category"], sort=False):
+        ids = []
+        for r in g.itertuples(index=False):
+            v = float(fixes[r.rec]) if r.rec in fixes else r.value
+            if v != r.value:
+                L.write_result(con, r.result_id, metric="tco2e_line", value=v, unit="t CO2e", scope=scope,
+                               category=cat, year=2025, method=METHOD + " + approved correction", produced_by=BY,
+                               lineage=[L.src("record", r.rec), L.src("correction", f"corr:mock_line_x10:{r.rec}"),
+                                        L.src("factor", f"EF-MOCK-{cat}")])
+            ids.append((r.result_id, v))
+        value = sum(v for _, v in ids)
+        totals[scope] = totals.get(scope, 0.0) + value
+        rid = f"MOCK:A2:2025:actual:{scope}:{cat}"
+        if abs(con.execute("SELECT value FROM results WHERE result_id = ?", [rid]).fetchone()[0] - value) > 1e-9:
+            L.write_result(con, rid, metric="tco2e", value=value, unit="t CO2e", scope=scope, category=cat,
+                           year=2025, method=METHOD, produced_by=BY, lineage=[L.src("doc", i) for i, _ in ids])
+    for scope, value in totals.items():
+        rid = f"MOCK:A2:2025:actual:{scope}_total"
+        if abs(con.execute("SELECT value FROM results WHERE result_id = ?", [rid]).fetchone()[0] - value) > 1e-9:
+            L.write_result(con, rid, metric="tco2e", value=value, unit="t CO2e", scope="total",
+                           category=f"{scope}_total", year=2025, method=METHOD, produced_by=BY,
+                           lineage=[L.src("doc", "sum of category rows (mock)")])
 
 
 if __name__ == "__main__":
