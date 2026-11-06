@@ -56,8 +56,9 @@ def test_correction_defaults_to_proposed_fix(con):
     assert con.execute("SELECT count(*) FROM corrections").fetchone()[0] == 1
 
 
-@pytest.mark.parametrize("who", ["", "agent:noa-claude", "noa-claude"])
-def test_agents_cannot_approve(con, who):
+@pytest.mark.parametrize("who", ["", "agent:noa-claude", "noa-claude", "climate-agent", "some-bot", "myname"])
+def test_agents_cannot_approve(con, who, monkeypatch):
+    monkeypatch.setenv("AGENT_NAME", "myname")
     iid = _issue(con)
     with pytest.raises(ValueError):
         L.apply_correction(con, iid, approved_by=who, reason="r")
