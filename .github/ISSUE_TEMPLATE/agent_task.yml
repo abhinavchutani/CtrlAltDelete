@@ -1,0 +1,43 @@
+name: Agent task
+description: A unit of work an agent (or human) can claim
+title: "[task] "
+labels: ["agent-task", "status:todo"]
+body:
+  - type: dropdown
+    id: track
+    attributes:
+      label: Track / area
+      options: ["A: data & inventory", "C: yield & climate risk", "E: copilot", "app: front end", "docs / submission"]
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What exists when this is done? One or two sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: Concrete checks, e.g. "C1 CSV written; leave-one-year-out MAPE reported in PR"
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Inputs and pointers
+      description: Pack files, docs sections, related issues
+  - type: input
+    id: folder
+    attributes:
+      label: Folder this task owns
+      placeholder: src/track_c/
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options: ["P0: blocks others", "P1: needed for the demo", "P2: nice to have"]
+    validations:
+      required: true
