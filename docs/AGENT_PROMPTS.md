@@ -4,6 +4,7 @@
 
 ```bash
 cd CtrlAltDelete && git pull
+[ -d .venv ] || python3 -m venv .venv      # first time on this laptop
 source .venv/bin/activate && pip install -r requirements.txt
 mkdir -p .claude && cp docs/claude-settings.recommended.json .claude/settings.json
 ```
