@@ -29,8 +29,7 @@ def source() -> tuple[str, str]:
     """(path, label) of the database the app reads."""
     if env("APP_MOCK") != "1" and _has_results(db_path()):
         return str(db_path()), "live"
-    if not mock.MOCK_DB.exists():
-        mock.seed()
+    mock.seed()  # rebuilt once per app process (cached), so it always matches the current mock shape
     return str(mock.MOCK_DB), "mock"
 
 
