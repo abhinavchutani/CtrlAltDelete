@@ -55,3 +55,19 @@ def test_gap_answer_is_filed_under_its_record(tmp_path, monkeypatch):
     f = G.file_note(G.NoteIn(text="The meter was swapped; the reading is on the paper log at the plant.",
                              contributed_by="X", gap_id=gaps[0].id))
     assert f.path[0] == "Energy" and "crop:pea" not in f.item.tags
+
+
+@needs_data
+def test_today_endpoint():
+    from fastapi.testclient import TestClient
+
+    from api.main import app
+
+    c = TestClient(app)
+    r = c.get("/api/radar/today")
+    assert r.status_code == 200
+    t = r.json()
+    assert t["date"] == t["default_date"] and t["path"] == "historical" and t["synthetic"] is True
+    assert sum(t["counts"].values()) == len(t["all"]) and t["sources"]
+    assert c.get("/api/radar/today", params={"date": "2025-06-01"}).status_code == 422
+    assert c.get("/api/radar/today", params={"crop": "wheat"}).status_code == 422
