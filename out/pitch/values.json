@@ -1,0 +1,97 @@
+{
+ "A1_DEV_SCORE": {
+  "value": "96.0",
+  "source": "issues (proposed) vs task_dev_A1 labels, src/a_score.py",
+  "pending": ""
+ },
+ "ISSUES_FOUND": {
+  "value": "790",
+  "source": "issues WHERE status='proposed' (all years)",
+  "pending": ""
+ },
+ "LEGIT_SUPPRESSED": {
+  "value": "204",
+  "source": "issues WHERE status='legitimate' (allow-list R01–R04)",
+  "pending": ""
+ },
+ "A2_DEV_2023": {
+  "value": "91.3",
+  "source": "out/scores/A2_dev.json",
+  "pending": ""
+ },
+ "A2_DEV_2024": {
+  "value": "74.9",
+  "source": "out/scores/A2_dev.json",
+  "pending": ""
+ },
+ "C1_BACKTEST_MAPE": {
+  "value": "5.1 %",
+  "source": "out/scores/C1_backtest_*.json",
+  "pending": ""
+ },
+ "PEAT_BEFORE": {
+  "value": "10,951 t CO2e",
+  "source": "out/scores/peat_reveal_2025.json (mineral_only)",
+  "pending": ""
+ },
+ "PEAT_AFTER": {
+  "value": "25,308 t CO2e",
+  "source": "out/scores/peat_reveal_2025.json (with_organic_soils)",
+  "pending": ""
+ },
+ "PEAT_EXTRA_TCO2E": {
+  "value": "14,356",
+  "source": "out/scores/peat_reveal_2025.json",
+  "pending": ""
+ },
+ "PEAT_SHARE_PCT": {
+  "value": "57",
+  "source": "out/scores/peat_reveal_2025.json",
+  "pending": ""
+ },
+ "PEAT_TOP_FARMS": {
+  "value": "8",
+  "source": "results farm_tco2e: fewest farms carrying ≥50 % of the peat emissions",
+  "pending": ""
+ },
+ "FLAG_SHARE_BEFORE": {
+  "value": "67.6 %",
+  "source": "a_inventory.flag_share(2025, mineral soils only)",
+  "pending": ""
+ },
+ "FLAG_SHARE_AFTER": {
+  "value": "69.6 %",
+  "source": "a_inventory.flag_share(2025, with organic soils)",
+  "pending": ""
+ },
+ "C2_PEA_SE_585_PCT": {
+  "value": null,
+  "source": "results yield_change_pct ssp585 SE_SKANE:pea",
+  "pending": "C2 (#18) not published yet"
+ },
+ "C2_PEA_SE_585_PBAD": {
+  "value": null,
+  "source": "results p_bad_year ssp585 / baseline, SE_SKANE:pea",
+  "pending": "C2 (#18) not published yet"
+ },
+ "C3_EUR_AT_RISK": {
+  "value": null,
+  "source": "results metric=eur_at_risk",
+  "pending": "C3 (#19) not published yet"
+ },
+ "C3_HEDGE_EUR": {
+  "value": null,
+  "source": "results metric=eur_hedge",
+  "pending": "C3 (#19) not published yet"
+ },
+ "C3_IRRIGATION_EUR": {
+  "value": null,
+  "source": "results metric=eur_irrigation",
+  "pending": "C3 (#19) not published yet"
+ },
+ "C3_REBALANCE_PCT": {
+  "value": null,
+  "source": "results C3 sourcing split",
+  "pending": "C3 (#19) not published yet"
+ }
+}
