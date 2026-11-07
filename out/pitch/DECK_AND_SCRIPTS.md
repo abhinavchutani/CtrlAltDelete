@@ -15,7 +15,7 @@
 3. **Approach:** one system, three layers: clean data → inventory, weather → yield → €, and a copilot with receipts. One rule: code computes every number; the LLM only classifies and explains. The architecture diagram goes here.
 4. **Evidence, data quality:** issues found by type; dev scores A1 96.7 vs 52.17, A2 87.2 vs 23.2; the allow-list protecting precision; one approved correction.
 5. **Evidence, the peat reveal:** the farm footprint with vs without organic soils: 11,754 t CO2e (52 %), and the FLAG share moves from 67.6 % to 69.2 %. Fix it before the SBTi base year.
-6. **Evidence, harvest risk:** the 2026 backtest (FI strong, SE drought); the 2041–60 risk by SSP; € at risk {{C3_EUR_AT_RISK}}/yr; the hedges {{C3_HEDGE_EUR}} and {{C3_IRRIGATION_EUR}}.
+6. **Evidence, harvest risk:** the 2026 backtest (FI strong, SE drought); the 2041–60 risk by SSP; € at risk €289,566/yr; the hedges €37,243 and €33,230.
 7. **Traceability + expert review:** the click-through from a number to its invoice line, the corrections log, and the publish flow. The Microsoft mapping table (below).
 8. **What Apetit should do next week:** 3 actions with €, t and an owner (see SUBMISSION_TEXT.md). The phase-2 roadmap: SBTi pathway (B) and the SBTN catchment layer (D).
 
@@ -67,4 +67,4 @@
 | `10,951 t CO2e`, `22,705 t CO2e`, `11,754`, `52`, `6` | A peat results (#12) |
 | `67.6 %`, `69.2 %` | A inventory FLAG split |
 | `-7.1`, `-4.4`, `+2.7` | C2 results (#18), `yield_change_pct` at ssp585 |
-| `{{C3_EUR_AT_RISK}}`, `{{C3_HEDGE_EUR}}`, `{{C3_IRRIGATION_EUR}}`, `{{C3_REBALANCE_PCT}}` | C3 results (#19) |
+| `€289,566`, `€37,243`, `€33,230`, `{{C3_REBALANCE_PCT}}` | C3 results (#19) |

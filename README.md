@@ -84,15 +84,46 @@ tests/
 
 ## Getting started
 
+Needs **Python 3.11+** (macOS ships 3.9; e.g. `uv venv --python 3.11 .venv` or `python3.11 -m venv .venv`).
+
 ```bash
 git clone https://github.com/abhinavchutani/CtrlAltDelete.git
 cd CtrlAltDelete
-python3 -m venv .venv && source .venv/bin/activate
+python3.11 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env        # set AGENT_NAME etc.
 ```
 
 Then unzip the data pack into `data/`. See [data/README.md](data/README.md).
+
+## Reproduce every result
+
+One command rebuilds every submission file from the unzipped pack (about **1 minute** on a laptop; no LLM key needed):
+
+```bash
+make all        # = make load a c e pitch
+```
+
+| Command | Builds | Output |
+|---|---|---|
+| `make load` | the pack's files, untouched, as `raw_*` / `task_*` tables | `out/navigator.duckdb` (gitignored) |
+| `make a` | Track A: detectors, LLM triage (offline stub without a key), corrections, 2023–25 inventory, peat reveal | `out/A1_issues_submission.csv`, `out/A2_inventory_2025_submission.csv`, `out/corrections.csv`, `out/scores/A2_dev.json`, `out/scores/peat_reveal_2025.json` |
+| `make c` | Track C: weather link, stage features, yield model + backtest, C1, C2 ensemble, C3 € risk, delivery changes | `out/C1_yields_2027_2031_submission.csv`, `out/C2_climate_yield_risk_submission.csv`, `out/scores/C1_backtest.json`, `C2_ensemble.json`, `C3_euro_risk.json` |
+| `make e` | Track E: every question in `tasks/E_questions.csv` through the copilot | `out/E_answers_submission.csv` (+ E90–E92 dev check printed) |
+| `make pitch` | every `{{placeholder}}` in METHOD_NOTE + `docs/pitch/` filled from `results` | `out/pitch/*.md`, `out/pitch/values.json` (value + source per number) |
+| `make app` | the Streamlit app: data quality, inventory click-through, farm & peat, climate risk, review & publish, copilot | http://localhost:8501 |
+| `make test` | the test suite (pack-dependent tests skip without data) | |
+
+**Determinism.** A rerun on a fresh database reproduces the committed CSVs byte for byte. The only expected diff is the
+git SHA recorded in `out/scores/A2_dev.json` (`method`). LLM calls, when a key is set, are cached by input hash in
+`out/cache/` so reruns repeat them exactly.
+
+**Results are drafts until a human publishes them.** With `NAVIGATOR_DEV_ASSUME=1` (the default in `.env.example`) the
+pipelines apply proposed fixes as `DEV-ASSUMED` corrections so scores can be checked; a human expert approves and
+publishes in the app's *Review & publish* page. **All figures come from the organisers' synthetic twin and are not
+Apetit's real data.**
+
+**Stop the app before `make all`**: while it runs it holds the DuckDB file lock.
 
 ## Working with AI agents
 
