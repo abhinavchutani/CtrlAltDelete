@@ -40,10 +40,10 @@ def test_ids_cannot_escape_out_v2():
         P.farms("../x", 2030)
 
 
-def test_unbuilt_prediction_module_is_503_not_fixture(real):
-    from api import layers
-    if not layers.available()["src.p_hedge"]:
-        assert real.get("/api/hedge").status_code == 503
+def test_hedge_and_pathways_wait_for_the_warm_model(real, monkeypatch):
+    monkeypatch.setitem(P._state, "ctx", None)
+    assert real.get("/api/hedge?climate=ssp245").status_code == 503  # real mode never falls back to fixtures
+    assert real.get("/api/pathways/current_plan_ssp585").status_code == 503
 
 
 @pytest.mark.skipif(not HAVE_V2, reason="needs `make v2` output in out/v2/")
@@ -88,3 +88,28 @@ def test_intent_follow_up_builds_on_base(real):
     assert r["door"] == "simulate" and r["spec"]["climate"] == "ssp585" and r["spec"]["horizon_end"] == 2060
     assert {lv["type"] for lv in r["spec"]["levers"]} == {"irrigate", "heat_tolerant_variety"}
     assert real.post("/api/intent", json={"text": "How did pea deliveries change since 2021?"}).json()["door"] == "ask"
+
+
+@pytest.mark.skipif(not HAVE_V2, reason="needs `make v2` output and the snapshot")
+def test_real_hedge_and_pathways():
+    P.warm()
+    if P.context_error():
+        pytest.skip(P.context_error())
+    h = P.hedge("ssp585")
+    assert len(h.points) == 21 and sum(p.is_now for p in h.points) == 1 and any(p.is_best for p in h.points)
+    assert all(p.crop in ("pea", "potato") for p in P.pathways("current_plan_ssp585"))
+
+
+def test_report_download_round_trip(real):
+    from api import layers
+    if not (layers._imports("src.r_report") and layers._imports("openpyxl")):
+        pytest.skip("r_report/openpyxl missing")
+    from src import serve_db
+    if not serve_db.exists():
+        pytest.skip("needs out/serve.duckdb")
+    q = "How did pea deliveries from Swedish farms in 2026 compare with 2021?"
+    a = real.post("/api/ask", json={"question": "Make that a report", "history": [{"question": q}]}).json()
+    assert a["report"], a
+    r = real.get(a["report"]["url"])
+    assert r.status_code == 200 and r.content[:2] == b"PK"  # an .xlsx is a zip
+    assert real.get("/api/report/nope").status_code == 404

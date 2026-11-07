@@ -134,3 +134,27 @@ def weather(climate: str, year: int) -> S.WeatherFrame:
         return S.WeatherFrame(**p_weather.get_frame(climate, year, out_dir=V2 / "weather"))
     except FileNotFoundError:
         raise HTTPException(404, f"no weather frame for {climate} {year}") from None
+
+
+# ── hedge + pathways (lane C #91; both need the warm context) ───────
+def _ready(what: str) -> None:
+    if _state["ctx"] is None:
+        why = _state["error"] or ("the model is warming up, try again in a few seconds" if warming() else "not loaded")
+        raise HTTPException(503, f"{what} unavailable: {why}")
+
+
+def hedge(climate: str) -> S.Hedge:
+    _ready("hedge")
+    from src import p_hedge
+
+    try:
+        return S.Hedge(**p_hedge.hedge(climate))
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from None
+
+
+def pathways(scenario_id: str) -> list[S.PathwayItem]:
+    _ready("pathways")
+    from src import p_pathways
+
+    return [S.PathwayItem(**p) for p in p_pathways.pathways(scenario_id)]

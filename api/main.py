@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import FileResponse
 
 from api import geo
 from api import layers as L
@@ -109,9 +110,21 @@ def ask(body: S.AskIn) -> S.AskOut:
     return L.get("ask")(body.question, body.history)
 
 
+XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
 @app.get("/api/report/{report_id}")
-def report(report_id: str):
-    raise HTTPException(501, "reports come from the retrieval layer (src.r_report), which is on hold")
+def report(report_id: str) -> FileResponse:
+    if L.mock_mode():
+        raise HTTPException(404, "reports are made by src.r_report in real mode (API_MOCK=0)")
+    try:
+        from src import r_report
+    except ImportError as e:
+        raise HTTPException(503, f"src.r_report not available: {e}") from e
+    path = r_report.path_for(report_id)
+    if path is None or not path.exists():
+        raise HTTPException(404, f"report {report_id} not found")
+    return FileResponse(path, media_type=XLSX, filename=path.name)
 
 
 @app.get("/api/options", response_model=list[S.AdaptationOption])

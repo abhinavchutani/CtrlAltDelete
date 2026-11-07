@@ -23,7 +23,9 @@ export function useMapData() {
     return [parcelsLayer(geoParcels.data, farms.data, palette)];
   }, [layer, weather.data, geoFarms.data, geoParcels.data, farms.data, palette]);
 
-  const pending = [sim, farms, geoParcels, geoFarms, weather].some((q) => q.isLoading);
-  const error = [sim, farms, geoParcels, geoFarms, weather].find((q) => q.error)?.error ?? null;
+  // only the active layer's queries decide loading / error, so a broken layer doesn't flag the others
+  const active = layer === "weather" ? [weather] : layer === "farms" ? [sim, farms, geoFarms] : [sim, farms, geoParcels];
+  const pending = active.some((q) => q.isLoading);
+  const error = active.find((q) => q.error)?.error ?? null;
   return { layers, pending, error };
 }
