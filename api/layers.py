@@ -3,9 +3,8 @@
 Real mode (task #95):
     scenarios / scenario / simulate / farms / weather → api.prediction (adapts src.p_presets, p_engine, p_weather;
                                                          presets and frames precomputed by `make v2`)
-    hedge    → src.p_hedge.hedge(climate) -> Hedge                     (lane C, #91; 503 until built)
-    pathways → src.p_pathways.pathways(scenario_id) -> list[PathwayItem] (lane C, #91)
-    intent   → src.p_parse.parse(text) -> IntentOut                     (lane C, #90)
+    hedge / pathways → api.prediction (src.p_hedge.hedge, src.p_pathways.pathways; 503 while the model warms)
+    intent   → src.p_parse.parse(text, base) -> IntentOut               (lane C, #90)
 Each real function takes the same arguments as its api.mock twin and returns the api.schemas model (or a
 dict that validates). Real mode never falls back to fixtures for prediction: an unbuilt module is a 503.
 
@@ -29,8 +28,8 @@ REAL: dict[str, tuple[str, str]] = {
     "simulate": ("api.prediction", "simulate"),
     "farms": ("api.prediction", "farms"),
     "weather": ("api.prediction", "weather"),
-    "hedge": ("src.p_hedge", "hedge"),
-    "pathways": ("src.p_pathways", "pathways"),
+    "hedge": ("api.prediction", "hedge"),
+    "pathways": ("api.prediction", "pathways"),
     "intent": ("src.p_parse", "parse"),
     # retrieval (lane A), served from fixtures while on hold
     "ask": ("src.r_agent", "ask"),
@@ -67,7 +66,7 @@ def live() -> dict[str, bool]:
 
 def available() -> dict[str, bool]:
     """Which real modules import (shown in /api/health so everyone sees what's wired)."""
-    return {m: _imports(m) for m in sorted({m for m, _ in REAL.values()} | {"src.p_engine", "src.p_presets", "src.p_weather"})}
+    return {m: _imports(m) for m in sorted({m for m, _ in REAL.values()} | {"src.p_engine", "src.p_presets", "src.p_weather", "src.p_hedge", "src.p_pathways"})}
 
 
 def get(name: str) -> Callable:

@@ -1,7 +1,7 @@
 # One command per output (docs/CONTRACTS.md). Targets for pipelines not yet built print a note.
 PY := $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python)
 
-.PHONY: schema load a c d e pitch app all test snapshot v2 fixtures openapi api web v2-check
+.PHONY: schema load a c d e pitch app all test snapshot v2 fixtures openapi api web v2-check demo-check
 
 schema:            ## create the four shared tables in NAVIGATOR_DB
 	$(PY) -m src.lineage
@@ -55,3 +55,6 @@ web:               ## React app on :5173, proxies /api → :8000
 v2-check:          ## v2 tests + the web build/typecheck when web/ exists
 	$(PY) -m pytest -q tests/test_api_contract.py tests/test_v2_guard.py $$(ls tests/test_p_*.py tests/test_r_*.py 2>/dev/null)
 	@if [ -f web/package.json ]; then cd web && npm ci && npm run build && npx tsc --noEmit; fi
+
+demo-check:        ## walk the 6-step demo through the real API (needs snapshot + v2), one line per beat
+	$(PY) -m api.demo_check
