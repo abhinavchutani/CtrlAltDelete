@@ -9,7 +9,18 @@ import type {
 
 const forever = { staleTime: Infinity };
 
-export const useHealth = () => useQuery({ queryKey: ["health"], queryFn: () => get<Health>("/api/health") });
+export const useHealth = () =>
+  useQuery({
+    queryKey: ["health"],
+    queryFn: () => get<Health>("/api/health"),
+    refetchInterval: (q) => (q.state.data?.warming ? 2000 : false), // poll while the model warms up
+  });
+/** True when ask/options/board answer from fixtures (mock mode, or retrieval not wired yet). */
+export function useRetrievalIsFixture() {
+  const h = useHealth();
+  return !!h.data && (h.data.mock || !h.data.layers?.retrieval_live);
+}
+
 export const useScenarios = () => useQuery({ queryKey: ["scenarios"], queryFn: () => get<ScenarioPreset[]>("/api/scenarios"), ...forever });
 
 /** The scenario on screen: a preset, or a custom spec run through /api/simulate. */

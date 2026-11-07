@@ -1,4 +1,4 @@
-import { useActiveScenario, useBoard } from "../../api/hooks";
+import { useActiveScenario, useBoard, useRetrievalIsFixture } from "../../api/hooks";
 import { useStore } from "../../state/store";
 import { Panel, Status } from "../../components/Status";
 import { EvidenceChips } from "../ask/EvidenceChips";
@@ -10,9 +10,11 @@ export function DecisionBoard() {
   const board = useBoard(sim.data?.scenario_id);
   const { boardDialogRow, openDecision } = useStore();
   const rows = board.data ?? [];
+  const fixture = useRetrievalIsFixture();
   const open = rows.find((r) => r.row_id === boardDialogRow);
   return (
     <Panel title="Decision board">
+      {fixture ? <p className="small sev-notable">Fixture rows (illustrative): the retrieval layer is not wired into the API yet.</p> : null}
       <Status loading={board.isLoading} error={board.error} empty={!board.isLoading && !rows.length} />
       {rows.length ? (
         <table>

@@ -1,0 +1,60 @@
+"""Real mode (API_MOCK=0): the adapters over src/p_* (task #95). Unit tests run in CI; the end-to-end ones
+need `make v2` output (out/v2/) and skip without it."""
+import pytest
+from fastapi import HTTPException
+from fastapi.testclient import TestClient
+
+from api import geo
+from api import prediction as P
+from api import schemas as S
+
+HAVE_V2 = (P.V2 / "scenarios" / "index.json").exists() and (P.V2 / "weather").exists()
+
+
+@pytest.fixture()
+def real(monkeypatch):
+    monkeypatch.setenv("API_MOCK", "0")
+    monkeypatch.setenv("API_WARM", "0")
+    from api.main import app
+    return TestClient(app)
+
+
+def test_simplify_keeps_three_props_and_rounds():
+    g = {"features": [{"geometry": {"type": "Polygon", "coordinates": [[[22.1234567, 60.9876543], [22.2, 60.1]]]},
+                       "properties": {"parcel_id": "P1", "farm_id": "F1", "area_ha": 2.5, "soil": "clay"}}]}
+    f = geo.simplify(g)["features"][0]
+    assert f["properties"] == {"parcel_id": "P1", "farm_id": "F1", "area_ha": 2.5}
+    assert f["geometry"]["coordinates"][0][0] == [22.12346, 60.98765]
+
+
+def test_simulate_before_warm_is_503(monkeypatch):
+    monkeypatch.setitem(P._state, "ctx", None)
+    with pytest.raises(HTTPException) as e:
+        P.simulate(S.ScenarioSpec())
+    assert e.value.status_code == 503
+
+
+def test_ids_cannot_escape_out_v2():
+    assert P.scenario("../../etc/passwd") is None
+    with pytest.raises(HTTPException):
+        P.farms("../x", 2030)
+
+
+def test_unbuilt_prediction_module_is_503_not_fixture(real):
+    from api import layers
+    if not layers.available()["src.p_hedge"]:
+        assert real.get("/api/hedge").status_code == 503
+
+
+@pytest.mark.skipif(not HAVE_V2, reason="needs `make v2` output in out/v2/")
+def test_real_presets_weather_farms(real):
+    ids = [p["scenario_id"] for p in real.get("/api/scenarios").json()]
+    assert "current_plan_ssp245" in ids and len(ids) == 6
+    sim = S.SimResult(**real.get("/api/scenario/current_plan_ssp245").json())
+    assert sim.synthetic and sim.years[0] == 2026
+    assert real.get("/api/scenario/nope").status_code == 404
+    w = S.WeatherFrame(**real.get("/api/weather?climate=ssp585&year=2026").json())
+    assert w.climate == "historical" and len(w.cells) == 84  # SSP paths start in 2027
+    farms = real.get("/api/cube/current_plan_ssp245/farms?year=2030").json()
+    assert farms and all(f["year"] == 2030 for f in farms)
+    assert real.get("/api/health").json()["mock"] is False

@@ -7,16 +7,29 @@ Routes only validate and dispatch; the numbers come from the layers (api/layers.
 """
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
+from api import geo
 from api import layers as L
+from api import prediction as P
 from api import schemas as S
 from src import serve_db
 from src.db import env
 
-app = FastAPI(title="Navigator v2", version="0.1.0",
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    if not L.mock_mode() and env("API_WARM", "1") != "0":
+        P.warm_in_background()  # fits the v1 models once; /api/health shows warming meanwhile
+    yield
+
+
+app = FastAPI(title="Navigator v2", version="0.1.0", lifespan=lifespan,
               description="Synthetic data: not Apetit's real figures. Contract: api/schemas.py.")
+app.add_middleware(GZipMiddleware, minimum_size=2048)
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
                    allow_methods=["*"], allow_headers=["*"])
 
@@ -32,17 +45,17 @@ def _found(x, what: str):
 def health() -> S.Health:
     llm = any(env(k) for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY"))
     return S.Health(ok=True, mock=L.mock_mode(), serve_db=str(serve_db.serve_path()) if serve_db.exists() else None,
-                    llm=llm, warming=False, layers=L.available())
+                    llm=llm, warming=P.warming(), layers={**L.available(), "retrieval_live": L.RETRIEVAL_LIVE})
 
 
 @app.get("/api/geo/farms")
 def geo_farms() -> dict:
-    return L.mock.geo_farms()  # V2-3 (#95) serves the full registry from serve.duckdb
+    return L.mock.geo_farms() if L.mock_mode() else geo.farms()
 
 
 @app.get("/api/geo/parcels")
 def geo_parcels() -> dict:
-    return L.mock.geo_parcels()  # V2-3 (#95): simplified real polygons, gzip
+    return L.mock.geo_parcels() if L.mock_mode() else geo.parcels()
 
 
 # ── intent ─────────────────────────────────────────────────────────

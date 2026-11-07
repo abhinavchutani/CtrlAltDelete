@@ -1,4 +1,4 @@
-import { useAsk } from "../../api/hooks";
+import { useAsk, useRetrievalIsFixture } from "../../api/hooks";
 import type { ReportRef, Table } from "../../api/types";
 import { useStore } from "../../state/store";
 import { Panel, Status } from "../../components/Status";
@@ -11,8 +11,10 @@ export function AskPanel() {
   const question = useStore((s) => s.question);
   const ask = useAsk(question);
   const a = ask.data;
+  const fixture = useRetrievalIsFixture();
   return (
     <Panel title="Ask">
+      {fixture ? <p className="small sev-notable">Fixture rows (illustrative): the retrieval layer is not wired into the API yet.</p> : null}
       {question ? <p className="muted">Q: {question}</p> : <p className="muted">Ask about the past: deliveries, energy, farms, rules.</p>}
       <Status loading={ask.isLoading} error={ask.error} />
       {a ? (
