@@ -40,3 +40,4 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 | 2026-11-07 03:30 | #19 PR | C3 (G3) | — → € at risk per region × crop × scenario, 3 actions with €/t/owner | baseline ≈ €325k/yr expected; two-region pea hedge €37–67k/yr; irrigation €33–37k/yr |
 | 2026-11-07 03:15 | #74 | E offline answered | 20 → 22/34 | E18 +26.1 % / E19 −13.0 % from C delivery rows; final check on a clean checkout of main |
 | 2026-11-07 09:00 | #78 | E offline answered | 22 → 24/34 | E06 FLAG share 69.23 % and E21 2032 FLAG target 124,687 t from the FLAG rows in #77 |
+| 2026-11-07 10:30 | #80 PR | D1 dev, leave-one-out MAE log10 P / N | — (no submission) → 0.025 / 0.040 (zero credit at 0.15) | parcel index from soil-P, slope, catch crop, N surplus, drainage, winter water surplus; delivery decay; retention; 2 global scales |

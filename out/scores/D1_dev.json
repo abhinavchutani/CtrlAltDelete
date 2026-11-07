@@ -1,0 +1,11 @@
+{
+ "scale_p_kg_ha": 1.4484,
+ "scale_n_kg_ha": 9.0074,
+ "dev_loo_mae_log10": {
+  "p": 0.0247,
+  "n": 0.0401
+ },
+ "n_parcels": 2410,
+ "n_catchments": 41,
+ "method": "d_nature:parcel_index_v1"
+}
