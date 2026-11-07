@@ -1,8 +1,8 @@
 """Prediction layer (v2): ScenarioSpec → yields on one plausible weather path → cube + SimResult (task #84, V2-5).
 
     from src import p_engine as P
-    ctx = P.load_context()                      # once at API start-up (fits the v1 models, ~1 min)
-    sim, cube = P.simulate(ctx, {"climate": "ssp245", "horizon_end": 2040, "levers": []})
+    P.warm()                                    # once at API start-up (fits the v1 models, ~15 s)
+    sim = P.simulate({"climate": "ssp245", "horizon_end": 2040, "levers": []})   # warm context, SimResult dict
 
 * Weather: 2026 = the observed (historical) year; 2027…horizon = the pack's daily weather for the chosen SSP.
   That is **one plausible weather path**, labelled as such; risk odds come from the delta-method ensemble (c_ensemble).
@@ -63,15 +63,45 @@ class Ctx:
     stage: dict[str, pd.DataFrame] = field(default_factory=dict)   # climate → stage features on the path
     exposed: set[str] = field(default_factory=set)
     sowing_stage: dict[str, pd.DataFrame] = field(default_factory=dict)
+    base_stress: pd.DataFrame | None = None             # region × crop mean stress features, 1991–2020
 
 
-def _predict(ctx_e: E.Context, wx: pd.DataFrame, st: pd.DataFrame, years, pre_finish=None) -> pd.DataFrame:
+def _predict(ctx_e: E.Context, wx: pd.DataFrame, st: pd.DataFrame, years, pre_finish=None,
+             keep_features: bool = False) -> pd.DataFrame:
     X = E.scenario_features(ctx_e.con, ctx_e.mix, wx, st, years, ctx_e.static, ctx_e.lab, ctx_e.organic, ctx_e.med,
                             pre_finish)
     X = X.assign(yield_pred=M.predict_all(ctx_e.models, X).to_numpy())
     if X.yield_pred.isna().any():
         raise RuntimeError("p_engine: rows without a prediction")
-    return X[["parcel_id", "farm_id", "region", "crop", "year", "area_ha", "yield_pred"]]
+    return X if keep_features else X[["parcel_id", "farm_id", "region", "crop", "year", "area_ha", "yield_pred"]]
+
+
+STRESS_PREFIXES = ("st_", "hot_days_tmax_ge_27")
+
+
+def stress_means(X: pd.DataFrame, by: list[str]) -> pd.DataFrame:
+    cols = [c for c in X.columns if c.startswith(STRESS_PREFIXES)]
+    return X.groupby(by)[cols].mean()
+
+
+def drivers(models: dict, path: pd.DataFrame, base: pd.DataFrame) -> pd.DataFrame:
+    """Per region × crop × year: the stress feature whose ridge contribution vs the 1991–2020 baseline costs the most
+    yield (log scale → %), as in c_model.year_drivers. Positive drivers are ignored (a good year has no stress)."""
+    rows = []
+    for (region, crop, year), m_row in path.iterrows():
+        m = models.get(crop)
+        if m is None or (region, crop) not in base.index:
+            continue
+        b_row = base.loc[(region, crop)]
+        best, best_c = None, 0.0
+        for i, f in enumerate(m.features):
+            if f in m_row.index and f in b_row.index and pd.notna(m_row[f]) and pd.notna(b_row[f]):
+                c = m.ridge.coef_[i] * (m_row[f] - b_row[f]) / m.scaler.scale_[i]
+                if c < best_c:
+                    best, best_c = f, c
+        rows.append({"region": region, "crop": crop, "year": year, "driver": best,
+                     "driver_pct": round(float(100 * (np.exp(best_c) - 1)), 1) if best else 0.0})
+    return pd.DataFrame(rows)
 
 
 def load_context(path: Path | None = None) -> Ctx:
@@ -79,10 +109,12 @@ def load_context(path: Path | None = None) -> Ctx:
     e = E.context(con)
     wx_b = e.wx_d[e.wx_d.scenario == "baseline"]
     st_b = e.st_d[e.st_d.scenario == "baseline"].drop(columns="scenario")
-    base_parcel = _predict(e, wx_b, st_b, E.BASE_RANGE)
+    base_x = _predict(e, wx_b, st_b, E.BASE_RANGE, keep_features=True)
+    base_parcel = base_x[["parcel_id", "farm_id", "region", "crop", "year", "area_ha", "yield_pred"]]
     base_rc = (base_parcel.assign(t=base_parcel.area_ha * base_parcel.yield_pred)
                .groupby(["region", "crop", "year"]).t.sum().groupby(["region", "crop"]).mean().rename("contracted_t").reset_index())
-    return Ctx(con, e, C.prices(con), C.import_factor_t(con), base_parcel, base_rc, exposed=C.exposed_parcels(e))
+    return Ctx(con, e, C.prices(con), C.import_factor_t(con), base_parcel, base_rc, exposed=C.exposed_parcels(e),
+               base_stress=stress_means(base_x, ["region", "crop"]))
 
 
 def _path_stage(ctx: Ctx, climate: str, crops: dict | None = None) -> pd.DataFrame:
@@ -154,7 +186,9 @@ def run_spec(ctx: Ctx, spec: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
     levers = spec["levers"]
     sow = any(lv["type"] == "earlier_sowing" for lv in levers)
     st = _path_stage(ctx, spec["climate"], C.earlier_sowing_crops() if sow else None)
-    par = _predict(ctx.e, _path_weather(ctx, spec["climate"]), st, years, _pre_finish(ctx, levers))
+    px = _predict(ctx.e, _path_weather(ctx, spec["climate"]), st, years, _pre_finish(ctx, levers), keep_features=True)
+    drv = drivers(ctx.e.models, stress_means(px, ["region", "crop", "year"]), ctx.base_stress)
+    par = px[["parcel_id", "farm_id", "region", "crop", "year", "area_ha", "yield_pred"]].copy()
     k = _volume_factors(ctx, levers)
     par = par.merge(k, on=["region", "crop"], how="left").fillna({"k": 1.0})
     par["t"] = par.area_ha * par.yield_pred * par.k
@@ -171,7 +205,9 @@ def run_spec(ctx: Ctx, spec: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
     farm = par.assign(t0=par.area_ha * par.yield_pred).groupby(["farm_id", "year"]).t0.sum().reset_index().join(fb, on="farm_id")
     farm["change_pct"] = 100 * (farm.t0 / farm.base_t - 1)
     farm["risk"] = np.select([farm.change_pct <= -20, farm.change_pct <= -10], ["bad", "watch"], "ok")
+    loss = loss.merge(drv, on=["region", "crop", "year"], how="left")
     cols = ["region", "crop", "year", "t", "contracted_t", "change_pct", "bad_year", "shortfall_t", "eur_loss", "eur_band",
+            "driver", "driver_pct",
             "import_tco2e"]
     return loss[cols].sort_values(["region", "crop", "year"]).reset_index(drop=True), farm[["farm_id", "year", "change_pct", "risk"]]
 
@@ -208,33 +244,78 @@ def meters(spec: dict, cube: pd.DataFrame, plan: pd.DataFrame | None) -> dict:
             "confidence": level, "confidence_why": why}
 
 
-def sim_result(sid: str, spec: dict, cube: pd.DataFrame, plan: pd.DataFrame | None) -> dict:
+def sim_result(sid: str, spec: dict, cube: pd.DataFrame, plan: pd.DataFrame | None,
+               grid: dict[str, pd.DataFrame] | None = None) -> dict:
+    from src import p_alerts as A, p_compare as PC
     regions = [{"region": r.region, "crop": r.crop, "year": int(r.year), "change_vs_baseline_pct": float(round(r.change_pct)),
                 "eur_at_risk": r.eur_band, "bad_year": bool(r.bad_year)} for r in cube.itertuples(index=False)]
+    suggest = PC.suggester(cube, grid) if grid else None
     return {"scenario_id": sid, "spec": spec, "years": list(range(S.FIRST_YEAR, spec["horizon_end"] + 1)),
-            "regions": regions, "farms_url": f"/api/cube/{sid}/farms", "alerts": [],      # alerts: task #89
-            "meters": meters(spec, cube, plan), "better": None, "synthetic": True}
+            "regions": regions, "farms_url": f"/api/cube/{sid}/farms", "alerts": A.alerts(sid, spec, cube, suggest),
+            "meters": meters(spec, cube, plan), "better": PC.better(spec, cube, grid) if grid else None, "synthetic": True}
 
 
-def simulate(ctx: Ctx, spec: dict, sid: str | None = None, plan: pd.DataFrame | None = None) -> tuple[dict, dict]:
+def run_sim(ctx: Ctx, spec: dict, sid: str | None = None, plan: pd.DataFrame | None = None,
+            grid: dict[str, pd.DataFrame] | None = None) -> tuple[dict, dict]:
     """(SimResult dict, {'regions': cube, 'farms': farm cube, 'problems': [...], 'seconds': s})."""
     t0 = time.time()
     clean, problems = S.validate(spec)
     cube, farms = run_spec(ctx, clean)
     if plan is None and clean["levers"]:
         plan, _ = run_spec(ctx, {**clean, "levers": []})
-    sim = sim_result(sid or S.scenario_id(clean), clean, cube, plan)
+    sim = sim_result(sid or S.scenario_id(clean), clean, cube, plan, grid)
     return sim, {"regions": cube, "farms": farms, "problems": problems, "seconds": round(time.time() - t0, 1)}
+
+
+# ── API entry points (api/layers.py) ─────────────────────────────────
+_CTX: Ctx | None = None
+_GRIDS: dict[tuple[str, int], dict] = {}
+_PLANS: dict[tuple[str, int], pd.DataFrame] = {}
+
+
+def warm() -> Ctx:
+    """The prediction context, loaded once per process (API start-up)."""
+    global _CTX
+    if _CTX is None:
+        _CTX = load_context()
+    return _CTX
+
+
+def grid_for(ctx: Ctx, climate: str, horizon_end: int) -> dict[str, pd.DataFrame]:
+    from src import p_compare as PC
+    key = (climate, horizon_end)
+    if key not in _GRIDS:
+        _GRIDS[key] = PC.run_grid(lambda sp: run_spec(ctx, sp), climate, horizon_end)
+    return _GRIDS[key]
+
+
+def plan_for(ctx: Ctx, climate: str, horizon_end: int) -> pd.DataFrame:
+    key = (climate, horizon_end)
+    if key not in _PLANS:
+        _PLANS[key] = run_spec(ctx, {"climate": climate, "horizon_end": horizon_end, "levers": [], "label": None})[0]
+    return _PLANS[key]
+
+
+def simulate(spec) -> dict:
+    """POST /api/simulate: a ScenarioSpec (model or dict) → SimResult dict, on the warm context."""
+    spec = spec.model_dump() if hasattr(spec, "model_dump") else dict(spec)
+    ctx = warm()
+    clean, _ = S.validate(spec)
+    sim, _ = run_sim(ctx, clean, plan=plan_for(ctx, clean["climate"], clean["horizon_end"]),
+                     grid=grid_for(ctx, clean["climate"], clean["horizon_end"]))
+    return sim
 
 
 if __name__ == "__main__":
     import json
     import sys
     t = time.time()
-    ctx = load_context()
+    ctx = warm()
     print(f"context {time.time() - t:.1f}s")
     climate = sys.argv[1] if len(sys.argv) > 1 else "ssp245"
-    sim, cube = simulate(ctx, {"climate": climate, "horizon_end": 2040, "levers": []}, sid=f"current_plan_{climate}")
-    r = cube["regions"]
-    print(f"simulate {cube['seconds']}s;", json.dumps(sim["meters"]))
-    print(r[(r.crop == "pea") & (r.year <= 2030)][["region", "year", "t", "change_pct", "bad_year", "eur_band"]].round(1).to_string(index=False))
+    t = time.time()
+    sim = simulate({"climate": climate, "horizon_end": 2060 if climate == "ssp585" else 2040, "levers": []})
+    print(f"simulate (incl. grid) {time.time() - t:.1f}s; {len(sim['alerts'])} alerts;", json.dumps(sim["meters"]))
+    for a in sim["alerts"]:
+        print(f"  {a['year']} {a['severity']:8} {a['hazard']} {a['title']:45} {a['eur_at_risk']:10} lever={a['suggested_lever']}")
+    print("better:", json.dumps(sim["better"], ensure_ascii=False))

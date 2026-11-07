@@ -38,7 +38,8 @@ def build(ctx: P.Ctx | None = None, out: Path = OUT) -> dict[str, dict]:
     for sid in sorted(PRESETS, key=lambda s: not s.startswith("current_plan")):   # plans first, for the meters
         spec = PRESETS[sid]
         t = time.time()
-        sim, cube = P.simulate(ctx, spec, sid=sid, plan=plans.get((spec["climate"], spec["horizon_end"])))
+        sim, cube = P.run_sim(ctx, spec, sid=sid, plan=plans.get((spec["climate"], spec["horizon_end"])),
+                              grid=P.grid_for(ctx, spec["climate"], spec["horizon_end"]))
         if not spec["levers"]:
             plans[(spec["climate"], spec["horizon_end"])] = cube["regions"]
         (out / "scenarios" / f"{sid}.json").write_text(json.dumps(sim, indent=1, ensure_ascii=False))
@@ -55,9 +56,27 @@ def get_scenario(sid: str, out: Path = OUT) -> dict:
     return json.loads((out / "scenarios" / f"{sid}.json").read_text())
 
 
+# ── API entry points (api/layers.py) ─────────────────────────────────
+def list_presets(out: Path = OUT) -> list[dict]:
+    """GET /api/scenarios: [{scenario_id, label, spec}] (from out/v2, else the PRESETS table)."""
+    f = out / "scenarios" / "index.json"
+    if f.exists():
+        return json.loads(f.read_text())
+    return [{"scenario_id": sid, "label": s["label"], "spec": {k: s[k] for k in ("climate", "horizon_end", "levers", "label")}}
+            for sid, s in PRESETS.items()]
+
+
+def load(scenario_id: str, out: Path = OUT) -> dict | None:
+    """GET /api/scenario/{id}: the precomputed SimResult, or None (→ 404)."""
+    if "/" in scenario_id or ".." in scenario_id:
+        return None
+    f = out / "scenarios" / f"{scenario_id}.json"
+    return json.loads(f.read_text()) if f.exists() else None
+
+
 def main() -> None:
     t = time.time()
-    ctx = P.load_context()
+    ctx = P.warm()
     print(f"context {time.time() - t:.1f}s")
     for sid, r in build(ctx).items():
         m = r["meters"]

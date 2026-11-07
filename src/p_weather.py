@@ -168,6 +168,14 @@ def get_frame(climate: str, year: int, out_dir: Path | str | None = None) -> dic
     return json.loads((d / name).read_text())
 
 
+def frame(climate: str, year: int) -> dict | None:
+    """GET /api/weather (api/layers.py): the precomputed frame, or None when it does not exist (→ 404)."""
+    try:
+        return get_frame(climate, year)
+    except (FileNotFoundError, ValueError):
+        return None
+
+
 def drought_check(table: pd.DataFrame, year: int = 2026) -> dict[str, tuple[float, float]]:
     """Per region: (mean drought_index in `year`, mean over historical 1991..year-1)."""
     h = table[table["climate"] == "historical"]

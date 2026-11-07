@@ -12,7 +12,7 @@ def ctx():
 
 
 def test_current_plan_is_a_valid_simresult_and_shows_the_2026_split(ctx):
-    sim, cube = P.simulate(ctx, {"climate": "ssp245", "horizon_end": 2031, "levers": []}, sid="current_plan_ssp245")
+    sim, cube = P.run_sim(ctx, {"climate": "ssp245", "horizon_end": 2031, "levers": []}, sid="current_plan_ssp245")
     assert sim["years"] == list(range(2026, 2032)) and sim["synthetic"] is True
     assert {"eur_at_risk_per_year", "vs_current_plan", "co2e_direction", "confidence", "confidence_why"} <= set(sim["meters"])
     r = cube["regions"].set_index(["region", "crop", "year"])
@@ -23,7 +23,7 @@ def test_current_plan_is_a_valid_simresult_and_shows_the_2026_split(ctx):
 
 
 def test_region_split_keeps_total_contracted_pea_volume(ctx):
-    _, cube = P.simulate(ctx, {"climate": "ssp245", "horizon_end": 2031,
+    _, cube = P.run_sim(ctx, {"climate": "ssp245", "horizon_end": 2031,
                                "levers": [{"type": "region_split", "fi_share": 0.7}]})
     r = cube["regions"]
     pea = r[(r.crop == "pea") & (r.year == 2027)].set_index("region").contracted_t
@@ -32,5 +32,5 @@ def test_region_split_keeps_total_contracted_pea_volume(ctx):
 
 
 def test_heat_tolerant_variety_lowers_low_confidence(ctx):
-    sim, _ = P.simulate(ctx, {"climate": "ssp585", "horizon_end": 2031, "levers": [{"type": "heat_tolerant_variety"}]})
+    sim, _ = P.run_sim(ctx, {"climate": "ssp585", "horizon_end": 2031, "levers": [{"type": "heat_tolerant_variety"}]})
     assert sim["meters"]["confidence"] == "low" and any("assumption" in w for w in sim["meters"]["confidence_why"])
