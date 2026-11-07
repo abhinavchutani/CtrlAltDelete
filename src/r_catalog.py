@@ -39,6 +39,44 @@ SYNONYMS = [["pea", "ärt", "ärter", "frysärt"], ["delivery", "deliveries", "l
 STOP = {"a", "an", "and", "by", "for", "from", "how", "id", "in", "is", "of", "on", "per", "the", "to", "what",
         "which", "with", "each", "all"}
 
+# Faceted tags (docs/DATA_INGESTION_AND_RETRIEVAL.md §4): controlled values, derived from the table name and its
+# columns, never typed by an LLM. Domain → GHG scope and owner follow the doc's examples (owners are roles).
+DOMAINS = (("energy", r"energy|heat_supplier"), ("fuels", r"fuel"), ("refrigerants", r"refrigerant"),
+           ("purchases", r"erp|supplier_pcf|suppliers|materials"), ("logistics", r"shipment|warehous"),
+           ("waste", r"waste"), ("water", r"water"), ("travel", r"travel"), ("commuting", r"commut"),
+           ("farming", r"farm|parcel|foodhills|calculator|crop"), ("climate", r"weather|climate"),
+           ("nature", r"catchment"), ("certificates", r"goo"), ("people", r"headcount"),
+           ("sales", r"sales"), ("investments", r"capex"), ("factors", r"emission_factor"))
+GHG = {"energy": ["scope:2-lb", "scope:2-mb"], "fuels": ["scope:1"], "refrigerants": ["scope:1"],
+       "purchases": ["scope3:cat1"], "logistics": ["scope3:cat4", "scope3:cat9"], "waste": ["scope3:cat5"],
+       "travel": ["scope3:cat6"], "commuting": ["scope3:cat7"], "farming": ["flag", "scope3:cat1"],
+       "certificates": ["scope:2-mb"]}
+OWNERS = {"energy": "owner:energy-manager", "fuels": "owner:energy-manager", "refrigerants": "owner:site-maintenance",
+          "purchases": "owner:sourcing", "logistics": "owner:supply-chain", "waste": "owner:site-environment",
+          "water": "owner:site-environment", "travel": "owner:hr", "commuting": "owner:hr",
+          "farming": "owner:agronomy", "nature": "owner:agronomy", "certificates": "owner:energy-manager"}
+ENTITY_COLS = {"site_id": "site", "supplier_id": "supplier", "material_id": "material", "farm_id": "farm",
+               "odlar_id": "farm", "parcel_id": "parcel", "catchment_id": "catchment", "ef_id": "ef"}
+
+
+def facets(table: str, columns: list[str], years: list[int] | None) -> dict[str, list[str]]:
+    """Controlled facet values for one table card: domain, entity, time, ghg, geo, owner."""
+    name = table.removeprefix("raw_").removeprefix("clean_")
+    domains = [d for d, pat in DOMAINS if re.search(pat, name)][:1]
+    out = {"domain": domains,
+           "entity": sorted({ENTITY_COLS[c] for c in columns if c in ENTITY_COLS}),
+           "time": [f"year:{y}" for y in (years or [])],
+           "ghg": sorted({g for d in domains for g in GHG.get(d, [])}),
+           "geo": ["SE", "SE_SKANE"] if "foodhills" in name else (["FI", "FI_SW"] if "farm_survey" in name else []),
+           "owner": [OWNERS[d] for d in domains if d in OWNERS]}
+    return {k: v for k, v in out.items() if v}
+
+
+def matches(card: dict, want: dict[str, str] | None) -> bool:
+    """True when the card carries every requested facet value (e.g. {"domain": "energy", "time": "year:2024"})."""
+    f = card.get("facets") or {}
+    return all(v in f.get(k, []) for k, v in (want or {}).items())
+
 
 # ── data dictionary ───────────────────────────────────────────────────
 def _table_for(path: str) -> str:
@@ -130,6 +168,8 @@ def build_cards(con: duckdb.DuckDBPyConnection, dictionary_path: Path | str | No
             "key_columns": [c for c in cols if c in ID_EXTRA or c.endswith("_id")],
             "tags": TAGS.get(table, []),
         })
+        yrs = cards[-1]["years"]
+        cards[-1]["facets"] = facets(table, list(cols), list(range(yrs[0], yrs[-1] + 1)) if yrs else None)
     return cards
 
 
@@ -181,7 +221,8 @@ def _synonyms(t: str) -> list[str]:
 
 def _doc(card: dict) -> dict[str, float]:
     tf: dict[str, float] = {}
-    parts = [(card["table"], 3.0), (card.get("description"), 1.0), (" ".join(card.get("tags") or []), 1.0)]
+    parts = [(card["table"], 3.0), (card.get("description"), 1.0), (" ".join(card.get("tags") or []), 1.0),
+             (" ".join(v for vs in (card.get("facets") or {}).values() for v in vs if not v.startswith("year:")), 1.0)]
     for c in card["columns"]:
         parts += [(c["name"], 2.0), (c.get("description"), 1.0)]
     for text, w in parts:
@@ -190,8 +231,10 @@ def _doc(card: dict) -> dict[str, float]:
     return tf
 
 
-def catalog_search(query: str, k: int = 5, cards: list[dict] | None = None) -> dict:
-    cards = cards if cards is not None else load_cards()
+def catalog_search(query: str, k: int = 5, cards: list[dict] | None = None,
+                   facet: dict[str, str] | None = None) -> dict:
+    """BM25 over the cards; `facet` keeps only cards carrying those facet values (faceted search, doc §8.1)."""
+    cards = [c for c in (cards if cards is not None else load_cards()) if matches(c, facet)]
     docs = [_doc(c) for c in cards]
     n, avg = len(docs), (sum(sum(d.values()) for d in docs) / len(docs)) if docs else 1.0
     q = [_synonyms(t) for t in dict.fromkeys(tokens(query))]
@@ -206,11 +249,12 @@ def catalog_search(query: str, k: int = 5, cards: list[dict] | None = None) -> d
 
         # each query word scores its best match; a synonym counts half
         score = sum(max([bm25(g[0])] + [0.5 * bm25(s) for s in g[1:]]) for g in q)
-        if score > 0:
+        if score > 0 or facet:   # a facet-only query lists every card that carries the facet
             scored.append((-round(score, 6), card["table"], card))
     hits = [{"table": c["table"], "description": c.get("description"),
              "columns": [x["name"] for x in c["columns"]], "years": c.get("years"),
-             "source_file": c.get("source_file"), "score": -s} for s, _, c in sorted(scored)[:k]]
+             "source_file": c.get("source_file"), "facets": c.get("facets", {}), "score": -s}
+            for s, _, c in sorted(scored)[:k]]
     return {"query": query, "tables": hits}
 
 
