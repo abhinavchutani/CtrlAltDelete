@@ -1,19 +1,17 @@
 """Which function answers each endpoint: the fixtures (API_MOCK=1) or the real layer (API_MOCK=0).
 
-This table IS the interface the Prediction lane implements. Each real function takes the same
-arguments as its api.mock twin and returns the api.schemas model (or a dict that validates):
+Real mode (task #95):
+    scenarios / scenario / simulate / farms / weather → api.prediction (adapts src.p_presets, p_engine, p_weather;
+                                                         presets and frames precomputed by `make v2`)
+    hedge    → src.p_hedge.hedge(climate) -> Hedge                     (lane C, #91; 503 until built)
+    pathways → src.p_pathways.pathways(scenario_id) -> list[PathwayItem] (lane C, #91)
+    intent   → src.p_parse.parse(text) -> IntentOut                     (lane C, #90)
+Each real function takes the same arguments as its api.mock twin and returns the api.schemas model (or a
+dict that validates). Real mode never falls back to fixtures for prediction: an unbuilt module is a 503.
 
-    src.p_presets.list_presets() -> list[ScenarioPreset]
-    src.p_presets.load(scenario_id) -> SimResult | None
-    src.p_engine.simulate(spec: ScenarioSpec) -> SimResult
-    src.p_cube.farms(scenario_id, year: int | None) -> list[FarmYear]
-    src.p_weather.frame(climate, year) -> WeatherFrame
-    src.p_hedge.hedge(climate) -> Hedge
-    src.p_pathways.pathways(scenario_id) -> list[PathwayItem]
-    src.p_parse.parse(text) -> IntentOut
-
-Retrieval is ON HOLD (humans, 7 Nov): ask / options / board / decide / report always use the
-fixtures, whatever API_MOCK says, until a human re-enables them (RETRIEVAL_LIVE below).
+Retrieval is back (human, 7 Nov 13:10): ask / options / board / decide use src.r_* in real mode as soon as
+their module imports; an unbuilt one (r_options #87, r_board #94) keeps serving its fixture, and /api/health
+reports which ones are live (`live:<name>`) so the UI labels fixture rows.
 """
 from __future__ import annotations
 
@@ -26,11 +24,11 @@ from api import mock
 from src.db import env
 
 REAL: dict[str, tuple[str, str]] = {
-    "scenarios": ("src.p_presets", "list_presets"),
-    "scenario": ("src.p_presets", "load"),
-    "simulate": ("src.p_engine", "simulate"),
-    "farms": ("src.p_cube", "farms"),
-    "weather": ("src.p_weather", "frame"),
+    "scenarios": ("api.prediction", "scenarios"),
+    "scenario": ("api.prediction", "scenario"),
+    "simulate": ("api.prediction", "simulate"),
+    "farms": ("api.prediction", "farms"),
+    "weather": ("api.prediction", "weather"),
     "hedge": ("src.p_hedge", "hedge"),
     "pathways": ("src.p_pathways", "pathways"),
     "intent": ("src.p_parse", "parse"),
@@ -41,27 +39,35 @@ REAL: dict[str, tuple[str, str]] = {
     "decide": ("src.r_board", "decide"),
 }
 RETRIEVAL = {"ask", "options", "board", "decide"}
-RETRIEVAL_LIVE = False  # flip only when a human says retrieval is back
+RETRIEVAL_LIVE = True  # retrieval back on (human, 7 Nov); set False to force fixtures
 
 
 def mock_mode() -> bool:
     return env("API_MOCK", "0").strip().lower() in ("1", "true", "yes")
 
 
+def _imports(mod: str) -> bool:
+    try:
+        importlib.import_module(mod)
+        return True
+    except ImportError:
+        return False
+
+
 def uses_mock(name: str) -> bool:
-    return mock_mode() or (name in RETRIEVAL and not RETRIEVAL_LIVE)
+    if mock_mode():
+        return True
+    return name in RETRIEVAL and not (RETRIEVAL_LIVE and _imports(REAL[name][0]))
+
+
+def live() -> dict[str, bool]:
+    """Per retrieval endpoint: True when real mode answers it from src.r_* (else its fixture)."""
+    return {f"live:{n}": not uses_mock(n) for n in sorted(RETRIEVAL)}
 
 
 def available() -> dict[str, bool]:
     """Which real modules import (shown in /api/health so everyone sees what's wired)."""
-    out = {}
-    for mod in sorted({m for m, _ in REAL.values()}):
-        try:
-            importlib.import_module(mod)
-            out[mod] = True
-        except ImportError:
-            out[mod] = False
-    return out
+    return {m: _imports(m) for m in sorted({m for m, _ in REAL.values()} | {"src.p_engine", "src.p_presets", "src.p_weather"})}
 
 
 def get(name: str) -> Callable:

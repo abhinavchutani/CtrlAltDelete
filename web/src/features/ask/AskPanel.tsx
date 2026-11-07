@@ -1,4 +1,4 @@
-import { useAsk } from "../../api/hooks";
+import { useAsk, useRetrievalIsFixture } from "../../api/hooks";
 import type { ReportRef, Table } from "../../api/types";
 import { useStore } from "../../state/store";
 import { Panel, Status } from "../../components/Status";
@@ -6,13 +6,15 @@ import { EvidenceChips } from "./EvidenceChips";
 import { ReportButton } from "./ReportButton";
 import { ResultTable } from "./ResultTable";
 
-/** Retrieval answers (on fixtures while retrieval is on hold). */
+/** Retrieval answers (src.r_agent in real mode). */
 export function AskPanel() {
   const question = useStore((s) => s.question);
   const ask = useAsk(question);
   const a = ask.data;
+  const fixture = useRetrievalIsFixture("ask");
   return (
     <Panel title="Ask">
+      {fixture ? <p className="small sev-notable">Fixture rows (illustrative): this retrieval module is not built yet.</p> : null}
       {question ? <p className="muted">Q: {question}</p> : <p className="muted">Ask about the past: deliveries, energy, farms, rules.</p>}
       <Status loading={ask.isLoading} error={ask.error} />
       {a ? (

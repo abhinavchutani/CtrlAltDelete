@@ -7,6 +7,7 @@ export function SyntheticBanner() {
     <div className="banner" role="note">
       Synthetic data: not Apetit's real figures, not facts about real farms. Futures are one plausible weather path.
       {health.data?.mock ? " · MOCK fixtures (API_MOCK=1)" : ""}
+      {health.data?.warming ? " · model warming up: live what-ifs in a few seconds" : ""}
       {health.error ? " · API not reachable" : ""}
     </div>
   );

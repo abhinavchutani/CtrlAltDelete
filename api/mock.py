@@ -123,7 +123,7 @@ def is_simulate(text: str) -> bool:
     return any(w in t for w in SIMULATE_WORDS) and "deliver" not in t
 
 
-def intent(text: str) -> S.IntentOut:
+def intent(text: str, base: dict | None = None) -> S.IntentOut:
     fx = load("intent")
     base = S.IntentOut(**fx["simulate" if is_simulate(text) else "ask"])
     return base.model_copy(update={"text": text})

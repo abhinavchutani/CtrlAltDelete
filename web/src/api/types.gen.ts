@@ -650,6 +650,7 @@ export interface components {
         IntentIn: {
             /** Text */
             text: string;
+            base?: components["schemas"]["ScenarioSpec"] | null;
         };
         /** IntentOut */
         IntentOut: {
