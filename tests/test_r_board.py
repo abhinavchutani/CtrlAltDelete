@@ -7,6 +7,8 @@ from pydantic import ValidationError
 from api.schemas import BoardRow, Decision
 from src import r_board as B
 
+SE, FI = "demo:SE_SKANE:pea:H1", "demo:FI_SW:pea:H2"
+
 ALERTS = [
     {"id": "a1", "year": 2026, "region": "SE_SKANE", "crop": "pea", "severity": "critical", "kind": "drought_flowering",
      "hazard": "H1", "title": "Pea flowering drought, SE_SKANE", "why": "drought index 0.67 vs 0.49 normal",
@@ -35,7 +37,7 @@ def test_rows_group_recurring_risks_critical_first(log):
     rows = B.board("demo")
     assert all(isinstance(r, BoardRow) for r in rows)
     assert [(r.region, r.hazard) for r in rows] == [("SE_SKANE", "H1"), ("FI_SW", "H2")]   # a4 lacks crop/hazard
-    assert rows[0].row_id == "demo-1" and "2026" in rows[0].risk and "2 alerts" in rows[0].trigger
+    assert rows[0].row_id == SE and "2026" in rows[0].risk and "2 alerts" in rows[0].trigger
 
 
 def test_suggested_lever_option_comes_first_and_kb_evidence_is_attached(log):
@@ -55,28 +57,48 @@ def test_unknown_scenario_is_empty(log):
 
 
 def test_decision_round_trips_and_survives_a_restart(log):
-    out = B.decide("demo-1", Decision(status="approved", decided_by="Anna Agronomist", reason="robust under all SSPs"))
+    out = B.decide(SE, Decision(status="approved", decided_by="Anna Agronomist", reason="robust under all SSPs"))
     assert out.status == "approved" and out.decided_by == "Anna Agronomist" and out.decided_at
     # a "restart": read the board again from the log file only
     again = {r.row_id: r for r in B.board("demo")}
-    assert again["demo-1"].status == "approved" and again["demo-2"].status == "pending"
+    assert again[SE].status == "approved" and again[FI].status == "pending"
     entry = json.loads(log.read_text().splitlines()[0])
     assert entry["decided_by"] == "Anna Agronomist" and entry["option_ids"][0] == "A07"
 
 
 def test_latest_decision_wins(log):
-    B.decide("demo-2", Decision(status="approved", decided_by="A", reason="ok"))
-    B.decide("demo-2", Decision(status="rejected", decided_by="B", reason="lead time too long"))
-    assert {r.row_id: r for r in B.board("demo")}["demo-2"].status == "rejected"
+    B.decide(FI, Decision(status="approved", decided_by="A", reason="ok"))
+    B.decide(FI, Decision(status="rejected", decided_by="B", reason="lead time too long"))
+    assert {r.row_id: r for r in B.board("demo")}[FI].status == "rejected"
 
 
 def test_decision_without_a_name_is_refused(log):
     with pytest.raises(ValidationError):
         Decision(status="approved", decided_by="", reason="x")           # the contract refuses an empty name
     with pytest.raises(ValueError):
-        B.decide("demo-1", Decision.model_construct(status="approved", decided_by="   ", reason="x"))
+        B.decide(SE, Decision.model_construct(status="approved", decided_by="   ", reason="x"))
     assert not log.exists()                                             # nothing logged
 
 
 def test_unknown_row_is_none(log):
     assert B.decide("demo-99", Decision(status="approved", decided_by="A", reason="x")) is None
+
+
+def test_approval_stays_on_its_risk_when_the_ranking_changes(log, monkeypatch):
+    B.decide(SE, Decision(status="approved", decided_by="Anna", reason="ok"))
+    assert [r.row_id for r in B.board("demo")] == [SE, FI]
+    # the FI heat risk turns critical and worse, so it now ranks first
+    worse = [a | {"severity": "critical", "eur_at_risk": "> €1M"} if a["id"] == "a3" else a for a in ALERTS]
+    monkeypatch.setattr(B, "_alerts", lambda sid: worse if sid == "demo" else [])
+    rows = B.board("demo")
+    assert [r.row_id for r in rows] == [FI, SE]
+    assert {r.row_id: r.status for r in rows} == {FI: "pending", SE: "approved"}
+
+
+def test_old_positional_or_mismatched_entries_apply_to_nothing(log):
+    old = {"row_id": "demo-1", "scenario_id": "demo", "status": "approved", "decided_by": "X", "reason": "r"}
+    forged = {"row_id": SE, "scenario_id": "demo", "region": "FI_SW", "crop": "pea", "hazard": "H2",
+              "status": "rejected", "decided_by": "Y", "reason": "r"}
+    log.write_text(json.dumps(old) + "\n" + json.dumps(forged) + "\n")
+    assert all(r.status == "pending" for r in B.board("demo"))
+    assert B.decide("demo-1", Decision(status="approved", decided_by="Anna", reason="x")) is None   # → 404

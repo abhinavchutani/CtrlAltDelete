@@ -82,9 +82,20 @@ def pick_options(hazard: str, crop: str, suggested: dict | None, timed: set[str]
                                        key[o.option_id]))[:TOP_OPTIONS]
 
 
+def row_id(scenario_id: str, region: str, crop: str, hazard: str) -> str:
+    """Stable id: the risk itself (scenario:region:crop:hazard), never its position, so a logged decision can't
+    move to another risk when the ranking changes (#122)."""
+    return f"{scenario_id}:{region}:{crop}:{hazard}"
+
+
+def _risk_key(x) -> tuple:
+    get = x.get if isinstance(x, dict) else lambda k: getattr(x, k, None)
+    return get("scenario_id"), get("region"), get("crop"), get("hazard")
+
+
 def build_rows(scenario_id: str, alerts: list[dict], pathways: list[dict]) -> list[BoardRow]:
     rows = []
-    for i, r in enumerate(group_risks(alerts), start=1):
+    for r in group_risks(alerts):
         w = r["worst"]
         timed = {p["option_id"] for p in pathways
                  if p["crop"] == r["crop"] and p["region"] == r["region"] and p.get("decide_by")}
@@ -103,7 +114,7 @@ def build_rows(scenario_id: str, alerts: list[dict], pathways: list[dict]) -> li
                       "label": f"kb/adaptation_options.csv · {o.option_id} (not yet reviewed by an agronomist)"}
                      for o in opts]
         rows.append(BoardRow(
-            row_id=f"{scenario_id}-{i}", scenario_id=scenario_id,
+            row_id=row_id(scenario_id, r["region"], r["crop"], r["hazard"]), scenario_id=scenario_id,
             risk=f"{r['crop'].replace('_', ' ').capitalize()} {HAZARD_RISK[r['hazard']]}, {r['region']}"
                  f" (first {years[0]}{', critical' if r['critical'] else ''})",
             crop=r["crop"], region=r["region"], hazard=r["hazard"], eur_at_risk=w["eur_at_risk"], eur_tail=None,
@@ -128,9 +139,17 @@ def read_decisions(path: Path | None = None) -> dict[str, dict]:
 
 
 def apply_decisions(rows: list[BoardRow], path: Path | None = None) -> list[BoardRow]:
+    """Apply a logged decision only when its stored risk (scenario, region, crop, hazard) is this row's risk.
+    Entries from before #122 (positional ids like 'scenario-1', no risk key) never match, so they apply to nothing."""
     dec = read_decisions(path)
-    return [r.model_copy(update={k: dec[r.row_id][k] for k in ("status", "decided_by", "decided_at", "reason", "action")
-                                 if dec[r.row_id].get(k) is not None}) if r.row_id in dec else r for r in rows]
+    out = []
+    for r in rows:
+        d = dec.get(r.row_id)
+        if d is not None and _risk_key(d) == _risk_key(r):
+            r = r.model_copy(update={k: d[k] for k in ("status", "decided_by", "decided_at", "reason", "action")
+                                     if d.get(k) is not None})
+        out.append(r)
+    return out
 
 
 # ── API entry points (api/layers.py) ─────────────────────────────────
@@ -145,11 +164,12 @@ def decide(row_id: str, d: Decision, path: Path | None = None) -> BoardRow | Non
     """POST /api/board/{row_id}/decision: log the human's decision and return the updated row (None → 404)."""
     if not d.decided_by or not d.decided_by.strip():
         raise ValueError("decided_by is required: a person types their name; code never fills it")
-    scenario_id = row_id.rsplit("-", 1)[0]
+    scenario_id = row_id.rsplit(":", 3)[0]
     row = next((r for r in board(scenario_id) if r.row_id == row_id), None)
     if row is None:
         return None
-    entry = {"row_id": row_id, "scenario_id": scenario_id, "status": d.status, "decided_by": d.decided_by.strip(),
+    entry = {"row_id": row_id, "scenario_id": scenario_id, "region": row.region, "crop": row.crop,
+             "hazard": row.hazard, "status": d.status, "decided_by": d.decided_by.strip(),
              "reason": d.reason, "action": d.action or row.action,
              "decided_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
              "risk": row.risk, "option_ids": row.option_ids, "eur_at_risk": row.eur_at_risk}
