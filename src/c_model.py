@@ -1,4 +1,4 @@
-"""Climate lane: monthly-feature yield model → backtest → first C1 CSV (task #15).
+"""Climate lane: yield model → backtest → C1 CSV (tasks #15, #17).
 
 Run:  python -m src.c_model            (needs `python -m src.load` and `python -m src.c_weather`)
 
@@ -11,8 +11,13 @@ Fast path of SYSTEM_DESIGN Track C (stage features from daily weather are #16):
 * Features, built per parcel × year and area-weighted up to the farm's crop area for training:
   Apr–Sep monthly tmean, precip, PET, hot days (Tmax ≥ 27 °C) and water balance from the parcel's
   grid cell; soil class, clay %, slope, drainage; farm management (irrigation, N, sprays, organic).
+* Stage features (#16, `c_stage_features`: sowing, GDD stages, soil-water drought by stage, heat at
+  flowering, heavy rain after sowing, harvest rain, blight/beetle days) joined per parcel by
+  (cell, year, crop, soil class), plus irrigation × drought and clay × heavy-rain interactions.
 * Model per crop: ridge regression on log(yield) + a shrunk per-farm effect (the hidden farmer
-  skill) + Duan smearing back to t/ha. Deterministic: no random state anywhere.
+  skill) + Duan smearing, averaged with a gradient-boosting model on the same features and farm
+  effect (rolling CV on 2020–23: average 6.14 % vs ridge 6.22 % vs GB 6.83 %). Per-feature effects
+  come from the ridge part. Deterministic: GB uses a fixed random_state.
 * For 2027–31 management is each farm's last reported value for that crop (crop × region median
   if the farm never reported it). Weather is the pack's single ssp245 realisation.
 
@@ -27,6 +32,7 @@ from pathlib import Path
 import duckdb
 import numpy as np
 import pandas as pd
+from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
 
@@ -39,13 +45,15 @@ WVARS = ("tmean_c", "precip_mm", "pet_mm", "hot_days_tmax_ge_27")
 SEASONS = {"am": (4, 5), "mj": (5, 6), "ja": (7, 8), "s": (9,)}   # monthly → seasonal means
 SOILS = ("clay", "silt", "fine_sand", "sand", "organic")
 OUTLIER_FACTOR = 3.0
-RIDGE_ALPHA = 1000.0     # chosen by rolling-origin CV on 2020–2023 (see PR #15 notes), not on the test years
+RIDGE_ALPHA = 300.0      # chosen by rolling-origin CV on 2020–2023 with stage features (#17), not on the test years
+GB_PARAMS = dict(max_iter=300, learning_rate=0.05, max_leaf_nodes=15, min_samples_leaf=20,
+                 l2_regularization=1.0, random_state=0)   # fixed seed: deterministic
 FARM_SHRINK = 2.0          # farm effect = Σ residual / (n + FARM_SHRINK)
 TRAIN_END = 2023           # backtest: train ≤ 2023, test 2024–2026
 TEST_YEARS = (2024, 2025, 2026)
-MODEL_ID = "c_model:monthly_ridge_v1"
+MODEL_ID = "c_model:stage_ridge_gb_v2"
 C1_PATH = REPO_ROOT / "out" / "C1_yields_2027_2031_submission.csv"
-SCORES_PATH = REPO_ROOT / "out" / "scores" / "C1_backtest_monthly.json"
+SCORES_PATH = REPO_ROOT / "out" / "scores" / "C1_backtest.json"
 
 
 # ── weather and parcel features ───────────────────────────────────────
@@ -67,7 +75,21 @@ def parcel_static(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
     for s in SOILS:
         p[f"soil_{s}"] = (p["soil"] == s).astype(float)
     p["drain_subsurface"] = (p["drainage"] == "subsurface").astype(float)
-    return p.drop(columns=["soil", "drainage"])
+    return p.drop(columns=["drainage"])   # `soil` kept: stage features are per soil class
+
+
+def stage_features(con: duckdb.DuckDBPyConnection, scenario: str) -> pd.DataFrame:
+    """`c_stage_features` (#16) for one scenario, columns prefixed `st_`; built on demand if missing."""
+    if not con.execute("SELECT 1 FROM information_schema.tables WHERE table_name = 'c_stage_features'").fetchone():
+        from src import c_features
+        c_features.write(con, c_features.build(con))
+    st = con.execute("SELECT * FROM c_stage_features WHERE scenario = ?", [scenario]).df().drop(columns="scenario")
+    keys = ["cell_id", "year", "crop", "soil"]
+    return st.rename(columns={c: f"st_{c}" for c in st.columns if c not in keys})
+
+
+def stage_cols(df: pd.DataFrame) -> list[str]:
+    return [c for c in df.columns if c.startswith("st_")]
 
 
 def weather_cols(df: pd.DataFrame) -> list[str]:
@@ -137,7 +159,9 @@ def farm_crop_year_features(con, lab: pd.DataFrame, static: pd.DataFrame, wx: pd
     fallback = missing.merge(static, on="farm_id")
     rows = pd.concat([keyed, fallback], ignore_index=True)
     rows = rows.merge(wx[wx["scenario"] == "historical"].drop(columns="scenario"), on=["cell_id", "year"])
-    num = [c for c in rows.columns if c not in ("parcel_id", "farm_id", "crop", "year", "cell_id", "region", "area_ha")]
+    rows = rows.merge(stage_features(con, "historical"), on=["cell_id", "year", "crop", "soil"], how="left")
+    num = [c for c in rows.columns
+           if c not in ("parcel_id", "farm_id", "crop", "year", "cell_id", "region", "area_ha", "soil")]
     rows[num] = rows[num].mul(rows["area_ha"], axis=0)
     agg = rows.groupby(["farm_id", "crop", "year"])[num + ["area_ha"]].sum()
     agg[num] = agg[num].div(agg["area_ha"], axis=0)
@@ -154,6 +178,10 @@ def finish_features(df: pd.DataFrame, mgmt_fallback: pd.DataFrame) -> pd.DataFra
     for m in (6, 7):
         df[f"irr_x_wb_m{m}"] = df["irrigated"] * df[f"wb_mm_m{m}"]
     df["clay_x_precip_m5"] = df["clay_pct"] * df["precip_mm_m5"]
+    if "st_drought_sens" in df:   # simulator-style interactions (SYSTEM_DESIGN Track C step 4)
+        df["st_irr_x_drought_sens"] = df["irrigated"] * df["st_drought_sens"]
+        df["st_irr_x_drought_fill"] = df["irrigated"] * df["st_drought_fill"]
+        df["st_clay_x_heavy_rain"] = df["clay_pct"] * df["st_heavy_rain_after_sow"]
     df["is_se"] = (df["region"] == "SE_SKANE").astype(float)
     return add_seasons(df)
 
@@ -162,7 +190,7 @@ def feature_list(df: pd.DataFrame) -> list[str]:
     static = ["clay_pct", "slope_pct", "drain_subsurface", *[f"soil_{s}" for s in SOILS],
               "irrigated", "n_kg_ha", "sprays", "organic", "is_se",   # no year trend: worse in CV
               "irr_x_wb_m6", "irr_x_wb_m7", "clay_x_precip_m5"]
-    return weather_cols(df) + [c for c in static if c in df.columns]
+    return weather_cols(df) + stage_cols(df) + [c for c in static if c in df.columns]
 
 
 # ── model ─────────────────────────────────────────────────────────────
@@ -175,12 +203,23 @@ class CropModel:
     farm_effect: dict[str, float]
     smear: float
     n_train: int
+    gb: HistGradientBoostingRegressor | None = None
+    gb_smear: float = 1.0
     meta: dict = field(default_factory=dict)
 
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
+    def predict_ridge(self, X: pd.DataFrame) -> np.ndarray:
         z = self.scaler.transform(X[self.features].to_numpy(dtype=float))
         b = X["farm_id"].map(self.farm_effect).fillna(0.0).to_numpy()
         return np.exp(self.ridge.predict(z) + b) * self.smear
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        """Mean of the ridge and the gradient-boosting predictions (both with the same farm effect)."""
+        r = self.predict_ridge(X)
+        if self.gb is None:
+            return r
+        b = X["farm_id"].map(self.farm_effect).fillna(0.0).to_numpy()
+        g = np.exp(self.gb.predict(X[self.features].to_numpy(dtype=float)) + b) * self.gb_smear
+        return (r + g) / 2
 
 
 def fit_crop(df: pd.DataFrame, crop: str) -> CropModel:
@@ -201,7 +240,9 @@ def fit_crop(df: pd.DataFrame, crop: str) -> CropModel:
         b = df["farm_id"].map(effect).to_numpy()
     resid = y - ridge.predict(z) - b
     smear = float(np.average(np.exp(resid), weights=w))
-    return CropModel(crop, feats, scaler, ridge, effect, smear, len(df))
+    gb = HistGradientBoostingRegressor(**GB_PARAMS).fit(X, y - b, sample_weight=w)
+    gb_smear = float(np.average(np.exp(y - b - gb.predict(X)), weights=w))
+    return CropModel(crop, feats, scaler, ridge, effect, smear, len(df), gb, gb_smear)
 
 
 def fit_all(train: pd.DataFrame) -> dict[str, CropModel]:
@@ -239,6 +280,7 @@ def backtest(data: pd.DataFrame) -> dict:
     test = data[data["year"].isin(TEST_YEARS)].copy()
     models = fit_all(train)
     test["pred"] = predict_all(models, test).to_numpy()
+    drivers_2026 = {f"{r}:pea": year_drivers(models["pea"], train, test, "pea", r, 2026) for r in ("FI_SW", "SE_SKANE")}
     farm_mean = train.groupby(["farm_id", "crop"])["yield_t_ha"].mean().rename("baseline")
     test = test.join(farm_mean, on=["farm_id", "crop"])
     crop_mean = train.groupby(["crop", "region"])["yield_t_ha"].mean()
@@ -252,6 +294,7 @@ def backtest(data: pd.DataFrame) -> dict:
                                 "farm_mean_baseline": round(float(mape_b["ape_pct"].mean()), 2)},
         "farm_nrmse": {"model": round(nrmse(test, "pred"), 4), "farm_mean_baseline": round(nrmse(test, "baseline"), 4)},
         "by_region_crop_year": cells.round(2).to_dict(orient="records"),
+        "drivers_2026_vs_train_mean": drivers_2026,
         "note": "nRMSE is farm-level (labels are per farm); the C1 scorer uses parcel level.",
     }
 
@@ -262,6 +305,7 @@ def c1_features(con, static, wx, lab, organic, mgmt_med) -> pd.DataFrame:
                     "task_template_C1_yields_2027_2031_submission").df()
     X = t.merge(static.drop(columns=["farm_id", "region", "area_ha"]), on="parcel_id", how="left")
     X = X.merge(wx[wx["scenario"] == "ssp245"].drop(columns="scenario"), on=["cell_id", "year"], how="left")
+    X = X.merge(stage_features(con, "ssp245"), on=["cell_id", "year", "crop", "soil"], how="left")
     X = X.merge(management_latest(lab, 2026), on=["farm_id", "crop"], how="left").merge(organic, on="farm_id", how="left")
     X = finish_features(X, mgmt_med)
     assert len(X) == len(t), "template rows lost in the feature join"
@@ -275,6 +319,29 @@ def build_training(con, lab, static, wx, organic, mgmt_med) -> pd.DataFrame:
     return finish_features(d, mgmt_med)
 
 
+def feature_effects(models: dict[str, CropModel]) -> pd.DataFrame:
+    """% yield change per +1 unit of each feature, from the ridge part (log scale → exp − 1)."""
+    rows = []
+    for crop, m in models.items():
+        beta = m.ridge.coef_ / m.scaler.scale_
+        for f, b in zip(m.features, beta):
+            rows.append({"crop": crop, "feature": f, "effect_pct_per_unit": 100 * (np.exp(b) - 1)})
+    return pd.DataFrame(rows)
+
+
+def year_drivers(m: CropModel, train: pd.DataFrame, test: pd.DataFrame, crop: str, region: str, year: int,
+                 top: int = 6) -> list[dict]:
+    """Largest feature contributions (ridge, % of yield) to `year` vs the region's training mean."""
+    tr = train[(train["crop"] == crop) & (train["region"] == region)]
+    te = test[(test["crop"] == crop) & (test["region"] == region) & (test["year"] == year)]
+    if tr.empty or te.empty:
+        return []
+    z = lambda d: m.scaler.transform(d[m.features].to_numpy(dtype=float)).mean(axis=0)
+    contrib = m.ridge.coef_ * (z(te) - z(tr))
+    order = np.argsort(-np.abs(contrib))[:top]
+    return [{"feature": m.features[i], "contribution_pct": round(float(100 * (np.exp(contrib[i]) - 1)), 2)} for i in order]
+
+
 def write_results(con, models, bt: dict, c1: pd.DataFrame, survey: str) -> None:
     L.init_schema(con)
     by = f"c_model@{git_sha()}"
@@ -285,7 +352,19 @@ def write_results(con, models, bt: dict, c1: pd.DataFrame, survey: str) -> None:
         L.write_result(con, f"C1:backtest:{k}", metric=k, value=v, unit="pct" if "pct" in k else "ratio",
                        method=f"{MODEL_ID}, train ≤{TRAIN_END}, test 2024–26", produced_by=by,
                        category="all", year=2026, scenario="backtest",
-                       lineage=model_src + [L.src("doc", "out/scores/C1_backtest_monthly.json")])
+                       lineage=model_src + [L.src("doc", "out/scores/C1_backtest.json")])
+    for c in bt["by_region_crop_year"]:   # backtest table for the app
+        cat, yr = f"{c['region']}:{c['crop']}", int(c["year"])
+        for key, metric, unit in (("p_act", "production_t_actual", "t"), ("p_pred", "production_t", "t"),
+                                  ("ape_pct_model", "ape_pct", "pct")):
+            L.write_result(con, f"C1:backtest:{yr}:{cat}:{metric}", metric=metric, value=float(c[key]), unit=unit,
+                           method=f"{MODEL_ID}, train ≤{TRAIN_END}", produced_by=by, category=cat, year=yr,
+                           scenario="backtest", lineage=model_src)
+    for r in feature_effects(models).itertuples(index=False):
+        L.write_result(con, f"C1:effect:{r.crop}:{r.feature}", metric="feature_effect_pct",
+                       value=float(r.effect_pct_per_unit), unit="% yield per unit", produced_by=by,
+                       method=f"{MODEL_ID} ridge coefficient, exp(β/σ) − 1", category=f"{r.crop}:{r.feature}",
+                       scenario="model", lineage=[L.src("model", MODEL_ID, note="ridge part of the ensemble")])
     prod = c1.assign(t=c1["area_ha"] * c1["yield_t_ha_pred"]).groupby(["region", "crop", "year"])["t"].sum()
     for (region, crop, year), t in prod.items():
         L.write_result(con, f"C1:{year}:{region}:{crop}:production", metric="production_t", value=float(t),

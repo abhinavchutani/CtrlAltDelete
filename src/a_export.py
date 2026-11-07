@@ -99,6 +99,16 @@ def peat_reveal(con: duckdb.DuckDBPyConnection, c: dict, year: int = YEAR) -> di
     return head
 
 
+def export_corrections_stable(con: duckdb.DuckDBPyConnection) -> Path:
+    """corrections.csv without run-time churn: DEV-ASSUMED rows carry no timestamp (they are re-assumed on every
+    run); human approvals keep theirs. Sorted, so git diffs show only real changes."""
+    df = con.execute("SELECT * FROM corrections ORDER BY correction_id").df()
+    df.loc[df.approved_by == L.DEV_ASSUMED, "approved_at"] = pd.NaT
+    path = OUT / "corrections.csv"
+    df.to_csv(path, index=False)
+    return path
+
+
 def main() -> None:
     con = connect()
     L.init_schema(con)
@@ -106,7 +116,7 @@ def main() -> None:
     T = A.canonical(con, c)
     summ = A.summarise(A.compute(T, YEAR))
     a1, a2 = export_a1(con), export_a2(summ)
-    L.export_corrections(con, OUT / "corrections.csv")
+    export_corrections_stable(con)
     head = peat_reveal(con, c)
     print(f"A1 2025: {len(a1)} issues → out/A1_issues_submission.csv")
     print(a1.issue_type.value_counts().to_string())

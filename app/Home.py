@@ -17,6 +17,7 @@ pages = [
     st.Page("views/inventory.py", title="Inventory", icon="📊"),
     st.Page("views/farm_peat.py", title="Farm & peat", icon="🌾"),
     st.Page("views/climate_risk.py", title="Climate risk", icon="🌦️"),
+    st.Page("views/review.py", title="Review & publish", icon="✅"),
 ]
 nav = st.navigation(pages)
 
