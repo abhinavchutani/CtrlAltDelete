@@ -102,6 +102,23 @@ def test_mock_decision_round_trip(client):
     assert r.status_code == 200 and r.json()["status"] == "approved" and r.json()["decided_by"] == "A. Expert"
 
 
+@pytest.mark.parametrize("name", ["   ", "\t\n"])
+def test_whitespace_name_is_422_not_500(client, name):
+    row = client.get("/api/board/current_plan_ssp245").json()[0]["row_id"]
+    r = client.post(f"/api/board/{row}/decision", json={"status": "approved", "decided_by": name, "reason": "x"})
+    assert r.status_code == 422 and "decided_by" in r.json()["detail"]
+
+
+def test_layer_refusal_is_422(client, monkeypatch):
+    from api import layers
+
+    def refuse(row_id, d):
+        raise ValueError("four-eyes rule: ask someone else")
+    monkeypatch.setattr(layers, "get", lambda name: refuse if name == "decide" else layers.get(name))
+    r = client.post("/api/board/x-1/decision", json={"status": "approved", "decided_by": "Anna", "reason": "x"})
+    assert r.status_code == 422 and "four-eyes" in r.json()["detail"]
+
+
 def test_real_mode_reports_unbuilt_layers(monkeypatch):
     monkeypatch.setenv("API_MOCK", "0")
     from api import layers
@@ -110,3 +127,18 @@ def test_real_mode_reports_unbuilt_layers(monkeypatch):
     if not layers.available()["src.p_hedge"]:
         assert c.get("/api/hedge").status_code == 503
     assert c.get("/api/options?hazard=H1").status_code == 200  # retrieval on hold → fixtures
+
+
+def test_report_downloads_under_friendly_name(monkeypatch, tmp_path):
+    pytest.importorskip("openpyxl")
+    from src import r_report
+    monkeypatch.setenv("API_MOCK", "0")
+    monkeypatch.setattr(r_report, "REPORT_DIR", tmp_path)
+    res = {"columns": ["a"], "rows": [[1]]}
+    params = {"crop": "pea", "region": "SE_SKANE", "years": [2021, 2026]}
+    r_report.write_xlsx(tmp_path / "deliveries_by_farm_year-0123456789.xlsx", "t", res,
+                        [("template", "deliveries_by_farm_year"), ("parameters", json.dumps(params))])
+    from api.main import app
+    r = TestClient(app).get("/api/report/deliveries_by_farm_year-0123456789")
+    assert r.status_code == 200
+    assert f"deliveries_by_farm_year_{r_report._slug(params)}.xlsx" in r.headers["content-disposition"]

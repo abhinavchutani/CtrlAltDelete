@@ -124,7 +124,23 @@ def report(report_id: str) -> FileResponse:
     path = r_report.path_for(report_id)
     if path is None or not path.exists():
         raise HTTPException(404, f"report {report_id} not found")
-    return FileResponse(path, media_type=XLSX, filename=path.name)
+    return FileResponse(path, media_type=XLSX, filename=_friendly_name(path, r_report))
+
+
+def _friendly_name(path, r_report) -> str:
+    """ReportRef.filename (e.g. deliveries_by_farm_year_pea_SE_SKANE_2021-2026.xlsx), rebuilt from the workbook's
+    Sources sheet (template + parameters) the way r_report names it; falls back to <report_id>.xlsx."""
+    import json
+
+    from openpyxl import load_workbook
+    try:
+        wb = load_workbook(path, read_only=True)
+        meta = {r[0]: r[1] for r in wb["Sources"].iter_rows(min_row=2, max_col=2, values_only=True)}
+        wb.close()
+        template, params = str(meta["template"]), json.loads(meta.get("parameters") or "{}")
+        return f"{template}_{r_report._slug(params)}.xlsx" if params else f"{template}.xlsx"
+    except Exception:  # an odd or older file still downloads, under its id
+        return path.name
 
 
 @app.get("/api/options", response_model=list[S.AdaptationOption])
@@ -139,4 +155,11 @@ def board(scenario_id: str) -> list[S.BoardRow]:
 
 @app.post("/api/board/{row_id}/decision", response_model=S.BoardRow)
 def decide(row_id: str, d: S.Decision) -> S.BoardRow:
-    return _found(L.get("decide")(row_id, d), f"board row {row_id}")
+    """A person's decision. A whitespace-only name passes the schema's min_length, so it's refused here (422) in both
+    modes, and a refusal raised by the layer (ValueError) is a 422 too, never a 500."""
+    if not d.decided_by.strip():
+        raise HTTPException(422, "decided_by is required: a person types their name")
+    try:
+        return _found(L.get("decide")(row_id, d), f"board row {row_id}")
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
