@@ -639,6 +639,200 @@
      }
     }
    }
+  },
+  "/api/knowledge": {
+   "post": {
+    "summary": "Knowledge Add",
+    "description": "Save a statement as pending_review. The conflict check reads serve.duckdb when it exists (real mode).",
+    "operationId": "knowledge_add_api_knowledge_post",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/KnowledgeIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/KnowledgeItem"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "summary": "Knowledge Items",
+    "operationId": "knowledge_items_api_knowledge_get",
+    "parameters": [
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "enum": [
+          "pending_review",
+          "approved",
+          "rejected",
+          "superseded"
+         ],
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/KnowledgeItem"
+         },
+         "title": "Response Knowledge Items Api Knowledge Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/knowledge/{knowledge_id}/decision": {
+   "post": {
+    "summary": "Knowledge Decide",
+    "description": "A person approves, rejects or supersedes. Blank reviewer or the contributor themself (four-eyes) → 422.",
+    "operationId": "knowledge_decide_api_knowledge__knowledge_id__decision_post",
+    "parameters": [
+     {
+      "name": "knowledge_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Knowledge Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/KnowledgeDecision"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/KnowledgeItem"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/gaps": {
+   "get": {
+    "summary": "Gaps",
+    "description": "Missing records with an owner and a drafted message. Drafts are copy-only: nothing is sent.",
+    "operationId": "gaps_api_gaps_get",
+    "parameters": [
+     {
+      "name": "year",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Year"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/Gap"
+         },
+         "title": "Response Gaps Api Gaps Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
   }
  },
  "components": {
@@ -1510,6 +1704,104 @@
     ],
     "title": "FarmYear"
    },
+   "Gap": {
+    "properties": {
+     "gap_id": {
+      "type": "string",
+      "title": "Gap Id"
+     },
+     "record_key": {
+      "type": "string",
+      "title": "Record Key"
+     },
+     "site_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Site Id"
+     },
+     "domain": {
+      "type": "string",
+      "title": "Domain"
+     },
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "month": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Month"
+     },
+     "owner": {
+      "type": "string",
+      "title": "Owner"
+     },
+     "impact": {
+      "type": "string",
+      "title": "Impact"
+     },
+     "draft_message": {
+      "type": "string",
+      "title": "Draft Message"
+     },
+     "estimate": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Estimate"
+     },
+     "explanation": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Explanation"
+     },
+     "evidence": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Evidence"
+     }
+    },
+    "type": "object",
+    "required": [
+     "gap_id",
+     "record_key",
+     "site_id",
+     "domain",
+     "year",
+     "month",
+     "owner",
+     "impact",
+     "draft_message",
+     "estimate",
+     "evidence"
+    ],
+    "title": "Gap"
+   },
    "HTTPValidationError": {
     "properties": {
      "detail": {
@@ -1781,6 +2073,287 @@
      "crop"
     ],
     "title": "Irrigate"
+   },
+   "KnowledgeDecision": {
+    "properties": {
+     "decision": {
+      "type": "string",
+      "enum": [
+       "approve",
+       "reject",
+       "supersede"
+      ],
+      "title": "Decision"
+     },
+     "reviewer": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Reviewer"
+     },
+     "note": {
+      "type": "string",
+      "title": "Note",
+      "default": ""
+     }
+    },
+    "type": "object",
+    "required": [
+     "decision",
+     "reviewer"
+    ],
+    "title": "KnowledgeDecision"
+   },
+   "KnowledgeIn": {
+    "properties": {
+     "statement": {
+      "type": "string",
+      "minLength": 3,
+      "title": "Statement"
+     },
+     "type": {
+      "type": "string",
+      "enum": [
+       "fact",
+       "explanation",
+       "process",
+       "contact"
+      ],
+      "title": "Type",
+      "default": "fact"
+     },
+     "tags": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Tags",
+      "default": []
+     },
+     "linked_refs": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Linked Refs",
+      "default": []
+     },
+     "contributed_by": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Contributed By"
+     },
+     "role": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Role"
+     },
+     "confidence": {
+      "type": "string",
+      "enum": [
+       "sure",
+       "think_so",
+       "heard"
+      ],
+      "title": "Confidence",
+      "default": "sure"
+     },
+     "valid_from": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid From"
+     },
+     "valid_until": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid Until"
+     },
+     "source": {
+      "type": "string",
+      "title": "Source",
+      "default": "chat"
+     }
+    },
+    "type": "object",
+    "required": [
+     "statement",
+     "contributed_by"
+    ],
+    "title": "KnowledgeIn"
+   },
+   "KnowledgeItem": {
+    "properties": {
+     "statement": {
+      "type": "string",
+      "minLength": 3,
+      "title": "Statement"
+     },
+     "type": {
+      "type": "string",
+      "enum": [
+       "fact",
+       "explanation",
+       "process",
+       "contact"
+      ],
+      "title": "Type",
+      "default": "fact"
+     },
+     "tags": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Tags",
+      "default": []
+     },
+     "linked_refs": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Linked Refs",
+      "default": []
+     },
+     "contributed_by": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Contributed By"
+     },
+     "role": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Role"
+     },
+     "confidence": {
+      "type": "string",
+      "enum": [
+       "sure",
+       "think_so",
+       "heard"
+      ],
+      "title": "Confidence",
+      "default": "sure"
+     },
+     "valid_from": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid From"
+     },
+     "valid_until": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid Until"
+     },
+     "source": {
+      "type": "string",
+      "title": "Source",
+      "default": "chat"
+     },
+     "knowledge_id": {
+      "type": "string",
+      "title": "Knowledge Id"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "pending_review",
+       "approved",
+       "rejected",
+       "superseded"
+      ],
+      "title": "Status",
+      "default": "pending_review"
+     },
+     "created_at": {
+      "type": "string",
+      "title": "Created At"
+     },
+     "reviewer": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reviewer"
+     },
+     "review_note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Review Note"
+     },
+     "reviewed_at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reviewed At"
+     },
+     "conflicts": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Conflicts",
+      "default": []
+     }
+    },
+    "type": "object",
+    "required": [
+     "statement",
+     "contributed_by",
+     "knowledge_id",
+     "created_at"
+    ],
+    "title": "KnowledgeItem"
    },
    "Meters": {
     "properties": {

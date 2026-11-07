@@ -218,6 +218,10 @@ class AskOut(BaseModel):
 | GET | `/api/options?hazard=&crop=` | `list[AdaptationOption]` | R (`r_options`) |
 | GET | `/api/board/{scenario_id}` | `list[BoardRow]` | R (`r_board`) |
 | POST | `/api/board/{row_id}/decision` | `BoardRow` (body: `Decision`) | R (`r_board`) |
+| POST | `/api/knowledge` | `KnowledgeItem`, 201, `pending_review` (body: `KnowledgeIn`; blank contributor → 422) | R (`r_knowledge.add`) |
+| GET | `/api/knowledge?status=` | `list[KnowledgeItem]` | R (`r_knowledge.items`) |
+| POST | `/api/knowledge/{id}/decision` | `KnowledgeItem` (body: `KnowledgeDecision`; unknown → 404, blank reviewer or own item → 422) | R (`r_knowledge.decide`) |
+| GET | `/api/gaps?year=` | `list[Gap]`, drafts copy-only (real mode only, else 503) | R (`r_gaps.gaps`) |
 | GET | `/api/geo/farms` | GeoJSON points (farm_registry) | platform |
 | GET | `/api/geo/parcels` | simplified GeoJSON polygons, gzip | platform |
 | GET | `/api/health` | `{ok, mock, serve_db, llm}` | platform |
