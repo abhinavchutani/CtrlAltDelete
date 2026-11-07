@@ -7,11 +7,11 @@
   ],
   "n_test_rows": 1734,
   "production_mape_pct": {
-    "model": 8.16,
+    "model": 5.12,
     "farm_mean_baseline": 9.89
   },
   "farm_nrmse": {
-    "model": 0.1338,
+    "model": 0.1145,
     "farm_mean_baseline": 0.1522
   },
   "by_region_crop_year": [
@@ -20,8 +20,8 @@
       "crop": "carrot",
       "year": 2024,
       "p_act": 7310.36,
-      "p_pred": 7240.38,
-      "ape_pct_model": 0.96,
+      "p_pred": 7538.17,
+      "ape_pct_model": 3.12,
       "ape_pct_baseline": 3.27
     },
     {
@@ -29,8 +29,8 @@
       "crop": "carrot",
       "year": 2025,
       "p_act": 6649.23,
-      "p_pred": 6105.5,
-      "ape_pct_model": 8.18,
+      "p_pred": 6140.76,
+      "ape_pct_model": 7.65,
       "ape_pct_baseline": 9.22
     },
     {
@@ -38,8 +38,8 @@
       "crop": "carrot",
       "year": 2026,
       "p_act": 4532.98,
-      "p_pred": 3914.86,
-      "ape_pct_model": 13.64,
+      "p_pred": 4014.16,
+      "ape_pct_model": 11.45,
       "ape_pct_baseline": 14.71
     },
     {
@@ -47,8 +47,8 @@
       "crop": "pea",
       "year": 2024,
       "p_act": 6306.34,
-      "p_pred": 5245.58,
-      "ape_pct_model": 16.82,
+      "p_pred": 6096.56,
+      "ape_pct_model": 3.33,
       "ape_pct_baseline": 20.13
     },
     {
@@ -56,8 +56,8 @@
       "crop": "pea",
       "year": 2025,
       "p_act": 4599.17,
-      "p_pred": 4447.98,
-      "ape_pct_model": 3.29,
+      "p_pred": 4659.58,
+      "ape_pct_model": 1.31,
       "ape_pct_baseline": 6.5
     },
     {
@@ -65,8 +65,8 @@
       "crop": "pea",
       "year": 2026,
       "p_act": 5772.31,
-      "p_pred": 4633.51,
-      "ape_pct_model": 19.73,
+      "p_pred": 5345.07,
+      "ape_pct_model": 7.4,
       "ape_pct_baseline": 21.97
     },
     {
@@ -74,8 +74,8 @@
       "crop": "potato",
       "year": 2024,
       "p_act": 5853.54,
-      "p_pred": 5649.14,
-      "ape_pct_model": 3.49,
+      "p_pred": 5996.28,
+      "ape_pct_model": 2.44,
       "ape_pct_baseline": 3.43
     },
     {
@@ -83,8 +83,8 @@
       "crop": "potato",
       "year": 2025,
       "p_act": 8602.56,
-      "p_pred": 8290.51,
-      "ape_pct_model": 3.63,
+      "p_pred": 8548.26,
+      "ape_pct_model": 0.63,
       "ape_pct_baseline": 6.26
     },
     {
@@ -92,8 +92,8 @@
       "crop": "potato",
       "year": 2026,
       "p_act": 6892.52,
-      "p_pred": 6127.01,
-      "ape_pct_model": 11.11,
+      "p_pred": 6006.84,
+      "ape_pct_model": 12.85,
       "ape_pct_baseline": 13.42
     },
     {
@@ -101,8 +101,8 @@
       "crop": "spinach",
       "year": 2024,
       "p_act": 5488.75,
-      "p_pred": 5527.68,
-      "ape_pct_model": 0.71,
+      "p_pred": 5472.64,
+      "ape_pct_model": 0.29,
       "ape_pct_baseline": 4.05
     },
     {
@@ -110,8 +110,8 @@
       "crop": "spinach",
       "year": 2025,
       "p_act": 5941.58,
-      "p_pred": 5487.46,
-      "ape_pct_model": 7.64,
+      "p_pred": 5425.66,
+      "ape_pct_model": 8.68,
       "ape_pct_baseline": 8.58
     },
     {
@@ -119,8 +119,8 @@
       "crop": "spinach",
       "year": 2026,
       "p_act": 6907.43,
-      "p_pred": 7511.95,
-      "ape_pct_model": 8.75,
+      "p_pred": 6497.76,
+      "ape_pct_model": 5.93,
       "ape_pct_baseline": 2.94
     },
     {
@@ -128,8 +128,8 @@
       "crop": "turnip_rape",
       "year": 2024,
       "p_act": 6049.85,
-      "p_pred": 4908.7,
-      "ape_pct_model": 18.86,
+      "p_pred": 5601.85,
+      "ape_pct_model": 7.41,
       "ape_pct_baseline": 19.46
     },
     {
@@ -137,8 +137,8 @@
       "crop": "turnip_rape",
       "year": 2025,
       "p_act": 5230.7,
-      "p_pred": 5592.6,
-      "ape_pct_model": 6.92,
+      "p_pred": 5539.93,
+      "ape_pct_model": 5.91,
       "ape_pct_baseline": 2.11
     },
     {
@@ -146,8 +146,8 @@
       "crop": "turnip_rape",
       "year": 2026,
       "p_act": 6180.7,
-      "p_pred": 5467.36,
-      "ape_pct_model": 11.54,
+      "p_pred": 6141.04,
+      "ape_pct_model": 0.64,
       "ape_pct_baseline": 21.08
     },
     {
@@ -155,8 +155,8 @@
       "crop": "pea",
       "year": 2024,
       "p_act": 19487.7,
-      "p_pred": 18395.75,
-      "ape_pct_model": 5.6,
+      "p_pred": 18443.04,
+      "ape_pct_model": 5.36,
       "ape_pct_baseline": 12.2
     },
     {
@@ -164,8 +164,8 @@
       "crop": "pea",
       "year": 2025,
       "p_act": 16829.87,
-      "p_pred": 17117.44,
-      "ape_pct_model": 1.71,
+      "p_pred": 16248.74,
+      "ape_pct_model": 3.45,
       "ape_pct_baseline": 1.89
     },
     {
@@ -173,10 +173,64 @@
       "crop": "pea",
       "year": 2026,
       "p_act": 14638.83,
-      "p_pred": 15266.09,
-      "ape_pct_model": 4.28,
+      "p_pred": 13997.47,
+      "ape_pct_model": 4.38,
       "ape_pct_baseline": 6.85
     }
   ],
+  "drivers_2026_vs_train_mean": {
+    "FI_SW:pea": [
+      {
+        "feature": "st_drought_sens",
+        "contribution_pct": 13.72
+      },
+      {
+        "feature": "st_hot_fill",
+        "contribution_pct": 11.24
+      },
+      {
+        "feature": "st_drought_fill",
+        "contribution_pct": 8.47
+      },
+      {
+        "feature": "tmean_c_smj",
+        "contribution_pct": -7.59
+      },
+      {
+        "feature": "hot_days_tmax_ge_27_sja",
+        "contribution_pct": -4.32
+      },
+      {
+        "feature": "st_season_len",
+        "contribution_pct": 4.07
+      }
+    ],
+    "SE_SKANE:pea": [
+      {
+        "feature": "tmean_c_smj",
+        "contribution_pct": 10.16
+      },
+      {
+        "feature": "st_hot_sens",
+        "contribution_pct": -4.09
+      },
+      {
+        "feature": "pet_mm_smj",
+        "contribution_pct": -3.58
+      },
+      {
+        "feature": "st_drought_sens",
+        "contribution_pct": -2.91
+      },
+      {
+        "feature": "tmean_c_ss",
+        "contribution_pct": -2.24
+      },
+      {
+        "feature": "st_drought_fill",
+        "contribution_pct": -2.18
+      }
+    ]
+  },
   "note": "nRMSE is farm-level (labels are per farm); the C1 scorer uses parcel level."
 }

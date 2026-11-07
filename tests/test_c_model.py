@@ -83,3 +83,18 @@ def test_survey_table_prefers_clean(tmp_path):
     assert M.survey_table(c) == "raw_farm_survey_fi"
     c.execute("CREATE TABLE clean_farm_survey (x INT)")
     assert M.survey_table(c) == "clean_farm_survey"
+
+
+def test_feature_effects_and_drivers_cover_features():
+    df = _toy()
+    m = M.fit_crop(df, "pea")
+    eff = M.feature_effects({"pea": m})
+    assert set(eff["feature"]) == set(m.features)
+    assert eff.loc[eff.feature == "wb_mm_sja", "effect_pct_per_unit"].notna().all()
+    drv = M.year_drivers(m, df[df.year < 2020], df[df.year >= 2020], "pea", "FI_SW", 2021)
+    assert 0 < len(drv) <= 6 and all("contribution_pct" in d for d in drv)
+
+
+def test_ensemble_is_deterministic():
+    df = _toy()
+    assert np.array_equal(M.fit_crop(df, "pea").predict(df), M.fit_crop(df, "pea").predict(df))
