@@ -247,8 +247,91 @@ def route_options(con, q: str) -> dict | None:
     return finish(q, out["answer_md"], [out["table"]], out["evidence"], out["table"], pending=out["pending_approval"])
 
 
+ENTITY_ASK = re.compile(r"everything (about|on|for)|tell me about|show me .*\b(all|everything)\b|what do we (have|know) (about|on)"
+                        r"|\bentity\b|linked to|connected to")
+
+
+# Why an allow-listed candidate is not an error (AGENTS.md §8 traps; Track A's allow-list R01, R02, R04)
+LEGIT_WHY = {"wrong_gas_code": "real ammonia systems, GWP 0", "unit_error": "credit notes or lots booked in tonnes",
+             "duplicate_record": "credit notes, movement 122", "meter_spike": "seasonal meter peaks",
+             "decimal_shift": "credit notes or tonne lots"}
+
+
+def route_entity(con, q: str) -> dict | None:
+    """'Everything about S-SAK / SUP073 / F0123 / M110 / CA28': every table with that ID, issues, corrections (#111)."""
+    from src import r_entity as E
+    m = E.ID_IN_TEXT.search(q)
+    if not (m and ENTITY_ASK.search(q)):
+        return None
+    out = E.entity_view(con, m.group(1))
+    if out is None or not out["rows"]:
+        return not_in_data(f"No table mentions {m.group(1).upper()}.")
+    rows = out["rows"]
+    n_rec = sum(r[2] for r in rows)
+    n_iss = sum(r[4] or 0 for r in rows)
+    n_corr = sum(r[5] or 0 for r in rows)
+    label = f"{out['id']}" + (f" ({out['name']})" if out["name"] else "")
+    issue_txt = ", ".join(f"{t.replace('_', ' ')} {n}" for t, n in out["issue_types"]) or "none"
+    legit = out["legitimate"]
+    md = (f"**{label}**, a {out['kind']}: {n_rec:,} records across {len(rows)} tables. "
+          f"Open data-quality issues: {n_iss} ({issue_txt}); proposed corrections: {n_corr}, pending expert approval."
+          + (" Checked and ruled not an error (allow-list): "
+             + ", ".join(f"{t.replace('_', ' ')} {n} ({LEGIT_WHY.get(t, 'a known legitimate case')})" for t, n in legit)
+             + "." if legit else "")
+          + "\n\n*The pack's shared IDs link the files; every row below is a plain join on that ID.*")
+    table = {"columns": ["table", "id_column", "records", "years", "open_issues", "corrections", "example_record_key"],
+             "rows": [[_plain(v) for v in r] for r in rows]}
+    derived = {"n_records": n_rec, "n_tables": len(rows), "n_issues": n_iss, "n_corrections": n_corr}
+    evidence = [ev("table_row", r[0], f"{r[0]} · {r[2]} rows with {r[1]} = {out['id']}") for r in rows]
+    evidence += [ev("table_row", r[6], r[6]) for r in rows if r[6]][:8]
+    return finish(q, md, [*out["results"], derived, table], evidence, table, pending=n_corr > 0)
+
+
+SCOPE_WORDS = (("scope2_location", r"scope 2.*location|location.based"), ("scope2_market", r"scope 2|market.based"),
+               ("scope1", r"scope 1\b"), ("scope3", r"scope 3\b"), ("flag", r"\bflag\b"), ("total", r"\btotal\b"))
+LINEAGE_ASK = re.compile(r"where does|come from|comes from|lineage|trace|how (was|is|did we get) .* (calculated|computed|built)"
+                         r"|what is .* made of|break.?down|drill down")
+
+
+def route_lineage(con, q: str) -> dict | None:
+    """'Where does the 2024 Scope 1 number come from?' → lines → source records, factors and corrections (#111)."""
+    from src import r_entity as E
+    if not LINEAGE_ASK.search(q):
+        return None
+    rid = re.search(r"\b(a2:\d{4}:[a-z0-9_:.-]+)", q)
+    yrs = years_in(q)
+    scope = next((s for s, pat in SCOPE_WORDS if re.search(pat, q)), None)
+    if rid:
+        out = E.lineage_trace(con, result_id=rid.group(1).replace("a2:", "A2:", 1))
+    elif yrs and scope:
+        out = E.lineage_trace(con, year=yrs[-1], scope=scope)
+    else:
+        return None
+    if out is None:
+        return not_in_data("No reported inventory number matches that.", ["results", "lineage"])
+    top = out["top"]["rows"]
+    total = round(sum(r[5] for r in top), 1)
+    parts = "; ".join(f"{r[3].replace('_', ' ')} {fmt(r[5])} t" for r in top[:6])
+    status = "draft, pending expert approval" if any(r[7] == "draft" for r in top) else top[0][7]
+    md = (f"**{top[0][2].replace('_', ' ')} {top[0][4]}: {fmt(total)} t CO2e** ({status}). Built from: {parts}. "
+          f"Those come from {len(out['lines']['rows'])} calculation lines over {out['n_records']} source records; "
+          f"{out['n_corrected']} of those records use a proposed data correction. The table shows the largest lines, "
+          f"each with its record count, emission factor and corrections.")
+    table = {"columns": ["line_result_id", "t_co2e", "status", "source_records", "factors", "corrected_records"],
+             "rows": out["table_rows"]}
+    derived = {"total": total, "n_lines": len(out["lines"]["rows"]), "n_records": out["n_records"],
+               "n_corrected": out["n_corrected"]}
+    evidence = [ev("result", r[0], f"results · {r[0]}") for r in top]
+    evidence += [ev("lineage", r[0], f"lineage · {r[0]}") for r in out["table_rows"][:6]]
+    evidence += [ev("table_row", r[0], f"corrections · {r[0]}: {r[1]} {r[2]} → {r[3]} ({r[4]})")
+                 for r in out["corrections"]["rows"][:4]]
+    return finish(q, md, [out["top"], out["lines"], derived, table], evidence, table,
+                  pending=any(r[7] == "draft" for r in top))
+
+
 ROUTES: list[Route] = [route_se_pea_deliveries, route_peat_as_mineral, route_energy_by_site_month,
-                       route_farm_yield_history, route_options, route_rule, route_v1_totals]
+                       route_farm_yield_history, route_lineage, route_entity, route_options, route_rule,
+                       route_v1_totals]
 
 
 def hints(q: str) -> list[str]:
