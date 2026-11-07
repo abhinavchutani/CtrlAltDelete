@@ -16,8 +16,10 @@ from fastapi.responses import FileResponse, StreamingResponse
 
 from api import geo
 from api import insight
+from api import kgraph
 from api import layers as L
 from api import prediction as P
+from api import radar
 from api import schemas as S
 from src import serve_db
 from src.db import env
@@ -133,6 +135,85 @@ def search(body: S.SearchIn) -> StreamingResponse:
     P.ready("plan finder")
     return StreamingResponse(insight.search_events(body.climate, body.horizon_end), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+# ── Field Radar v4 (light redesign) ────────────────────────────────
+@app.post("/api/radar/outlook", response_model=radar.Outlook)
+def radar_outlook(body: radar.OutlookIn) -> radar.Outlook:
+    if L.mock_mode():
+        raise HTTPException(503, "the outlook runs the live model (API_MOCK=0)")
+    return radar.outlook(body)
+
+
+@app.get("/api/graph", response_model=kgraph.Graph)
+def graph() -> kgraph.Graph:
+    return kgraph.graph()
+
+
+@app.post("/api/radar/ask", response_model=kgraph.RadarAskOut)
+def radar_ask(body: kgraph.RadarAskIn) -> kgraph.RadarAskOut:
+    return kgraph.ask(body)
+
+
+@app.get("/api/tacit/topics", response_model=list[str])
+def tacit_topics() -> list[str]:
+    return kgraph.topics()
+
+
+@app.post("/api/tacit/notes", response_model=kgraph.Filed)
+def tacit_note(body: kgraph.NoteIn) -> kgraph.Filed:
+    return kgraph.file_note(body)
+
+
+@app.post("/api/tacit/notes/{note_id}/confirm", response_model=S.KnowledgeItem)
+def tacit_confirm(note_id: str, body: kgraph.ConfirmIn) -> S.KnowledgeItem:
+    return kgraph.confirm(note_id, body)
+
+
+@app.patch("/api/tacit/notes/{note_id}", response_model=kgraph.Filed)
+def tacit_refile(note_id: str, body: kgraph.RefileIn) -> kgraph.Filed:
+    return kgraph.refile(note_id, body)
+
+
+@app.post("/api/tacit/interviews", response_model=kgraph.Interview)
+def tacit_interview(body: kgraph.InterviewIn) -> kgraph.Interview:
+    return kgraph.interview(body)
+
+
+# ── knowledge + gaps (#123): src.r_knowledge / src.r_gaps ──────────
+@app.get("/api/knowledge", response_model=list[S.KnowledgeItem])
+def knowledge(status: str | None = None) -> list[S.KnowledgeItem]:
+    from src import r_knowledge
+    return r_knowledge.items(status)
+
+
+@app.post("/api/knowledge", response_model=S.KnowledgeItem)
+def knowledge_add(body: S.KnowledgeIn) -> S.KnowledgeItem:
+    from src import r_knowledge
+    try:
+        if serve_db.exists():
+            with serve_db.connect() as con:
+                return r_knowledge.add(body, con)
+        return r_knowledge.add(body)
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
+
+
+@app.post("/api/knowledge/{knowledge_id}/decision", response_model=S.KnowledgeItem)
+def knowledge_decide(knowledge_id: str, body: S.KnowledgeDecision) -> S.KnowledgeItem:
+    from src import r_knowledge
+    try:
+        return _found(r_knowledge.decide(knowledge_id, body), f"knowledge {knowledge_id}")
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
+
+
+@app.get("/api/gaps", response_model=list[S.Gap])
+def gaps(year: int | None = None) -> list[S.Gap]:
+    _need_data()
+    from src import r_gaps
+    with serve_db.connect() as con:
+        return [S.Gap(**g) for g in r_gaps.gaps(con, year)["gaps"]]
 
 
 # ── retrieval (fixtures while on hold) ─────────────────────────────

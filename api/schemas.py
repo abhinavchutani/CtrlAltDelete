@@ -365,3 +365,53 @@ class PlanCandidate(BaseModel):  # one simulated plan in the search stream
     co2e_direction: Literal["lower", "same", "higher"]
     assumption: bool
     futures: dict[str, PlanFuture] | None = None
+
+
+# ── knowledge + gaps (#112 store, #123 endpoints): tacit knowledge with human review ──
+class KnowledgeIn(BaseModel):
+    statement: str = Field(min_length=3)
+    type: Literal["fact", "explanation", "process", "contact"] = "fact"
+    tags: list[str] = []
+    linked_refs: list[str] = []          # entity IDs (S-SAK, SUP073, …) or record keys
+    contributed_by: str = Field(min_length=1)   # typed by the person; code never fills it
+    role: str | None = None
+    confidence: Literal["sure", "think_so", "heard"] = "sure"
+    valid_from: str | None = None        # ISO date
+    valid_until: str | None = None
+    source: str = "chat"                 # chat message id or voice transcript snippet
+
+
+class KnowledgeItem(KnowledgeIn):
+    knowledge_id: str
+    status: Literal["pending_review", "approved", "rejected", "superseded"] = "pending_review"
+    created_at: str
+    reviewer: str | None = None
+    review_note: str | None = None
+    reviewed_at: str | None = None
+    conflicts: list[EvidenceRef] = []
+
+
+class KnowledgeDecision(BaseModel):
+    decision: Literal["approve", "reject", "supersede"]
+    reviewer: str = Field(min_length=1)  # a person; code never fills it
+    note: str = ""
+
+
+class KnowledgeRefile(BaseModel):  # PATCH /api/knowledge/{id}: where it is filed, nothing else
+    tags: list[str]
+    linked_refs: list[str] | None = None  # None keeps the current links
+
+
+class Gap(BaseModel):  # GET /api/gaps: a record the inventory needs that nobody delivered (src.r_gaps)
+    gap_id: str
+    record_key: str
+    site_id: str | None
+    domain: str
+    year: int
+    month: int | None
+    owner: str
+    impact: str
+    draft_message: str
+    estimate: float | None
+    explanation: str | None
+    evidence: list[EvidenceRef]

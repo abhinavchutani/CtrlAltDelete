@@ -523,6 +523,481 @@
     }
    }
   },
+  "/api/radar/outlook": {
+   "post": {
+    "summary": "Radar Outlook",
+    "operationId": "radar_outlook_api_radar_outlook_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OutlookIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Outlook"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/graph": {
+   "get": {
+    "summary": "Graph",
+    "operationId": "graph_api_graph_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Graph"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/radar/ask": {
+   "post": {
+    "summary": "Radar Ask",
+    "operationId": "radar_ask_api_radar_ask_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RadarAskIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RadarAskOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/tacit/topics": {
+   "get": {
+    "summary": "Tacit Topics",
+    "operationId": "tacit_topics_api_tacit_topics_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "type": "string"
+         },
+         "type": "array",
+         "title": "Response Tacit Topics Api Tacit Topics Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/tacit/notes": {
+   "post": {
+    "summary": "Tacit Note",
+    "operationId": "tacit_note_api_tacit_notes_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NoteIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Filed"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/tacit/notes/{note_id}/confirm": {
+   "post": {
+    "summary": "Tacit Confirm",
+    "operationId": "tacit_confirm_api_tacit_notes__note_id__confirm_post",
+    "parameters": [
+     {
+      "name": "note_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Note Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ConfirmIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/KnowledgeItem"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/tacit/notes/{note_id}": {
+   "patch": {
+    "summary": "Tacit Refile",
+    "operationId": "tacit_refile_api_tacit_notes__note_id__patch",
+    "parameters": [
+     {
+      "name": "note_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Note Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RefileIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Filed"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/tacit/interviews": {
+   "post": {
+    "summary": "Tacit Interview",
+    "operationId": "tacit_interview_api_tacit_interviews_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InterviewIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Interview"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/knowledge": {
+   "get": {
+    "summary": "Knowledge",
+    "operationId": "knowledge_api_knowledge_get",
+    "parameters": [
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/KnowledgeItem"
+         },
+         "title": "Response Knowledge Api Knowledge Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "summary": "Knowledge Add",
+    "operationId": "knowledge_add_api_knowledge_post",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/KnowledgeIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/KnowledgeItem"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/knowledge/{knowledge_id}/decision": {
+   "post": {
+    "summary": "Knowledge Decide",
+    "operationId": "knowledge_decide_api_knowledge__knowledge_id__decision_post",
+    "parameters": [
+     {
+      "name": "knowledge_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Knowledge Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/KnowledgeDecision"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/KnowledgeItem"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/gaps": {
+   "get": {
+    "summary": "Gaps",
+    "operationId": "gaps_api_gaps_get",
+    "parameters": [
+     {
+      "name": "year",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Year"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/Gap"
+         },
+         "title": "Response Gaps Api Gaps Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/ask": {
    "post": {
     "summary": "Ask",
@@ -1478,6 +1953,25 @@
     ],
     "title": "BoardRow"
    },
+   "ConfirmIn": {
+    "properties": {
+     "reviewer": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Reviewer"
+     },
+     "note": {
+      "type": "string",
+      "title": "Note",
+      "default": ""
+     }
+    },
+    "type": "object",
+    "required": [
+     "reviewer"
+    ],
+    "title": "ConfirmIn"
+   },
    "CropArea": {
     "properties": {
      "type": {
@@ -1602,6 +2096,24 @@
     ],
     "title": "EarlierSowing"
    },
+   "Edge": {
+    "properties": {
+     "source": {
+      "type": "string",
+      "title": "Source"
+     },
+     "target": {
+      "type": "string",
+      "title": "Target"
+     }
+    },
+    "type": "object",
+    "required": [
+     "source",
+     "target"
+    ],
+    "title": "Edge"
+   },
    "EvidenceRef": {
     "properties": {
      "kind": {
@@ -1632,6 +2144,34 @@
      "label"
     ],
     "title": "EvidenceRef"
+   },
+   "FarmStatus": {
+    "properties": {
+     "farm_id": {
+      "type": "string",
+      "title": "Farm Id"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "watch",
+       "risk"
+      ],
+      "title": "Status"
+     },
+     "change_pct": {
+      "type": "number",
+      "title": "Change Pct"
+     }
+    },
+    "type": "object",
+    "required": [
+     "farm_id",
+     "status",
+     "change_pct"
+    ],
+    "title": "FarmStatus"
    },
    "FarmYear": {
     "properties": {
@@ -1665,6 +2205,198 @@
      "risk"
     ],
     "title": "FarmYear"
+   },
+   "Filed": {
+    "properties": {
+     "note_id": {
+      "type": "string",
+      "title": "Note Id"
+     },
+     "path": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Path"
+     },
+     "topic": {
+      "type": "string",
+      "title": "Topic"
+     },
+     "siblings": {
+      "type": "integer",
+      "title": "Siblings"
+     },
+     "linked_node_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Linked Node Ids"
+     },
+     "linked_labels": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Linked Labels"
+     },
+     "verified": {
+      "type": "boolean",
+      "title": "Verified"
+     },
+     "item": {
+      "$ref": "#/components/schemas/KnowledgeItem"
+     }
+    },
+    "type": "object",
+    "required": [
+     "note_id",
+     "path",
+     "topic",
+     "siblings",
+     "linked_node_ids",
+     "linked_labels",
+     "verified",
+     "item"
+    ],
+    "title": "Filed"
+   },
+   "Gap": {
+    "properties": {
+     "gap_id": {
+      "type": "string",
+      "title": "Gap Id"
+     },
+     "record_key": {
+      "type": "string",
+      "title": "Record Key"
+     },
+     "site_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Site Id"
+     },
+     "domain": {
+      "type": "string",
+      "title": "Domain"
+     },
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "month": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Month"
+     },
+     "owner": {
+      "type": "string",
+      "title": "Owner"
+     },
+     "impact": {
+      "type": "string",
+      "title": "Impact"
+     },
+     "draft_message": {
+      "type": "string",
+      "title": "Draft Message"
+     },
+     "estimate": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Estimate"
+     },
+     "explanation": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Explanation"
+     },
+     "evidence": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Evidence"
+     }
+    },
+    "type": "object",
+    "required": [
+     "gap_id",
+     "record_key",
+     "site_id",
+     "domain",
+     "year",
+     "month",
+     "owner",
+     "impact",
+     "draft_message",
+     "estimate",
+     "explanation",
+     "evidence"
+    ],
+    "title": "Gap"
+   },
+   "Graph": {
+    "properties": {
+     "nodes": {
+      "items": {
+       "$ref": "#/components/schemas/Node"
+      },
+      "type": "array",
+      "title": "Nodes"
+     },
+     "edges": {
+      "items": {
+       "$ref": "#/components/schemas/Edge"
+      },
+      "type": "array",
+      "title": "Edges"
+     },
+     "counts": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "type": "object",
+      "title": "Counts"
+     },
+     "synthetic": {
+      "type": "boolean",
+      "title": "Synthetic",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "nodes",
+     "edges",
+     "counts"
+    ],
+    "title": "Graph"
    },
    "HTTPValidationError": {
     "properties": {
@@ -1906,6 +2638,50 @@
     ],
     "title": "IntentOut"
    },
+   "Interview": {
+    "properties": {
+     "gap_id": {
+      "type": "string",
+      "title": "Gap Id"
+     },
+     "recipient": {
+      "type": "string",
+      "title": "Recipient"
+     },
+     "questions": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Questions"
+     },
+     "draft_message": {
+      "type": "string",
+      "title": "Draft Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "gap_id",
+     "recipient",
+     "questions",
+     "draft_message"
+    ],
+    "title": "Interview"
+   },
+   "InterviewIn": {
+    "properties": {
+     "gap_id": {
+      "type": "string",
+      "title": "Gap Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "gap_id"
+    ],
+    "title": "InterviewIn"
+   },
    "Irrigate": {
     "properties": {
      "type": {
@@ -1937,6 +2713,429 @@
      "crop"
     ],
     "title": "Irrigate"
+   },
+   "Issue": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "type": {
+      "type": "string",
+      "title": "Type"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "watch",
+       "risk"
+      ],
+      "title": "Status"
+     },
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "crop": {
+      "type": "string",
+      "title": "Crop"
+     },
+     "month": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Month"
+     },
+     "eur_at_risk": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "< €50k",
+         "€50–100k",
+         "€100–250k",
+         "€250k–1M",
+         "> €1M"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Eur At Risk"
+     },
+     "rain_vs_normal_pct": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rain Vs Normal Pct"
+     },
+     "temp_vs_normal_c": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Temp Vs Normal C"
+     },
+     "hot_days": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Hot Days"
+     },
+     "fields_below": {
+      "type": "integer",
+      "title": "Fields Below"
+     },
+     "farms_below": {
+      "type": "integer",
+      "title": "Farms Below"
+     },
+     "why": {
+      "type": "string",
+      "title": "Why"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/SourceRef"
+      },
+      "type": "array",
+      "title": "Sources"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "year",
+     "type",
+     "label",
+     "status",
+     "region",
+     "crop",
+     "month",
+     "eur_at_risk",
+     "rain_vs_normal_pct",
+     "temp_vs_normal_c",
+     "hot_days",
+     "fields_below",
+     "farms_below",
+     "why",
+     "sources"
+    ],
+    "title": "Issue"
+   },
+   "KnowledgeDecision": {
+    "properties": {
+     "decision": {
+      "type": "string",
+      "enum": [
+       "approve",
+       "reject",
+       "supersede"
+      ],
+      "title": "Decision"
+     },
+     "reviewer": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Reviewer"
+     },
+     "note": {
+      "type": "string",
+      "title": "Note",
+      "default": ""
+     }
+    },
+    "type": "object",
+    "required": [
+     "decision",
+     "reviewer"
+    ],
+    "title": "KnowledgeDecision"
+   },
+   "KnowledgeIn": {
+    "properties": {
+     "statement": {
+      "type": "string",
+      "minLength": 3,
+      "title": "Statement"
+     },
+     "type": {
+      "type": "string",
+      "enum": [
+       "fact",
+       "explanation",
+       "process",
+       "contact"
+      ],
+      "title": "Type",
+      "default": "fact"
+     },
+     "tags": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Tags",
+      "default": []
+     },
+     "linked_refs": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Linked Refs",
+      "default": []
+     },
+     "contributed_by": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Contributed By"
+     },
+     "role": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Role"
+     },
+     "confidence": {
+      "type": "string",
+      "enum": [
+       "sure",
+       "think_so",
+       "heard"
+      ],
+      "title": "Confidence",
+      "default": "sure"
+     },
+     "valid_from": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid From"
+     },
+     "valid_until": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid Until"
+     },
+     "source": {
+      "type": "string",
+      "title": "Source",
+      "default": "chat"
+     }
+    },
+    "type": "object",
+    "required": [
+     "statement",
+     "contributed_by"
+    ],
+    "title": "KnowledgeIn"
+   },
+   "KnowledgeItem": {
+    "properties": {
+     "statement": {
+      "type": "string",
+      "minLength": 3,
+      "title": "Statement"
+     },
+     "type": {
+      "type": "string",
+      "enum": [
+       "fact",
+       "explanation",
+       "process",
+       "contact"
+      ],
+      "title": "Type",
+      "default": "fact"
+     },
+     "tags": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Tags",
+      "default": []
+     },
+     "linked_refs": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Linked Refs",
+      "default": []
+     },
+     "contributed_by": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Contributed By"
+     },
+     "role": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Role"
+     },
+     "confidence": {
+      "type": "string",
+      "enum": [
+       "sure",
+       "think_so",
+       "heard"
+      ],
+      "title": "Confidence",
+      "default": "sure"
+     },
+     "valid_from": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid From"
+     },
+     "valid_until": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid Until"
+     },
+     "source": {
+      "type": "string",
+      "title": "Source",
+      "default": "chat"
+     },
+     "knowledge_id": {
+      "type": "string",
+      "title": "Knowledge Id"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "pending_review",
+       "approved",
+       "rejected",
+       "superseded"
+      ],
+      "title": "Status",
+      "default": "pending_review"
+     },
+     "created_at": {
+      "type": "string",
+      "title": "Created At"
+     },
+     "reviewer": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reviewer"
+     },
+     "review_note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Review Note"
+     },
+     "reviewed_at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reviewed At"
+     },
+     "conflicts": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Conflicts",
+      "default": []
+     }
+    },
+    "type": "object",
+    "required": [
+     "statement",
+     "contributed_by",
+     "knowledge_id",
+     "created_at"
+    ],
+    "title": "KnowledgeItem"
    },
    "Meters": {
     "properties": {
@@ -2081,6 +3280,368 @@
      "months"
     ],
     "title": "MonthsFrame"
+   },
+   "Node": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "hub",
+       "data",
+       "model",
+       "doc",
+       "tacit",
+       "gap"
+      ],
+      "title": "Kind"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "records": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Records"
+     },
+     "verified": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Verified"
+     },
+     "detail": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detail"
+     },
+     "question": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Question"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "kind",
+     "label"
+    ],
+    "title": "Node"
+   },
+   "NoteIn": {
+    "properties": {
+     "text": {
+      "type": "string",
+      "minLength": 3,
+      "title": "Text"
+     },
+     "contributed_by": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Contributed By"
+     },
+     "role": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Role"
+     },
+     "farm_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Farm Id"
+     },
+     "gap_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Gap Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "text",
+     "contributed_by"
+    ],
+    "title": "NoteIn"
+   },
+   "Outlook": {
+    "properties": {
+     "climate": {
+      "type": "string",
+      "enum": [
+       "ssp126",
+       "ssp245",
+       "ssp585"
+      ],
+      "title": "Climate"
+     },
+     "levers": {
+      "items": {
+       "oneOf": [
+        {
+         "$ref": "#/components/schemas/Irrigate"
+        },
+        {
+         "$ref": "#/components/schemas/EarlierSowing"
+        },
+        {
+         "$ref": "#/components/schemas/RegionSplit"
+        },
+        {
+         "$ref": "#/components/schemas/HeatTolerant"
+        },
+        {
+         "$ref": "#/components/schemas/CropArea"
+        }
+       ],
+       "discriminator": {
+        "propertyName": "type",
+        "mapping": {
+         "crop_area": "#/components/schemas/CropArea",
+         "earlier_sowing": "#/components/schemas/EarlierSowing",
+         "heat_tolerant_variety": "#/components/schemas/HeatTolerant",
+         "irrigate": "#/components/schemas/Irrigate",
+         "region_split": "#/components/schemas/RegionSplit"
+        }
+       }
+      },
+      "type": "array",
+      "title": "Levers"
+     },
+     "years": {
+      "items": {
+       "type": "integer"
+      },
+      "type": "array",
+      "title": "Years"
+     },
+     "money": {
+      "type": "string",
+      "enum": [
+       "< €50k",
+       "€50–100k",
+       "€100–250k",
+       "€250k–1M",
+       "> €1M"
+      ],
+      "title": "Money"
+     },
+     "costly_years": {
+      "type": "integer",
+      "title": "Costly Years"
+     },
+     "worst_year": {
+      "type": "integer",
+      "title": "Worst Year"
+     },
+     "worst_band": {
+      "type": "string",
+      "enum": [
+       "< €50k",
+       "€50–100k",
+       "€100–250k",
+       "€250k–1M",
+       "> €1M"
+      ],
+      "title": "Worst Band"
+     },
+     "seasons": {
+      "items": {
+       "$ref": "#/components/schemas/Season"
+      },
+      "type": "array",
+      "title": "Seasons"
+     },
+     "issues": {
+      "items": {
+       "$ref": "#/components/schemas/Issue"
+      },
+      "type": "array",
+      "title": "Issues"
+     },
+     "focus_year": {
+      "type": "integer",
+      "title": "Focus Year"
+     },
+     "fields_risk": {
+      "type": "integer",
+      "title": "Fields Risk"
+     },
+     "fields_watch": {
+      "type": "integer",
+      "title": "Fields Watch"
+     },
+     "pea_fields": {
+      "type": "integer",
+      "title": "Pea Fields"
+     },
+     "farms_focus": {
+      "items": {
+       "$ref": "#/components/schemas/FarmStatus"
+      },
+      "type": "array",
+      "title": "Farms Focus"
+     },
+     "worst_region": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "FI_SW",
+         "SE_SKANE"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Worst Region"
+     },
+     "contract_farms": {
+      "type": "integer",
+      "title": "Contract Farms"
+     },
+     "regions": {
+      "items": {
+       "type": "string",
+       "enum": [
+        "FI_SW",
+        "SE_SKANE"
+       ]
+      },
+      "type": "array",
+      "title": "Regions"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/SourceRef"
+      },
+      "type": "array",
+      "title": "Sources"
+     },
+     "synthetic": {
+      "type": "boolean",
+      "title": "Synthetic",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "climate",
+     "levers",
+     "years",
+     "money",
+     "costly_years",
+     "worst_year",
+     "worst_band",
+     "seasons",
+     "issues",
+     "focus_year",
+     "fields_risk",
+     "fields_watch",
+     "pea_fields",
+     "farms_focus",
+     "worst_region",
+     "contract_farms",
+     "regions",
+     "sources"
+    ],
+    "title": "Outlook"
+   },
+   "OutlookIn": {
+    "properties": {
+     "climate": {
+      "type": "string",
+      "enum": [
+       "ssp126",
+       "ssp245",
+       "ssp585"
+      ],
+      "title": "Climate",
+      "default": "ssp245"
+     },
+     "levers": {
+      "items": {
+       "oneOf": [
+        {
+         "$ref": "#/components/schemas/Irrigate"
+        },
+        {
+         "$ref": "#/components/schemas/EarlierSowing"
+        },
+        {
+         "$ref": "#/components/schemas/RegionSplit"
+        },
+        {
+         "$ref": "#/components/schemas/HeatTolerant"
+        },
+        {
+         "$ref": "#/components/schemas/CropArea"
+        }
+       ],
+       "discriminator": {
+        "propertyName": "type",
+        "mapping": {
+         "crop_area": "#/components/schemas/CropArea",
+         "earlier_sowing": "#/components/schemas/EarlierSowing",
+         "heat_tolerant_variety": "#/components/schemas/HeatTolerant",
+         "irrigate": "#/components/schemas/Irrigate",
+         "region_split": "#/components/schemas/RegionSplit"
+        }
+       }
+      },
+      "type": "array",
+      "title": "Levers",
+      "default": []
+     }
+    },
+    "type": "object",
+    "title": "OutlookIn"
    },
    "PathwayItem": {
     "properties": {
@@ -2316,6 +3877,116 @@
     ],
     "title": "Provenance"
    },
+   "RadarAskIn": {
+    "properties": {
+     "question": {
+      "type": "string",
+      "title": "Question"
+     },
+     "history": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "History",
+      "default": []
+     }
+    },
+    "type": "object",
+    "required": [
+     "question"
+    ],
+    "title": "RadarAskIn"
+   },
+   "RadarAskOut": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "answered",
+       "not_in_data"
+      ],
+      "title": "Status"
+     },
+     "answer_md": {
+      "type": "string",
+      "title": "Answer Md"
+     },
+     "table": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Table"
+     },
+     "evidence": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Evidence"
+     },
+     "report": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Report"
+     },
+     "pending_approval": {
+      "type": "boolean",
+      "title": "Pending Approval",
+      "default": false
+     },
+     "used_node_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Used Node Ids"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/SourceChip"
+      },
+      "type": "array",
+      "title": "Sources"
+     }
+    },
+    "type": "object",
+    "required": [
+     "status",
+     "answer_md",
+     "evidence",
+     "used_node_ids",
+     "sources"
+    ],
+    "title": "RadarAskOut"
+   },
+   "RefileIn": {
+    "properties": {
+     "topic": {
+      "type": "string",
+      "title": "Topic"
+     }
+    },
+    "type": "object",
+    "required": [
+     "topic"
+    ],
+    "title": "RefileIn"
+   },
    "RegionSplit": {
     "properties": {
      "type": {
@@ -2523,6 +4194,51 @@
     "type": "object",
     "title": "SearchIn"
    },
+   "Season": {
+    "properties": {
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "watch",
+       "risk"
+      ],
+      "title": "Status"
+     },
+     "bucket": {
+      "type": "string",
+      "enum": [
+       "lt100k",
+       "100k_250k",
+       "250k_plus"
+      ],
+      "title": "Bucket"
+     },
+     "band": {
+      "type": "string",
+      "enum": [
+       "< €50k",
+       "€50–100k",
+       "€100–250k",
+       "€250k–1M",
+       "> €1M"
+      ],
+      "title": "Band"
+     }
+    },
+    "type": "object",
+    "required": [
+     "year",
+     "status",
+     "bucket",
+     "band"
+    ],
+    "title": "Season"
+   },
    "SimResult": {
     "properties": {
      "scenario_id": {
@@ -2588,6 +4304,86 @@
      "meters"
     ],
     "title": "SimResult"
+   },
+   "SourceChip": {
+    "properties": {
+     "node_id": {
+      "type": "string",
+      "title": "Node Id"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "data",
+       "model",
+       "doc",
+       "tacit"
+      ],
+      "title": "Kind"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "detail": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "required": [
+     "node_id",
+     "kind",
+     "label"
+    ],
+    "title": "SourceChip"
+   },
+   "SourceRef": {
+    "properties": {
+     "node_id": {
+      "type": "string",
+      "title": "Node Id"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "detail": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detail"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "data",
+       "model",
+       "doc",
+       "tacit"
+      ],
+      "title": "Kind"
+     }
+    },
+    "type": "object",
+    "required": [
+     "node_id",
+     "label",
+     "kind"
+    ],
+    "title": "SourceRef"
    },
    "ValidationError": {
     "properties": {
