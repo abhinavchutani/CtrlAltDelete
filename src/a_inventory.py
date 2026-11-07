@@ -26,7 +26,6 @@ from src.db import connect, git_sha
 
 # Share of the year a site is inside the boundary (METHODOLOGY §1): Foodhills/Bjuv acquired 27 Nov 2025,
 # operations included from December 2025; not in scope before.
-EST_UNCERTAINTY = 0.05  # relative uncertainty assumed for estimated (missing / spike-replaced) meter months
 IN_SCOPE_FRACTION = {("S-BJU", 2025): 1 / 12, **{("S-BJU", y): 0.0 for y in range(2019, 2025)}}
 
 TABLES = {  # issue table_name → raw table
@@ -219,11 +218,7 @@ def compute(T: dict, year: int) -> pd.DataFrame:
         lb = (F.GRID_FI_LB if c == "FI" else F.GRID_SE_LB)[year]
         res = (F.RESIDUAL_FI if c == "FI" else F.RESIDUAL_SE)[year]
         covered = min(mwh, goo.get(site, 0.0))
-        basis = "uncovered MWh × residual mix"
-        gap, est = mwh - covered, g.est_mwh.sum()
-        if goo.get(site, 0.0) > 0 and 0 < gap <= EST_UNCERTAINTY * est:
-            covered, basis = mwh, (f"GoO covers metered MWh; the {gap:.1f} MWh gap is within the ±{EST_UNCERTAINTY:.0%} "
-                                   f"uncertainty of {est:.0f} MWh of estimated meter months, so treated as covered")
+        basis = "uncovered MWh × residual mix (GHG Protocol Scope 2: only cancelled GoO MWh are covered)"
         keys = sum(g["keys"], [])
         add("scope2_location", "purchased_electricity", site, mwh * lb, "MWh × grid average", keys, [f"grid_lb:{c}:{year}"])
         add("scope2_market", "purchased_electricity", site, (mwh - covered) * res, basis,

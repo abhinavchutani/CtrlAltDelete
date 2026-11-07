@@ -1,5 +1,5 @@
 {
- "method": "a_inventory@56f74f0",
+ "method": "a_inventory@207527b",
  "scores": {
   "2023": {
    "score": 91.32,
@@ -21,11 +21,11 @@
    }
   },
   "2024": {
-   "score": 85.88,
+   "score": 74.89,
    "error_pct": {
     "scope1_total": 0.0,
     "scope2_location_total": 0.02,
-    "scope2_market_total": 0.42,
+    "scope2_market_total": 5.92,
     "scope3_total": 1.55,
     "cat01_purchased_goods_services": 1.72,
     "cat02_capital_goods": 0.0,

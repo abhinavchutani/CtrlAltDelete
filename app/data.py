@@ -39,7 +39,14 @@ def is_mock() -> bool:
 
 @st.cache_resource
 def _con() -> duckdb.DuckDBPyConnection:
-    return connect(source()[0], read_only=True)
+    """One read-write connection per app process (the review page writes decisions through it).
+    While the app runs it holds the DuckDB file lock, so stop it before `make all`."""
+    return connect(source()[0])
+
+
+def rw() -> duckdb.DuckDBPyConnection:
+    """A cursor for writes (review & publish)."""
+    return _con().cursor()
 
 
 def q(sql: str, params: list | None = None) -> pd.DataFrame:
