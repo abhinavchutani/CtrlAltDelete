@@ -25,7 +25,7 @@ from src.db import REPO_ROOT, env
 MAX_ROWS = 500
 TIMEOUT_S = 5.0
 ALLOWED_PREFIXES = ("raw_", "clean_")
-ALLOWED_TABLES = {"results", "lineage", "corrections"}
+ALLOWED_TABLES = {"results", "lineage", "corrections", "issues"}  # read-only; issues added for the entity view (#111)
 FORBIDDEN = re.compile(
     r"\b(insert|update|delete|merge|create|drop|alter|truncate|attach|detach|copy|export|import|pragma|install|load|"
     r"call|set|reset|vacuum|checkpoint|grant|revoke|begin|commit|rollback|use)\b", re.I)
