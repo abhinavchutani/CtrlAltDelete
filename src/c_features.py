@@ -51,11 +51,13 @@ GDD_BASE, HOT_C, HEAVY_MM, WINDOW_D = 5.0, 27.0, 20.0, 14
 SEASON = ("04-01", "10-31")
 
 
-def season_arrays(con: duckdb.DuckDBPyConnection) -> tuple[pd.DataFrame, dict[str, np.ndarray], np.ndarray]:
-    """Daily Apr–Oct weather as arrays shaped (cell-year rows, days). Returns keys, arrays, day-of-year."""
+def season_arrays(con: duckdb.DuckDBPyConnection, source: str = "raw_weather_daily"
+                  ) -> tuple[pd.DataFrame, dict[str, np.ndarray], np.ndarray]:
+    """Daily Apr–Oct weather as arrays shaped (cell-year rows, days). `source` is any table with the
+    raw_weather_daily columns (e.g. the C2 delta-method futures). Returns keys, arrays, day index."""
     w = con.execute(f"""SELECT cell_id, scenario, year(date) AS year, dayofyear(date) AS doy, month(date) AS month,
                                tmean_c, tmax_c, precip_mm, pet_mm
-                        FROM raw_weather_daily
+                        FROM {source}
                         WHERE strftime(date, '%m-%d') BETWEEN '{SEASON[0]}' AND '{SEASON[1]}'
                         ORDER BY cell_id, scenario, year, date""").df()
     w["d"] = w.groupby(["cell_id", "scenario", "year"]).cumcount()
@@ -123,8 +125,8 @@ def crop_features(arr: dict[str, np.ndarray], crop: Crop, aet: np.ndarray) -> di
     return out
 
 
-def build(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
-    keys, arr, _ = season_arrays(con)
+def build(con: duckdb.DuckDBPyConnection, source: str = "raw_weather_daily") -> pd.DataFrame:
+    keys, arr, _ = season_arrays(con, source)
     parts = []
     for soil, cap in BUCKET_MM.items():
         aet = soil_water(arr["precip_mm"], arr["pet_mm"], cap)
