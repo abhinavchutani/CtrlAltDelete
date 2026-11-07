@@ -7,7 +7,7 @@ import type { Climate, Lever, Region, ScenarioSpec } from "../api/types";
 export type Tab = "overview" | "map" | "assistant";
 export type Lens = "overall" | "drought" | "heat" | "rain";
 export type Mode = "ask" | "simulate" | "teach";
-export type SheetKind = "issues" | "money" | "accuracy" | "plans";
+export type SheetKind = "issues" | "money" | "accuracy" | "plans" | "changes" | "unusual";
 export type ParcelPick = { parcel_id: string; farm_id: string; area_ha: number; crop?: string | null; ring: [number, number][] };
 export type View = { longitude: number; latitude: number; zoom: number };
 /** One turn in the assistant. `context` carries what the user came from (a farm, a year, an issue). */
@@ -49,6 +49,9 @@ type State = {
   litNodes: string[]; // the knowledge-graph nodes the latest answer used
   newNodes: string[]; // notes filed this session (shown with a "New" pill)
   tourOpen: boolean;
+  /** The Overview's demo clock: an ISO day (1 Apr–31 Oct), or null = the server's demo day. */
+  asOf: string | null;
+  dayPlaying: boolean;
 };
 
 type Actions = {
@@ -71,11 +74,18 @@ type Actions = {
   light: (ids: string[]) => void;
   markNew: (id: string) => void;
   setTourOpen: (open: boolean) => void;
+  setAsOf: (d: string | null) => void;
+  setDayPlaying: (p: boolean) => void;
 };
 
 const hashTab = (): Tab => {
   const h = typeof window === "undefined" ? "" : window.location.hash.slice(1);
   return h === "map" || h === "assistant" ? h : "overview";
+};
+
+const urlAsOf = (): string | null => {
+  const v = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("asof");
+  return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
 };
 
 export const useStore = create<State & Actions>((set) => ({
@@ -96,6 +106,8 @@ export const useStore = create<State & Actions>((set) => ({
   litNodes: [],
   newNodes: [],
   tourOpen: false,
+  asOf: urlAsOf(),
+  dayPlaying: false,
   setTab: (tab) => set({ tab, sheet: null }),
   setClimate: (climate) => set({ climate, planLevers: null, planLabel: null, playing: false }),
   showPlan: (planLevers, planLabel = null) => set({ planLevers, planLabel }),
@@ -118,6 +130,8 @@ export const useStore = create<State & Actions>((set) => ({
   light: (litNodes) => set({ litNodes }),
   markNew: (id) => set((s) => ({ newNodes: [...new Set([...s.newNodes, id])] })),
   setTourOpen: (tourOpen) => set({ tourOpen }),
+  setAsOf: (asOf) => set({ asOf }),
+  setDayPlaying: (dayPlaying) => set({ dayPlaying }),
 }));
 
 /** The spec the map and season strip show: today's plan or the chosen plan, always 2026–2040. */

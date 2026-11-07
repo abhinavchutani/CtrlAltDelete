@@ -76,3 +76,11 @@ export type SourceChip = S["SourceChip"];
 export type Filed = S["Filed"];
 export type Interview = S["Interview"];
 export type KnowledgeItem = S["KnowledgeItem"];
+
+// Overview "Today" (task #127): the season so far on the demo clock's day (api/radar.py Today)
+export type Today = S["Today"];
+export type RegionDay = S["RegionDay"];
+export type TodayChange = S["Change"];
+export type FarmSpread = S["FarmSpread"];
+export type TodayCrop = RegionDay["crop"];
+export type StageName = S["Stage"]["name"];
