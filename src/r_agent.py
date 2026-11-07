@@ -215,8 +215,17 @@ def route_v1_totals(con, q: str) -> dict | None:
             "pending_approval": a.pending}
 
 
+def route_options(con, q: str) -> dict | None:
+    """Adaptation options from kb/adaptation_options.csv (#87), e.g. 'what can we do about heat at flowering?'."""
+    from src import r_options
+    out = r_options.answer(q)
+    if out is None:
+        return None
+    return finish(q, out["answer_md"], [out["table"]], out["evidence"], out["table"], pending=out["pending_approval"])
+
+
 ROUTES: list[Route] = [route_se_pea_deliveries, route_peat_as_mineral, route_energy_by_site_month,
-                       route_farm_yield_history, route_rule, route_v1_totals]
+                       route_farm_yield_history, route_options, route_rule, route_v1_totals]
 
 
 def hints(q: str) -> list[str]:
