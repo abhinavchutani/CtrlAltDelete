@@ -6,8 +6,8 @@ Method = the pack's docs/METHODOLOGY.md (GHG Protocol, AR6 GWP100), re-implement
 line carries lineage to record keys and factor ids. Key choices (REASONING_LOG):
 * Only active corrections are applied: human-approved, or DEV-ASSUMED when NAVIGATOR_DEV_ASSUME=1.
 * Duplicates are dropped, missing meter months / sea legs are added with their documented estimates.
-* Contract-farm footprints include drained organic soils (R14) on the organic share of the crop area
-  (clean_farm_survey.crop_organic_share; survey-reported "Organic soil" counts as fully organic).
+* Contract-farm footprints include drained organic soils (R14) on crop areas the reviewed survey reports as
+  "Organic soil" (after soil_misreport corrections).
 * GoO counts only for its own vintage year, capped at site consumption (R05); biogenic CO2 is a memo (R10).
 * Results are written with status `draft` (only humans publish).
 """
@@ -133,12 +133,9 @@ def farm_kg_per_ha(sv: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
 
 def farm_footprints(con: duckdb.DuckDBPyConnection, sv: pd.DataFrame, erp: pd.DataFrame,
                     with_organic: bool = True) -> pd.DataFrame:
-    shares = con.execute("SELECT record_key, crop_organic_share FROM clean_farm_survey").df() \
-        if con.execute("SELECT count(*) FROM information_schema.tables WHERE table_name='clean_farm_survey'").fetchall()[0][0] else \
-        pd.DataFrame(columns=["record_key", "crop_organic_share"])
-    sv = sv.merge(shares, on="record_key", how="left")
-    share = sv.crop_organic_share.fillna(0).clip(0, 1)
-    share = np.where(sv.soil_type_reported.str.lower().str.startswith("organic"), 1.0, share)
+    # soil type from the reviewed survey (soil_misreport corrections applied); the soil map is evidence for that
+    # review, not a quantity: adding the map's fractional share on top over-counted cat01 by 1–2 % on dev years
+    share = np.where(sv.soil_type_reported.str.lower().str.startswith("organic"), 1.0, 0.0)
     comp = farm_components(sv)
     mineral = sum(v for k, v in comp.items() if k != "organic_full")
     org = share * comp["organic_full"] if with_organic else 0.0

@@ -11,8 +11,8 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 | G1 | C1 CSV | exists + valid | 12,064 rows = template, final model (#17) | ✅ done |
 | G1 | C2 CSV | exists + valid | 18 rows = template (#18) | ✅ done |
 | G1 | E CSV | exists + valid | — | open (#23) |
-| G2 | A1 dev score, overall | ≥ 80 | **96.04** (all 200 dev labels; P 0.95, R 0.97) | ✅ met |
-| G2 | A2 dev score, 2023 / 2024 | ≥ 70 / ≥ 70 | **91.32 / 74.89** | ✅ met (GHG-Protocol-strict Scope 2 market; cat01 +1.1–1.7 % is the next lever) |
+| G2 | A1 dev score, overall | ≥ 80 | **96.69** (all 200 dev labels; P 0.98, R 0.95) | ✅ met |
+| G2 | A2 dev score, 2023 / 2024 | ≥ 70 / ≥ 70 | **84.96 / 87.17** | ✅ met (cat01 −1.9 % / −0.1 %; 2024 Scope 2 market −5.9 % is the next lever) |
 | G2 | C1 backtest MAPE / nRMSE | ≤ 8 % / ≤ 0.25 | **5.12 % / 0.115** (FI pea 2026 7.4 %, SE pea 2026 4.4 %) | ✅ met (#17) |
 | G2 | C2 | ensemble built and documented | delta-method ensemble: 30 perturbed 1991–2020 years × 3 SSPs, 2025 parcel mix; cross-checked vs the pack realisation | ✅ done (#18) |
 | G2 | E dev E90–E92 | 3/3 within tolerance | **3/3** (E90 0.0 %, E91 6.0 %, E92 1.7 %) | ✅ met (copilot #47 + A's interpolated meter months in #50) |
@@ -36,3 +36,4 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 | 2026-11-07 02:20 | #17 PR | C1 backtest MAPE / nRMSE | 8.16 % / 0.134 → 5.12 % / 0.115 | stage features (#16) + ridge/GB average; CV 7.64 % → 6.14 % |
 | 2026-11-07 02:45 | #54 | E dev E90–E92 (offline stub, real 2024 inventory) | 2/3 → 3/3 | E91 66.7 vs 62.9 (6.0 %, tolerance 10 %) after A's meter-estimate fix; no copilot change |
 | 2026-11-07 02:45 | #18 PR | C2 | — → 18 rows | delta-method ensemble (no public truth); pack-realisation cross-check agrees in sign |
+| 2026-11-07 06:30 | #13 PR | A1 all; A2 dev 2023 / 2024 | 96.04 → 96.69; 91.32 / 74.89 → 84.96 / 87.17 | soil_misreport needs crop+farm map agreement or the farm's own peat reports (8 of 11 false flags gone); peat only on reviewed-organic areas; stale issues retired on re-run |
