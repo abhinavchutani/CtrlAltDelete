@@ -1,6 +1,6 @@
 // Layers 2 + 3 of the Overview: the sheets that open over the grid. Each ends in its receipt.
 import { useState } from "react";
-import { useOutlook, useProvenance } from "../api/hooks";
+import { useOutlook } from "../api/hooks";
 import type { Issue, Outlook, Status } from "../api/types";
 import {
   Crumbs, Receipt, REGION_NAME, SeasonStrip, Segmented, Sheet, SourceChip, StatusMark, shortYear,
@@ -154,25 +154,6 @@ function MoneySheet({ o, onClose }: { o: Outlook; onClose: () => void }) {
   );
 }
 
-function AccuracySheet({ o, onClose }: { o: Outlook; onClose: () => void }) {
-  const sheet = useStore((s) => s.sheet);
-  const p = useProvenance();
-  const b = p.data?.backtest;
-  return (
-    <Sheet label="Forecast accuracy" from={sheet?.from} onClose={onClose}>
-      <div className="sheet-head"><div>
-        <Crumbs items={[{ label: "Overview", onClick: onClose }, { label: "Forecast accuracy" }]} />
-        <h2 className="sheet-title">{b ? `${b.model_error_pct}% off on seasons it never saw` : "How we checked"}</h2>
-        {b ? <p className="sheet-sub">Trained on harvests up to {b.train_until}, then asked to predict {b.test_years.join(", ")}. Total production
-          was off by {b.model_error_pct}%; a naive guess (each farm's average) was off by {b.baseline_error_pct}%.</p> : null}
-      </div></div>
-      <div style={{ marginTop: 28 }}>
-        <Receipt sources={o.sources} foot="Back-test score from out/scores/C1_backtest.json. Synthetic data pack, not Apetit's real figures." />
-      </div>
-    </Sheet>
-  );
-}
-
 function PlansSheet({ onClose }: { onClose: () => void }) {
   const sheet = useStore((s) => s.sheet);
   const plan = useBestPlan();
@@ -195,7 +176,6 @@ export function OverviewSheets({ o }: { o: Outlook }) {
   if (!sheet) return null;
   if (sheet.kind === "issues") return <IssuesSheet key={sheet.issueId ?? "issues"} o={o} onClose={close} />;
   if (sheet.kind === "money") return <MoneySheet o={o} onClose={close} />;
-  if (sheet.kind === "accuracy") return <AccuracySheet o={o} onClose={close} />;
   return <PlansSheet onClose={close} />;
 }
 

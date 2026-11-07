@@ -7,7 +7,7 @@ import type { Climate, Lever, Region, ScenarioSpec } from "../api/types";
 export type Tab = "overview" | "map" | "assistant";
 export type Lens = "overall" | "drought" | "heat" | "rain";
 export type Mode = "ask" | "simulate" | "teach";
-export type SheetKind = "issues" | "money" | "accuracy" | "plans";
+export type SheetKind = "issues" | "money" | "plans";
 export type ParcelPick = { parcel_id: string; farm_id: string; area_ha: number; crop?: string | null; ring: [number, number][] };
 export type View = { longitude: number; latitude: number; zoom: number };
 /** One turn in the assistant. `context` carries what the user came from (a farm, a year, an issue). */

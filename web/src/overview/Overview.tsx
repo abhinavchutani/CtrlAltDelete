@@ -1,14 +1,15 @@
 // Layer 1: the widget grid. A widget never lists; each one is a single button that opens its Layer 2.
 // Every number comes from /api/radar/outlook, /api/provenance or the plan finder stream.
 import { useMemo, type MouseEvent } from "react";
-import { useGeoFarms, useProvenance } from "../api/hooks";
+import { useGeoFarms } from "../api/hooks";
 import type { Outlook, Region, Status } from "../api/types";
 import {
-  CheckCircle, EuroIcon, FieldsIcon, PinIcon, REGION_NAME, Ring, Segmented, SproutIcon, StatusMark, WarnIcon, shortYear,
+  EuroIcon, FieldsIcon, PinIcon, REGION_NAME, Ring, Segmented, SproutIcon, StatusMark, WarnIcon, shortYear,
 } from "../components/ui";
-import { CLIMATES, climatePath, REGION_VIEW, useStore, type SheetKind } from "../state/store";
+import { CLIMATES, climatePath, REGION_VIEW, START_YEAR, useStore, type SheetKind } from "../state/store";
 import { BUCKET_LEVEL, cap, typeLabel, useBestPlan, useTodayOutlook } from "./data";
 import { OverviewSheets } from "./Sheets";
+import { WeatherWatch } from "./WeatherWatch";
 
 const BAR_H = { 1: 24, 2: 52, 3: 96 } as const;
 const rect = (e: MouseEvent) => (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -26,21 +27,24 @@ function Widget({ size = "S", label, icon, right, cta, onOpen, children, tour }:
   );
 }
 
-function SeasonBars({ o }: { o: Outlook }) {
+/** The 15 seasons as bars (height = € bucket, colour = status), with the next costly season and the worst one tagged. */
+function SeasonBars({ o, next }: { o: Outlook; next: number | null }) {
   const risk = o.seasons.filter((s) => s.status === "risk").length;
   return (
     <>
-      <div className="bars" style={{ height: 140, marginTop: 22 }} role="img"
-        aria-label={`Euros at risk by season, ${o.years[0]}–${o.years[o.years.length - 1]}: ${risk} seasons at €250k or more`}>
+      <div className="bars" style={{ height: 150, marginTop: 14 }} role="img"
+        aria-label={`Cost of shortfalls by season, ${o.years[0]}–${o.years[o.years.length - 1]}: ${risk} seasons over €250k; next ${next ?? "none"}, worst ${o.worst_year}`}>
         {o.seasons.map((s, i) => (
           <div key={s.year} className="col">
+            {s.year === next ? <span className="bar-tag">Next</span> : s.year === o.worst_year ? <span className="bar-tag worst">Worst</span> : null}
             <div className={`bar ${s.status}`} style={{ height: BAR_H[BUCKET_LEVEL[s.bucket] as 1 | 2 | 3] }} />
-            <span className="yl">{i % 2 === 0 ? shortYear(s.year) : "​"}</span>
+            <span className="yl" style={s.year === next || s.year === o.worst_year ? { color: "var(--ink)", fontWeight: 700 } : undefined}>
+              {i % 2 === 0 || s.year === next || s.year === o.worst_year ? shortYear(s.year) : "\u200b"}</span>
           </div>
         ))}
       </div>
       <div className="legend" style={{ marginTop: 10 }}>
-        <span><StatusMark status="risk" size={13} /> €250k+ ({risk} yrs)</span>
+        <span><StatusMark status="risk" size={13} /> over €250k</span>
         <span><StatusMark status="watch" size={13} /> €100–250k</span>
         <span><StatusMark status="ok" size={13} /> under €100k</span>
       </div>
@@ -100,7 +104,6 @@ export function Overview() {
   const showPlan = useStore((s) => s.showPlan);
   const setPlanSheet = useStore((s) => s.setPlanSheet);
   const q = useTodayOutlook();
-  const prov = useProvenance();
   const plan = useBestPlan();
   const o = q.data;
   const open = (k: SheetKind) => (e: MouseEvent) => openSheet(k, rect(e));
@@ -114,7 +117,7 @@ export function Overview() {
   const watch = o?.issues.filter((i) => i.status === "watch").length ?? 0;
   const byType = new Map<string, number>();
   for (const i of o?.issues ?? []) byType.set(i.type, (byType.get(i.type) ?? 0) + 1);
-  const bt = prov.data?.backtest;
+  const next = o?.seasons.find((x) => x.status === "risk" && x.year > START_YEAR)?.year ?? null;
   const best = plan.best;
 
   return (
@@ -130,10 +133,15 @@ export function Overview() {
       {q.error ? <p className="err" role="alert">Couldn't load the outlook: {String(q.error)}</p> : null}
 
       <div className={`grid ${sheet ? "dim" : ""}`} aria-hidden={sheet ? true : undefined}>
-        <Widget size="L" label="Money at stake each year" icon={<EuroIcon />} cta="See what drives it" onOpen={open("money")} tour="money">
-          {o ? <span className="w-fig fig-harvest">{o.money}</span> : skel("70%", 64)}
-          <span className="w-sub">of contracted crop supply, {climatePath(climate)}, {o ? `${o.years[0]}–${o.years[o.years.length - 1]}` : "…"}</span>
-          {o ? <SeasonBars o={o} /> : null}
+        <Widget size="L" label="What weather shortfalls will cost us" icon={<EuroIcon />} cta="See what drives it" onOpen={open("money")} tour="money">
+          {o ? <span className="w-fig fig-harvest">{o.costly_years} of {o.seasons.length} seasons</span> : skel("70%", 64)}
+          <span className="w-sub">cost over €250k each: the extra we pay to buy in the contract crops our farms can't deliver.</span>
+          {o ? <SeasonBars o={o} next={next} /> : null}
+          {o ? (
+            <span className="w-story">
+              {next ? <>Next one: <b>{next}</b>. </> : null}Worst: <b>{o.worst_year}</b>, {o.worst_band}. On average <b>{o.money}</b> a year.
+            </span>
+          ) : null}
         </Widget>
 
         <Widget label="Issues ahead" icon={<WarnIcon />} cta={o ? `See the ${o.issues.length}` : "See them"} onOpen={open("issues")} tour="issues">
@@ -145,7 +153,7 @@ export function Overview() {
           <span className="w-sub">{[...byType.entries()].map(([t, n]) => `${n} ${typeLabel(t).toLowerCase().replace(" at flowering", "")}`).join(" · ")}{byType.size ? " at flowering" : ""}</span>
         </Widget>
 
-        <Widget label="Fields needing attention" icon={<FieldsIcon />} cta="Show on the map" onOpen={() => toMap(o?.focus_year, o?.worst_region)}>
+        <Widget label="Fields at risk" icon={<FieldsIcon />} cta="Show on the map" onOpen={() => toMap(o?.focus_year, o?.worst_region)}>
           {o ? <span className="w-fig fig-risk">{o.fields_risk.toLocaleString("en-GB")}</span> : skel(80, 56)}
           <span className="w-sub">of {o?.pea_fields.toLocaleString("en-GB") ?? "…"} pea fields in {o?.focus_year ?? "…"}</span>
           <span className="w-sub" style={{ color: "var(--risk-ink)", display: "flex", alignItems: "center", gap: 8 }}>
@@ -179,26 +187,15 @@ export function Overview() {
           </div>
         </Widget>
 
-        <Widget label="Contract farms" icon={<PinIcon />} cta="Open the map" onOpen={() => toMap()}>
-          {o ? <span className="w-fig">{o.contract_farms.toLocaleString("en-GB")}</span> : skel(90, 56)}
-          <span className="w-sub">{o ? o.regions.map((r) => REGION_NAME[r]).join(" and ") : "…"}</span>
-        </Widget>
-
-        <Widget label="Forecast accuracy" icon={<CheckCircle />} cta="How we checked" onOpen={open("accuracy")}>
-          {bt ? (
-            <>
-              <span className="w-row">
-                <Ring size={72} stroke={11} label={`Total production off by ${bt.model_error_pct} percent`}
-                  parts={[{ value: bt.model_error_pct, color: "var(--apetit)" }, { value: 100 - bt.model_error_pct, color: "transparent" }]} />
-                <span className="w-fig">{bt.model_error_pct}%</span>
-              </span>
-              <span className="w-sub">off on {bt.test_years.length} unseen seasons (naive guess: {bt.baseline_error_pct}%)</span>
-            </>
-          ) : skel("80%", 88)}
+        <Widget size="M" label={`Next season's weather: ${START_YEAR + 1}`} icon={<WarnIcon />}
+          right="one plausible path, not a forecast" cta="Watch it on the map"
+          onOpen={() => { setYear(START_YEAR + 1); toMap(START_YEAR + 1); setLens("rain"); }}>
+          <WeatherWatch year={START_YEAR + 1} climate={climate} />
         </Widget>
 
         <Widget size="M" label={`Where it hurts in ${o?.focus_year ?? "…"}`} icon={<PinIcon />}
-          right={o?.worst_region ? `${REGION_NAME[o.worst_region]} worst` : undefined} cta="Open the map"
+          right={o ? `${o.contract_farms.toLocaleString("en-GB")} contract farms${o.worst_region ? ` · ${REGION_NAME[o.worst_region]} worst` : ""}` : undefined}
+          cta="Open the map"
           onOpen={() => toMap(o?.focus_year, o?.worst_region)}>
           {o ? <MiniMap o={o} /> : <div className="minimap skeleton" />}
         </Widget>
