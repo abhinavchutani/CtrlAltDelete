@@ -13,7 +13,8 @@ Rules (first match wins; anything ambiguous returns None → "not in the data"):
 * peat share   "share … contract-farm … emissions … drained organic soils" → extra ÷ with-organic total
 * deliveries   "… <Finnish|Swedish/Foodhills> … pea deliveries change from Y0 to Y1" → Track C's delivery_change_pct
 * SBTi target  "with <Y0> as base year … <r> %/yr linear … Scope 1+2 (market-based) … <Y1> … target"
-               → (S1 + S2 market)_Y0 × (1 − r/100 × (Y1 − Y0))
+               → (S1 + S2 market)_Y0 × (1 − r/100 × (Y1 − Y0)); "… FLAG target" → FLAG_Y0 × (same)
+* FLAG share   "share … <year> … FLAG" → Track A's flag_share_pct row (FLAG ÷ (S1 + S2 market + S3))
 """
 from __future__ import annotations
 
@@ -130,23 +131,43 @@ _RATE = re.compile(r"(\d+(?:\.\d+)?) ?%/yr")
 
 def linear_target(con, q: str, year: int) -> Resolved | None:
     b, r = _BASE.search(q), _RATE.search(q)
-    if not (b and r and "target" in q and "scope 1+2" in q and "market-based" in q) or "flag" in q:
+    flag = "flag" in q
+    if not (b and r and "target" in q and (flag or ("scope 1+2" in q and "market-based" in q))):
         return None
+    if flag and "scope 1+2" in q:
+        return None  # ambiguous: which base?
     y0, rate = int(b.group(1)), float(r.group(1))
     later = [int(y) for y in YEAR.findall(q) if int(y) > y0]
     if len(set(later)) != 1:
         return None
     y1 = later[0]
-    parts = [e_tools.query_results(con, metric="tco2e", scope="total", category=c, year=y0)
-             for c in ("scope1_total", "scope2_market_total")]
+    if flag:
+        parts = [e_tools.query_results(con, metric="tco2e", scope="flag", category="flag_total", year=y0)]
+        label, what = "FLAG", "FLAG emissions (SBTi FLAG, METHODOLOGY §5)"
+    else:
+        parts = [e_tools.query_results(con, metric="tco2e", scope="total", category=c, year=y0)
+                 for c in ("scope1_total", "scope2_market_total")]
+        label, what = "S1 + S2 market", "Scope 1 + Scope 2 market"
     if not all(p["rows"] for p in parts):
         return None
     base = sum(p["rows"][0]["value"] for p in parts)
     v = round(base * (1 - rate / 100 * (y1 - y0)), 4)
-    derived = {"derived": {"formula": f"(S1 + S2 market)_{y0} × (1 − {rate}/100 × ({y1} − {y0}))",
+    derived = {"derived": {"formula": f"({label})_{y0} × (1 − {rate}/100 × ({y1} − {y0}))",
                            "inputs": [base, rate, y0, y1], "value": v}}
-    return Resolved(v, "t CO2e", f"{v:,.1f} t CO2e in {y1}: the {y0} base of {base:,.1f} t (Scope 1 + Scope 2 "
-                                 f"market) reduced linearly by {rate} % of the base per year.", parts + [derived])
+    return Resolved(v, "t CO2e", f"{v:,.1f} t CO2e in {y1}: the {y0} base of {base:,.1f} t ({what}) reduced "
+                                 f"linearly by {rate} % of the base per year (illustrative).", parts + [derived])
+
+
+def flag_share(con, q: str, year: int) -> Resolved | None:
+    """'What share (%) of total <year> emissions … are FLAG emissions' → Track A's flag_share_pct row."""
+    if not ("flag" in q and "share" in q) or "target" in q:
+        return None
+    res = e_tools.query_results(con, metric="flag_share_pct", category="flag_share_pct", year=year)
+    if not res["rows"]:
+        return None
+    row = res["rows"][0]
+    return Resolved(row["value"], "%", f"{row['value']:.1f} % of {year} emissions (S1 + S2 market + S3) are FLAG "
+                                       f"emissions ({row['method']}).", [res])
 
 
 _REGION = (("swedish", "SE_SKANE"), ("foodhills", "SE_SKANE"), ("sweden", "SE_SKANE"),
@@ -172,7 +193,7 @@ def delivery_change(con, q: str, year: int) -> Resolved | None:
                                        f"({row['method']}).", [res])
 
 
-RULES = (linear_target, peat_share, sea_legs, delivery_change, site_lines)
+RULES = (linear_target, flag_share, peat_share, sea_legs, delivery_change, site_lines)
 
 
 def resolve(con: duckdb.DuckDBPyConnection, question: str) -> Resolved | None:

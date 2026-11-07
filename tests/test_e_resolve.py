@@ -39,6 +39,9 @@ def con(tmp_path, monkeypatch):
     L.write_result(c, "PEAT:2025:with_organic_soils:all_farms", metric="farm_tco2e", value=4000.0, unit="t CO2e",
                    scope="3", category="all_farms", year=2025, scenario="with_organic_soils", method="fixture",
                    produced_by="test", lineage=[L.src("doc", "x")])
+    for cat, metric, v in [("flag_total", "tco2e", 150000.0), ("flag_share_pct", "flag_share_pct", 69.2)]:
+        L.write_result(c, f"A2:2025:actual:flag:{cat}", metric=metric, value=v, unit="%", scope="flag", category=cat,
+                       year=2025, method="fixture", produced_by="test", lineage=[L.src("doc", "x")])
     for region, v in [("FI_SW", 26.1), ("SE_SKANE", -13.0)]:
         L.write_result(c, f"C:deliveries:{region}:pea:2026", metric="delivery_change_pct", value=v, unit="%",
                        category=f"{region}:pea", year=2026, scenario="actual", produced_by="test",
@@ -64,6 +67,10 @@ def _ask(con, q):
      "statement (tCO2e)?", 60.0),
     ("By how many percent did Finnish contract pea deliveries change from 2025 to 2026?", 26.1),
     ("By how many percent did Swedish (Foodhills) pea deliveries change from 2025 to 2026?", -13.0),
+    ("What share (%) of total 2025 emissions (S1 + S2 market + S3) are FLAG emissions as defined in "
+     "docs/METHODOLOGY.md?", 69.2),
+    ("Illustrative: with 2025 as base year and the SBTi FLAG minimum 3.03 %/yr linear rate, what is a 2032 FLAG "
+     "target in tCO2e?", 150000.0 * (1 - 0.0303 * 7)),
 ])
 def test_rules_answer_from_results(con, q, expected):
     a = _ask(con, q)
@@ -80,7 +87,8 @@ def test_derived_numbers_show_their_formula(con):
     "What were Scope 1 emissions from diesel at the Säkylä plant in 2025 (tCO2e)?",      # carrier not in the lines
     "What were Scope 1 emissions at the Säkylä and Kantvik plants in 2025 (tCO2e)?",     # two sites: ambiguous
     "By how many percent did Finnish contract pea deliveries change from 2021 to 2026?",  # not year-on-year
-    "Illustrative: with 2025 as base year and the SBTi FLAG minimum 3.03 %/yr linear rate, what is a 2032 FLAG target?",
+    "What share (%) of total 2023 emissions are FLAG emissions?",                       # no 2023 FLAG row here
+    "With 2025 as base year at 3.03 %/yr linear, what is a 2032 FLAG and Scope 1+2 target?",  # which base?
 ])
 def test_ambiguous_or_unsupported_questions_stay_unanswered(con, q):
     assert e_resolve.resolve(con, q) is None
