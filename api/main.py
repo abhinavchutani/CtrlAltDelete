@@ -145,6 +145,14 @@ def radar_outlook(body: radar.OutlookIn) -> radar.Outlook:
     return radar.outlook(body)
 
 
+@app.get("/api/radar/today", response_model=radar.Today)
+def radar_today(date: str | None = Query(None, description="YYYY-MM-DD, 1 Apr–31 Oct of 2026–2040; default: the demo day"),
+                climate: S.Climate = "ssp245", crop: radar.TodayCrop = "pea") -> radar.Today:
+    if L.mock_mode():
+        raise HTTPException(503, "today runs on the daily weather (API_MOCK=0)")
+    return radar.today(date, climate, crop)
+
+
 @app.get("/api/graph", response_model=kgraph.Graph)
 def graph() -> kgraph.Graph:
     return kgraph.graph()

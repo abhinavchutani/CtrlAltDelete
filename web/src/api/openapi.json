@@ -561,6 +561,86 @@
     }
    }
   },
+  "/api/radar/today": {
+   "get": {
+    "summary": "Radar Today",
+    "operationId": "radar_today_api_radar_today_get",
+    "parameters": [
+     {
+      "name": "date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "YYYY-MM-DD, 1 Apr–31 Oct of 2026–2040; default: the demo day",
+       "title": "Date"
+      },
+      "description": "YYYY-MM-DD, 1 Apr–31 Oct of 2026–2040; default: the demo day"
+     },
+     {
+      "name": "climate",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "ssp126",
+        "ssp245",
+        "ssp585"
+       ],
+       "type": "string",
+       "default": "ssp245",
+       "title": "Climate"
+      }
+     },
+     {
+      "name": "crop",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "pea",
+        "potato",
+        "spinach",
+        "carrot",
+        "turnip_rape"
+       ],
+       "type": "string",
+       "default": "pea",
+       "title": "Crop"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Today"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/graph": {
    "get": {
     "summary": "Graph",
@@ -1953,6 +2033,71 @@
     ],
     "title": "BoardRow"
    },
+   "Change": {
+    "properties": {
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "crop": {
+      "type": "string",
+      "enum": [
+       "pea",
+       "potato",
+       "spinach",
+       "carrot",
+       "turnip_rape"
+      ],
+      "title": "Crop"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "escalated",
+       "eased",
+       "stage",
+       "jump"
+      ],
+      "title": "Kind"
+     },
+     "from_status": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "watch",
+       "risk"
+      ],
+      "title": "From Status"
+     },
+     "to_status": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "watch",
+       "risk"
+      ],
+      "title": "To Status"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "region",
+     "crop",
+     "kind",
+     "from_status",
+     "to_status",
+     "text"
+    ],
+    "title": "Change"
+   },
    "ConfirmIn": {
     "properties": {
      "reviewer": {
@@ -2144,6 +2289,70 @@
      "label"
     ],
     "title": "EvidenceRef"
+   },
+   "FarmSpread": {
+    "properties": {
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "crop": {
+      "type": "string",
+      "enum": [
+       "pea",
+       "potato",
+       "spinach",
+       "carrot",
+       "turnip_rape"
+      ],
+      "title": "Crop"
+     },
+     "farms": {
+      "type": "integer",
+      "title": "Farms"
+     },
+     "fields": {
+      "type": "integer",
+      "title": "Fields"
+     },
+     "p10": {
+      "type": "integer",
+      "title": "P10"
+     },
+     "p50": {
+      "type": "integer",
+      "title": "P50"
+     },
+     "p90": {
+      "type": "integer",
+      "title": "P90"
+     },
+     "share_ge_90": {
+      "type": "number",
+      "title": "Share Ge 90"
+     },
+     "share_ge_75": {
+      "type": "number",
+      "title": "Share Ge 75"
+     }
+    },
+    "type": "object",
+    "required": [
+     "region",
+     "crop",
+     "farms",
+     "fields",
+     "p10",
+     "p50",
+     "p90",
+     "share_ge_90",
+     "share_ge_75"
+    ],
+    "title": "FarmSpread"
    },
    "FarmStatus": {
     "properties": {
@@ -3987,6 +4196,106 @@
     ],
     "title": "RefileIn"
    },
+   "RegionDay": {
+    "properties": {
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "crop": {
+      "type": "string",
+      "enum": [
+       "pea",
+       "potato",
+       "spinach",
+       "carrot",
+       "turnip_rape"
+      ],
+      "title": "Crop"
+     },
+     "stage": {
+      "type": "string",
+      "enum": [
+       "not_sown",
+       "sown",
+       "flowering",
+       "fill",
+       "harvest"
+      ],
+      "title": "Stage"
+     },
+     "stages": {
+      "items": {
+       "$ref": "#/components/schemas/Stage"
+      },
+      "type": "array",
+      "title": "Stages"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "watch",
+       "risk"
+      ],
+      "title": "Status"
+     },
+     "dryness": {
+      "type": "number",
+      "title": "Dryness"
+     },
+     "dryness_pct": {
+      "type": "integer",
+      "title": "Dryness Pct"
+     },
+     "dryness_normal": {
+      "items": {
+       "type": "number"
+      },
+      "type": "array",
+      "title": "Dryness Normal"
+     },
+     "hot_days": {
+      "type": "number",
+      "title": "Hot Days"
+     },
+     "heat_pct": {
+      "type": "integer",
+      "title": "Heat Pct"
+     },
+     "hot_normal": {
+      "items": {
+       "type": "number"
+      },
+      "type": "array",
+      "title": "Hot Normal"
+     },
+     "hot_days_p50": {
+      "type": "number",
+      "title": "Hot Days P50"
+     }
+    },
+    "type": "object",
+    "required": [
+     "region",
+     "crop",
+     "stage",
+     "stages",
+     "status",
+     "dryness",
+     "dryness_pct",
+     "dryness_normal",
+     "hot_days",
+     "heat_pct",
+     "hot_normal",
+     "hot_days_p50"
+    ],
+    "title": "RegionDay"
+   },
    "RegionSplit": {
     "properties": {
      "type": {
@@ -4384,6 +4693,176 @@
      "kind"
     ],
     "title": "SourceRef"
+   },
+   "Stage": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "enum": [
+       "sown",
+       "flowering",
+       "fill",
+       "harvest"
+      ],
+      "title": "Name"
+     },
+     "date": {
+      "type": "string",
+      "title": "Date"
+     },
+     "expected": {
+      "type": "boolean",
+      "title": "Expected"
+     }
+    },
+    "type": "object",
+    "required": [
+     "name",
+     "date",
+     "expected"
+    ],
+    "title": "Stage"
+   },
+   "Today": {
+    "properties": {
+     "date": {
+      "type": "string",
+      "title": "Date"
+     },
+     "climate": {
+      "type": "string",
+      "enum": [
+       "ssp126",
+       "ssp245",
+       "ssp585"
+      ],
+      "title": "Climate"
+     },
+     "path": {
+      "type": "string",
+      "enum": [
+       "historical",
+       "ssp126",
+       "ssp245",
+       "ssp585"
+      ],
+      "title": "Path"
+     },
+     "crop": {
+      "type": "string",
+      "enum": [
+       "pea",
+       "potato",
+       "spinach",
+       "carrot",
+       "turnip_rape"
+      ],
+      "title": "Crop"
+     },
+     "season": {
+      "prefixItems": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       }
+      ],
+      "type": "array",
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Season"
+     },
+     "regions": {
+      "items": {
+       "$ref": "#/components/schemas/RegionDay"
+      },
+      "type": "array",
+      "title": "Regions"
+     },
+     "all": {
+      "items": {
+       "$ref": "#/components/schemas/RegionDay"
+      },
+      "type": "array",
+      "title": "All"
+     },
+     "counts": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "propertyNames": {
+       "enum": [
+        "ok",
+        "watch",
+        "risk"
+       ]
+      },
+      "type": "object",
+      "title": "Counts"
+     },
+     "changes": {
+      "items": {
+       "$ref": "#/components/schemas/Change"
+      },
+      "type": "array",
+      "title": "Changes"
+     },
+     "farms": {
+      "items": {
+       "$ref": "#/components/schemas/FarmSpread"
+      },
+      "type": "array",
+      "title": "Farms"
+     },
+     "normal_years": {
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       }
+      ],
+      "type": "array",
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Normal Years"
+     },
+     "default_date": {
+      "type": "string",
+      "title": "Default Date"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/SourceRef"
+      },
+      "type": "array",
+      "title": "Sources"
+     },
+     "synthetic": {
+      "type": "boolean",
+      "title": "Synthetic",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "date",
+     "climate",
+     "path",
+     "crop",
+     "season",
+     "regions",
+     "all",
+     "counts",
+     "changes",
+     "farms",
+     "normal_years",
+     "default_date",
+     "sources"
+    ],
+    "title": "Today"
    },
    "ValidationError": {
     "properties": {
