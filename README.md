@@ -109,6 +109,7 @@ make all        # = make load a c e pitch
 | `make load` | the pack's files, untouched, as `raw_*` / `task_*` tables | `out/navigator.duckdb` (gitignored) |
 | `make a` | Track A: detectors, LLM triage (offline stub without a key), corrections, 2023–25 inventory, peat reveal | `out/A1_issues_submission.csv`, `out/A2_inventory_2025_submission.csv`, `out/corrections.csv`, `out/scores/A2_dev.json`, `out/scores/peat_reveal_2025.json` |
 | `make c` | Track C: weather link, stage features, yield model + backtest, C1, C2 ensemble, C3 € risk, delivery changes | `out/C1_yields_2027_2031_submission.csv`, `out/C2_climate_yield_risk_submission.csv`, `out/scores/C1_backtest.json`, `C2_ensemble.json`, `C3_euro_risk.json` |
+| `make d` | Track D1: 2025 Apetit-parcel P and N delivered to water per catchment (parcel index, delivery decay, retention; 2 scales calibrated on the 6 dev catchments) + SBTN-style priority rank | `out/D1_catchment_priority_submission.csv`, `out/scores/D1_dev.json` |
 | `make e` | Track E: every question in `tasks/E_questions.csv` through the copilot | `out/E_answers_submission.csv` (+ E90–E92 dev check printed) |
 | `make pitch` | every `{{placeholder}}` in METHOD_NOTE + `docs/pitch/` filled from `results` | `out/pitch/*.md`, `out/pitch/values.json` (value + source per number) |
 | `make app` | the Streamlit app: data quality, inventory click-through, farm & peat, climate risk, review & publish, copilot | http://localhost:8501 |
