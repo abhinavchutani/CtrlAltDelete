@@ -51,3 +51,11 @@ def test_results_have_lineage(con):
                              AND NOT EXISTS (SELECT 1 FROM lineage l WHERE l.result_id = r.result_id)""").fetchall()[0][0]
     assert orphans == 0
     assert con.execute("SELECT count(DISTINCT status) FROM results WHERE result_id LIKE 'A2:%'").fetchall()[0][0] == 1  # all draft
+
+
+def test_flag_results_written_with_lineage(con):
+    A.run(con, years=(2025,), write=True)
+    rows = dict(con.execute("""SELECT category, value FROM results
+                               WHERE result_id LIKE 'A2:2025:actual:flag:%'""").fetchall())
+    assert rows["flag_total"] > 0 and 50 < rows["flag_share_pct"] < 90
+    assert con.execute("""SELECT count(*) FROM lineage WHERE result_id = 'A2:2025:actual:flag:flag_total'""").fetchall()[0][0] >= 2

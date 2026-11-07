@@ -355,6 +355,22 @@ def flag_share(T: dict, year: int) -> dict:
             "flag_share_pct": round(100 * flag / total, 2)}
 
 
+def write_flag(con: duckdb.DuckDBPyConnection, T: dict, year: int, scenario: str = "actual") -> dict:
+    """FLAG (SBTi) total and share of S1 + S2 market + S3 as results (copilot E06/E21; METHODOLOGY §5)."""
+    f = flag_share(T, year)
+    by = f"a_inventory@{git_sha()}"
+    meth = (f"farm FLAG {f['farm_flag_t']:,.1f} t (N2O, liming, organic soils) + commodity lines × library flag_share "
+            f"{f['commodity_flag_t']:,.1f} t")
+    lin = [L.src("doc", f"A2:{year}:{scenario}:scope3:cat01_purchased_goods_services"), L.src("doc", "pack docs/METHODOLOGY.md §5")]
+    L.write_result(con, f"A2:{year}:{scenario}:flag:flag_total", metric="tco2e", value=f["flag_t"], unit="t CO2e",
+                   scope="flag", category="flag_total", year=year, scenario=scenario, method=meth, produced_by=by, lineage=lin)
+    L.write_result(con, f"A2:{year}:{scenario}:flag:flag_share_pct", metric="flag_share_pct", value=f["flag_share_pct"],
+                   unit="%", scope="flag", category="flag_share_pct", year=year, scenario=scenario,
+                   method=f"FLAG ÷ (S1 + S2 market + S3) = {f['flag_t']:,.1f} / {f['total_t']:,.1f}", produced_by=by,
+                   lineage=lin + [L.src("doc", f"A2:{year}:{scenario}:total:{c}") for c in ("scope1_total", "scope2_market_total", "scope3_total")])
+    return f
+
+
 def score_a2(sub: pd.DataFrame, key: pd.DataFrame) -> dict:
     t, p = key.set_index("category").tco2e, sub.set_index("category").tco2e
     tot, detail = 0.0, {}
@@ -403,6 +419,7 @@ def run(con: duckdb.DuckDBPyConnection, years=(2023, 2024, 2025), write: bool = 
         out[y] = summ
         if write:
             write_results(con, inv, summ, y)
+            write_flag(con, T, y)
     return out
 
 
