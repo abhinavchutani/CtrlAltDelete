@@ -80,19 +80,19 @@
   "pending": ""
  },
  "C3_EUR_AT_RISK": {
-  "value": null,
+  "value": "€289,566",
   "source": "results metric=eur_at_risk",
-  "pending": "C3 (#19) not published yet"
+  "pending": ""
  },
  "C3_HEDGE_EUR": {
-  "value": null,
+  "value": "€37,243",
   "source": "results metric=eur_hedge",
-  "pending": "C3 (#19) not published yet"
+  "pending": ""
  },
  "C3_IRRIGATION_EUR": {
-  "value": null,
+  "value": "€33,230",
   "source": "results metric=eur_irrigation",
-  "pending": "C3 (#19) not published yet"
+  "pending": ""
  },
  "C3_REBALANCE_PCT": {
   "value": null,
