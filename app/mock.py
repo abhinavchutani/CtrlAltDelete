@@ -111,23 +111,28 @@ def seed(path=MOCK_DB) -> None:
         L.write_result(con, f"MOCK:C1:effect:pea:{feat}", metric="feature_effect_pct", value=v, unit="% yield per unit",
                        category=f"pea:{feat}", scenario="model", method=METHOD, produced_by=BY, lineage=c1)
 
-    for ssp_i, ssp in enumerate(SSPS):
+    c3 = [L.src("model", "mock_euro_model"), L.src("doc", "climate_change_signals.csv")]  # C2/C3 shapes (#57, #64)
+    for ssp_i, ssp in enumerate(["baseline", *SSPS]):
         for region in REGIONS:
             for crop in CROPS:
                 cat = f"{region}:{crop}"
-                d = -float(rng.uniform(0, 4)) * (ssp_i + 1)
-                for metric, val, unit in [("yield_change_pct", round(d, 1), "%"),
-                                          ("p_bad_year", round(min(0.6, 0.1 + abs(d) / 40), 2), "share"),
-                                          ("eur_at_risk", round(abs(d) * float(rng.uniform(1e4, 5e4)), -3), "EUR/yr")]:
-                    L.write_result(con, f"MOCK:C2:{ssp}:{cat}:{metric}", metric=metric, value=val, unit=unit,
-                                   category=cat, year=2050, scenario=ssp, method=METHOD, produced_by=BY,
-                                   lineage=[L.src("model", "mock_yield_model"), L.src("doc", "climate_change_signals.csv")])
-    for i, (action, owner) in enumerate([("Irrigation on drought-exposed fields", "contract farming"),
-                                         ("Earlier sowing window", "field advisors"),
-                                         ("Two-region pea sourcing", "procurement")]):
-        L.write_result(con, f"MOCK:C3:adapt:{i}", metric="eur_saved", value=round(float(rng.uniform(5e4, 3e5)), -3),
-                       unit="EUR/yr", category=f"{action} | owner: {owner}", year=2050, scenario="ssp245",
-                       method=METHOD, produced_by=BY, lineage=[L.src("model", "mock_euro_model")])
+                d = -float(rng.uniform(0, 4)) * ssp_i
+                eur = round(float(rng.uniform(1e4, 9e4)) * (1 + ssp_i / 5), -3)
+                rows = [("p_bad_year", round(min(0.6, 0.05 + abs(d) / 40), 2), "share"), ("eur_at_risk", eur, "€/yr"),
+                        ("eur_at_risk_p90", round(3 * eur, -3), "€ (1-in-10 yr)"),
+                        ("shortfall_t", round(eur / 150), "t/yr"), ("import_tco2e", round(eur / 300), "t CO2e/yr")]
+                if ssp != "baseline":
+                    rows.append(("yield_change_pct", round(d, 1), "%"))
+                for metric, val, unit in rows:
+                    L.write_result(con, f"MOCK:C3:{ssp}:{cat}:{metric}", metric=metric, value=val, unit=unit,
+                                   category=cat, year=2050, scenario=ssp, method=METHOD, produced_by=BY, lineage=c3)
+        for action, owner in [("irrigation", "contract farming (field advisors)"), ("earlier_sowing", "contract farming (agronomy)"),
+                              ("two_region_pea", "procurement")]:
+            for metric, val, unit in [("eur_saved", round(float(rng.uniform(5e3, 6e4)), -3), "€/yr"),
+                                      ("tco2e_avoided", round(float(rng.uniform(20, 200))), "t CO2e/yr")]:
+                L.write_result(con, f"MOCK:C3:{ssp}:{action}:{metric}", metric=metric, value=val, unit=unit,
+                               category=f"{action} | owner: {owner}", year=2050, scenario=ssp, method=METHOD,
+                               produced_by=BY, lineage=c3)
     con.close()
 
 

@@ -62,3 +62,16 @@ def test_farm_page_does_not_count_the_all_farms_total(monkeypatch, tmp_path):
     assert not at.exception
     shown = [m.value for m in at.metric if "organic" in m.label.lower()][0]
     assert shown == f"{total:,.0f} t CO2e"
+
+
+def test_climate_page_shows_c3_actions_with_owner(monkeypatch):
+    monkeypatch.setenv("APP_MOCK", "1")
+    at = AppTest.from_file("../app/Home.py", default_timeout=60)
+    at.run()
+    at.switch_page("views/climate_risk.py").run()
+    assert not at.exception
+    labels = [m.label for m in at.metric]
+    assert "Expected € at risk per year" in labels
+    actions = [d.value for d in at.dataframe if "owner" in d.value.columns]
+    assert actions and set(actions[0]["owner"]) >= {"procurement"}
+    assert "€ avoided / yr (gross)" in actions[0].columns

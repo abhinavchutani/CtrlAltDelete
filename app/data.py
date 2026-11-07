@@ -9,7 +9,7 @@ import pandas as pd
 import streamlit as st
 
 from app import mock
-from src.db import connect, db_path, env
+from src.db import REPO_ROOT, connect, db_path, env
 
 
 def _has_results(path) -> bool:
@@ -88,6 +88,16 @@ def flagged(issues: pd.DataFrame) -> pd.DataFrame:
     """Real flags only: allow-listed rows (status `legitimate`, whatever their issue_type) and
     `observation` rows are not issues."""
     return issues[(issues["status"] != "legitimate") & (issues["issue_type"] != "observation")]
+
+
+def score_file(name: str) -> dict:
+    """A JSON file in out/scores/ written by the pipelines (empty dict if absent)."""
+    import json
+    p = REPO_ROOT / "out" / "scores" / name
+    try:
+        return json.loads(p.read_text())
+    except (OSError, ValueError):
+        return {}
 
 
 def visible(df: pd.DataFrame, show_drafts: bool) -> pd.DataFrame:
