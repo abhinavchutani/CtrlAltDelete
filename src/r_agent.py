@@ -77,6 +77,33 @@ def years_in(q: str) -> list[int]:
     return sorted({int(y) for y in re.findall(r"\b(19[89]\d|20[0-6]\d)\b", q)})
 
 
+REPORT_RE = re.compile(r"\breport\b|excel|xlsx|spreadsheet|download|\bfile\b")
+
+
+def wants_report(q: str) -> bool:
+    return bool(REPORT_RE.search(q))
+
+
+def maybe_report(con, q: str, template: str, params: dict) -> dict | None:
+    """The .xlsx for this answer when the question asks for a report (#92); the answer stands without it."""
+    if not wants_report(q):
+        return None
+    try:
+        from src.r_report import make_report
+        return make_report(con, template, params)
+    except Exception:  # noqa: BLE001 — a failed file never blocks the answer
+        return None
+
+
+def previous_question(history: list[dict] | None) -> str | None:
+    """The last user question in the chat history ({question} or {role: user, content})."""
+    for h in reversed(history or []):
+        text = h.get("question") or (h.get("content") if h.get("role", "user") == "user" else None)
+        if text and str(text).strip():
+            return str(text)
+    return None
+
+
 def fmt(x: float, d: int = 1) -> str:
     return f"{x:,.{d}f}"
 
@@ -105,7 +132,8 @@ def route_se_pea_deliveries(con, q: str) -> dict | None:
     md = ("Swedish pea deliveries (Foodhills grower records, harvest year): " + "; ".join(parts) + ".\n\n"
           "*Synthetic twin data. Source: the Swedish grower file (columns skördeår, gröda, levererad_mängd_ton).*")
     evidence = sql_evidence(res) + ([ev("assumption", "derived:change_pct", derived["derived"]["formula"])] if derived else [])
-    return finish(q, md, [res, derived], evidence, table_of(res))
+    report = maybe_report(con, q, "deliveries_by_farm_year", {"region": "SE_SKANE", "crop": "pea", "years": yrs})
+    return finish(q, md, [res, derived], evidence, table_of(res), report=report)
 
 
 def route_peat_as_mineral(con, q: str) -> dict | None:
@@ -164,13 +192,7 @@ def route_energy_by_site_month(con, q: str) -> dict | None:
     n_corr = sum(r[2] for r in tot["rows"])
     md = (f"Energy use per site in {yr} (all carriers, MWh): {parts}. The table has one row per site × carrier × month; "
           f"{n_corr} readings use a proposed correction (unit error, spike or missing month), pending expert approval.")
-    report = None
-    if re.search(r"report|excel|xlsx|file", q):
-        try:
-            from src.r_report import make_report  # task #92
-            report = make_report(con, "export_query", {"year": yr}, sql=ENERGY_SQL, tables=res["tables"], params_list=[yr, yr])
-        except Exception:  # noqa: BLE001 — reports land in #92; the answer stands without the file
-            report = None
+    report = maybe_report(con, q, "energy_by_site_month", {"year": yr})
     return finish(q, md, [res, tot], sql_evidence(res), table_of(res), report=report, pending=n_corr > 0)
 
 
@@ -196,7 +218,8 @@ def route_farm_yield_history(con, q: str) -> dict | None:
         return not_in_data(f"No survey rows for farm {farm}.", ["clean_farm_survey", "raw_farm_survey_fi"])
     lines = [f"{r[0]} {r[1]}: {fmt(r[3], 2)} t/ha on {fmt(r[2], 2)} ha" + (" (corrected)" if r[4] else "") for r in res["rows"]]
     md = f"Farm {farm}, survey yields after the data review:\n\n" + "\n".join(f"- {l}" for l in lines)
-    return finish(q, md, [res], sql_evidence(res), table_of(res), pending=any(r[4] for r in res["rows"]))
+    report = maybe_report(con, q, "farm_yield_history", {"farm_id": farm})
+    return finish(q, md, [res], sql_evidence(res), table_of(res), report=report, pending=any(r[4] for r in res["rows"]))
 
 
 def route_v1_totals(con, q: str) -> dict | None:
@@ -258,6 +281,9 @@ def _ask(question: str, history: list[dict] | None = None, con: duckdb.DuckDBPyC
                 out = not_in_data(f"The query was refused: {e}.")
             if out is not None:
                 return out
+        prev = previous_question(history)
+        if wants_report(q) and prev:   # "make that a report": rerun the previous question with a report
+            return _ask(f"{prev} as a report", None, con)
         return not_in_data("No offline route answers this yet; the LLM mode (task #93) will try the tools.", hints(question))
     finally:
         if own:
