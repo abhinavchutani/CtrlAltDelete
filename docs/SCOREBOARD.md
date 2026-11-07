@@ -14,7 +14,7 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 | G2 | A1 dev score, overall | ≥ 80 | **96.04** (all 200 dev labels; P 0.95, R 0.97) | ✅ met |
 | G2 | A2 dev score, 2023 / 2024 | ≥ 70 / ≥ 70 | **91.32 / 74.89** | ✅ met (GHG-Protocol-strict Scope 2 market; cat01 +1.1–1.7 % is the next lever) |
 | G2 | C1 backtest MAPE / nRMSE | ≤ 8 % / ≤ 0.25 | **5.12 % / 0.115** (FI pea 2026 7.4 %, SE pea 2026 4.4 %) | ✅ met (#17) |
-| G2 | E dev E90–E92 | 3/3 within tolerance | **2/3** (E90 0.0 %, E92 1.7 %; E91 23 % off) | open: E91 is the A2 2024 Scope 2 market gap (+23 %), not the copilot (#47) |
+| G2 | E dev E90–E92 | 3/3 within tolerance | **3/3** (E90 0.0 %, E91 6.0 %, E92 1.7 %) | ✅ met (copilot #47 + A's interpolated meter months in #50) |
 | G3 | App on real results; peat; C3 actions; click-through | done | — | open |
 | G4 | Placeholders filled; `make all` from clean clone; CI green | done | — | open |
 
@@ -33,3 +33,4 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 | 2026-11-07 01:50 | #12 PR | A2 dev 2023 / 2024 | 91.47 / 74.83 → 91.32 / 85.88 | GoO from registry, interpolated meter months, estimation-uncertainty coverage rule, Bjuv Dec-only |
 | 2026-11-07 02:20 | #12 PR | A2 dev 2024 | 85.88 → 74.89 | dropped the ±5 % 'treated as covered' rule after review: not GHG Protocol (only cancelled GoO MWh are covered) |
 | 2026-11-07 02:20 | #17 PR | C1 backtest MAPE / nRMSE | 8.16 % / 0.134 → 5.12 % / 0.115 | stage features (#16) + ridge/GB average; CV 7.64 % → 6.14 % |
+| 2026-11-07 02:45 | #54 | E dev E90–E92 (offline stub, real 2024 inventory) | 2/3 → 3/3 | E91 66.7 vs 62.9 (6.0 %, tolerance 10 %) after A's meter-estimate fix; no copilot change |
