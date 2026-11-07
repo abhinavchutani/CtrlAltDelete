@@ -93,7 +93,9 @@ def compute_values(con: duckdb.DuckDBPyConnection) -> dict[str, dict]:
     for name, metric in [("C3_EUR_AT_RISK", "eur_at_risk"), ("C3_HEDGE_EUR", "eur_hedge"), ("C3_IRRIGATION_EUR", "eur_irrigation")]:
         r = _results(con, "metric = ? AND (scenario LIKE 'ssp245%' OR scenario='today')", [metric])
         put(name, f"€{fmt(r.value.sum())}" if len(r) else None, f"results metric={metric}", "C3 (#19) not published yet")
-    put("C3_REBALANCE_PCT", None, "results C3 sourcing split", "C3 (#19) not published yet")
+    rb = _results(con, "result_id = 'C3:all:pea:rebalance_pp'")
+    put("C3_REBALANCE_PCT", f"{rb.value.iloc[0]:+.1f}" if len(rb) else None, "results C3:all:pea:rebalance_pp",
+        "C3 rebalance not computed (make c)")
     return v
 
 

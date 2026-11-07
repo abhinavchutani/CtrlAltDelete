@@ -119,6 +119,43 @@ def observed_2026_split(con: duckdb.DuckDBPyConnection, lab_table: str) -> dict:
     return {f"{r}_2026_vs_mean_pct": round(100 * v, 1) for r, v in dev.items()}
 
 
+def rebalance(loss: pd.DataFrame, step: float = 0.01) -> dict:
+    """FI share of the contracted pea volume (total fixed) that minimises the expected pooled € loss.
+    Each region's production scales with its contracted volume (same yields, more or less area)."""
+    p = loss[loss["crop"] == "pea"].pivot_table(index="year", columns="region", values=["t", "contracted_t", "price", "premium"])
+    v, t = p["contracted_t"].iloc[0], p["t"]
+    unit = (p["price"] * p["premium"]).iloc[0]
+    v_tot, s_now = float(v.sum()), float(v["FI_SW"] / v.sum())
+    shares = np.round(np.arange(0.0, 1.0 + 1e-9, step), 4)
+    exp_loss = []
+    for s in shares:
+        new_v = pd.Series({"FI_SW": s * v_tot, "SE_SKANE": (1 - s) * v_tot})
+        prod = t["FI_SW"] * new_v["FI_SW"] / v["FI_SW"] + t["SE_SKANE"] * new_v["SE_SKANE"] / v["SE_SKANE"]
+        cost = float((new_v * unit).sum() / v_tot)          # €/t of replacement for this mix
+        exp_loss.append(float(((v_tot - prod).clip(lower=0) * cost).mean()))
+    exp_loss = np.array(exp_loss)
+    best = np.flatnonzero(np.isclose(exp_loss, exp_loss.min()))
+    s_opt = float(shares[best[np.argmin(np.abs(shares[best] - s_now))]])   # tie → closest to today
+    i_now = int(np.argmin(np.abs(shares - s_now)))
+    return {"fi_share_now_pct": round(100 * s_now, 1), "fi_share_opt_pct": round(100 * s_opt, 1),
+            "rebalance_pp": round(100 * (s_opt - s_now), 1),
+            "eur_now": round(float(exp_loss[i_now]), 0), "eur_opt": round(float(exp_loss.min()), 0),
+            "_curve": (shares, exp_loss, i_now)}
+
+
+def robust_rebalance(per_scen: dict[str, dict]) -> dict:
+    """The FI share whose *worst* relative gain across all scenarios is largest (robust to which future
+    happens). The per-scenario optima move a lot because the loss curve is flat; this one does not."""
+    shares = next(iter(per_scen.values()))["_curve"][0]
+    gains = np.vstack([1 - c["_curve"][1] / c["_curve"][1][c["_curve"][2]] for c in per_scen.values()])
+    worst = gains.min(axis=0)
+    i = int(np.argmax(worst))
+    now = next(iter(per_scen.values()))["fi_share_now_pct"]
+    return {"fi_share_now_pct": now, "fi_share_opt_pct": round(100 * float(shares[i]), 1),
+            "rebalance_pp": round(100 * float(shares[i]) - now, 1),
+            "min_gain_pct": round(100 * float(worst[i]), 2), "max_gain_pct": round(100 * float(gains[:, i].max()), 2)}
+
+
 # ── adaptation ────────────────────────────────────────────────────────
 def exposed_parcels(ctx: E.Context) -> set[str]:
     """Pea/potato parcels in the top quartile of baseline flowering-stage drought, not irrigated today."""
@@ -171,6 +208,7 @@ def run(con: duckdb.DuckDBPyConnection) -> dict:
         p = loss[loss.crop == "pea"].pivot_table(index="year", columns="region", values=["t", "contracted_t"])
         short_pool = (p["contracted_t"].sum(axis=1) - p["t"].sum(axis=1)).clip(lower=0).mean()
         avg_fac = float(fac[fac.crop == "pea"].net_tco2e_per_t.mean())
+        out.setdefault("rebalance", {})[scen] = rebalance(loss)
         out["actions"].append({"scenario": scen, "action": "two_region_pea", "eur_saved": hedge,
                                "tco2e_avoided": float((short_sep - short_pool) * avg_fac)})
     out["risk"] = pd.concat(out["risk"], ignore_index=True)
@@ -181,6 +219,9 @@ def run(con: duckdb.DuckDBPyConnection) -> dict:
     obs["pooled_FI_SE_2026_vs_mean_pct"] = round(float(pooled), 1)
     obs["contracted_share_FI_pct"] = round(float(100 * v["FI_SW"] / v.sum()), 1)
     out["observed_2026"] = obs
+    out["rebalance"]["robust_all_scenarios"] = robust_rebalance(out["rebalance"])
+    for v in out["rebalance"].values():
+        v.pop("_curve", None)
     return out
 
 
@@ -198,6 +239,13 @@ def write_results(con: duckdb.DuckDBPyConnection, r: dict) -> None:
                            method=f"{MODEL_ID}: shortfall × price × premium; imports net of domestic factor",
                            produced_by=by, category=cat, scenario=x.scenario,
                            lineage=base_src + (efs if metric == "import_tco2e" else []))
+    for scen, rb in r["rebalance"].items():
+        scen = "all" if scen == "robust_all_scenarios" else scen
+        for metric, unit in (("rebalance_pp", "percentage points"), ("fi_share_opt_pct", "%")):
+            L.write_result(con, f"C3:{scen}:pea:{metric}", metric=metric, value=float(rb[metric]), unit=unit,
+                           method=f"{MODEL_ID}: FI share of contracted pea volume minimising expected pooled € loss "
+                                  f"(today {rb['fi_share_now_pct']} %)", produced_by=by, category="pea:FI_share",
+                           scenario=scen, lineage=base_src)
     summary = {"two_region_pea": "eur_hedge", "irrigation": "eur_irrigation", "earlier_sowing": "eur_sowing"}
     for a in r["actions"].itertuples(index=False):
         cat = f"{a.action} | owner: {OWNERS[a.action]}"
@@ -215,7 +263,7 @@ def main() -> None:
     SCORES_PATH.parent.mkdir(parents=True, exist_ok=True)
     SCORES_PATH.write_text(json.dumps({
         "method": MODEL_ID, "price_year": PRICE_YEAR, "n_irrigated_parcels": r["n_irrigated_parcels"],
-        "observed_2026": r["observed_2026"],
+        "observed_2026": r["observed_2026"], "pea_rebalance": r["rebalance"],
         "risk": r["risk"].round(1).to_dict("records"), "actions": r["actions"].round(1).to_dict("records"),
     }, indent=2, ensure_ascii=False) + "\n")
     print(r["risk"].pivot_table(index=["region", "crop"], columns="scenario", values="eur_at_risk").round(0).to_string())

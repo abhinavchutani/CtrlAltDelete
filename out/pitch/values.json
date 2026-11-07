@@ -95,8 +95,8 @@
   "pending": ""
  },
  "C3_REBALANCE_PCT": {
-  "value": null,
-  "source": "results C3 sourcing split",
-  "pending": "C3 (#19) not published yet"
+  "value": "-2.4",
+  "source": "results C3:all:pea:rebalance_pp",
+  "pending": ""
  }
 }

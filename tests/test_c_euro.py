@@ -37,3 +37,12 @@ def test_earlier_sowing_lowers_every_threshold():
 def test_irrigation_override_only_touches_listed_parcels():
     X = pd.DataFrame({"parcel_id": ["a", "b"], "irrigated": [0.0, 0.0]})
     assert C.with_irrigation({"a"})(X)["irrigated"].tolist() == [1.0, 0.0]
+
+
+def test_robust_rebalance_prefers_share_good_in_every_scenario():
+    import numpy as np
+    shares = np.array([0.0, 0.5, 1.0])
+    curves = {"a": {"fi_share_now_pct": 50.0, "_curve": (shares, np.array([90.0, 100.0, 50.0]), 1)},
+              "b": {"fi_share_now_pct": 50.0, "_curve": (shares, np.array([95.0, 100.0, 200.0]), 1)}}
+    r = C.robust_rebalance(curves)           # share 1.0 wins in 'a' but loses badly in 'b'
+    assert r["fi_share_opt_pct"] == 0.0 and r["rebalance_pp"] == -50.0 and r["min_gain_pct"] == 5.0

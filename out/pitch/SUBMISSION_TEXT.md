@@ -23,7 +23,7 @@ Climate & Nature Navigator: CtrlAltDelete
 **What Apetit could do next week:**
 1. Verify soil type on the 6 farms most likely on peat before fixing the SBTi base year (owner: sustainability lead).
 2. Pilot irrigation scheduling on the highest-risk Skåne pea fields (owner: Apetit Sverige contract farming).
-3. Rebalance contracted pea area between Finland and Sweden by {{C3_REBALANCE_PCT}} % (owner: procurement).
+3. Keep two-region pea sourcing: today's Finland/Sweden split is near the robust optimum (moving the Finnish share by -2.4 percentage points changes the expected loss by under 1 %), so protect the split in contracts rather than concentrate (owner: procurement).
 
 **How we built it.** Python + DuckDB (a "number + trail" layer: issues, corrections, results, lineage), scikit-learn / statsmodels, Streamlit, and an OpenAI-compatible LLM for triage and the copilot. An LLM never produces a number. Everything maps one-to-one onto Apetit's Microsoft stack: Fabric Lakehouse, notebooks, Azure ML, Azure OpenAI in AI Foundry, AI Search, Power Apps / Power BI and Purview lineage. One `make all` rebuilds every submission file from the unzipped pack.
 

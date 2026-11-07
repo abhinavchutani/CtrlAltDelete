@@ -67,4 +67,4 @@
 | `10,951 t CO2e`, `22,705 t CO2e`, `11,754`, `52`, `6` | A peat results (#12) |
 | `67.6 %`, `69.2 %` | A inventory FLAG split |
 | `-7.1`, `-4.4`, `+2.7` | C2 results (#18), `yield_change_pct` at ssp585 |
-| `€289,566`, `€37,243`, `€33,230`, `{{C3_REBALANCE_PCT}}` | C3 results (#19) |
+| `€289,566`, `€37,243`, `€33,230`, `-2.4` | C3 results (#19) |
