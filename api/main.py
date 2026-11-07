@@ -216,6 +216,18 @@ def gaps(year: int | None = None) -> list[S.Gap]:
         return [S.Gap(**g) for g in r_gaps.gaps(con, year)["gaps"]]
 
 
+# ── SBTi targets + pathway (#130) ──────────────────────────────────
+@app.post("/api/sbti/pathway", response_model=S.SbtiPathway)
+def sbti_pathway(body: S.SbtiPathwayIn) -> S.SbtiPathway:
+    """Base year 2025 → SBTi near-term targets, BAU under a transition scenario, and the chosen levers' effect."""
+    try:
+        return L.get("sbti_pathway")(body.scenario, body.levers, body.target_year)
+    except (ValueError, LookupError) as e:
+        raise HTTPException(422, str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(503, str(e)) from e
+
+
 # ── retrieval (fixtures while on hold) ─────────────────────────────
 @app.post("/api/ask", response_model=S.AskOut)
 def ask(body: S.AskIn) -> S.AskOut:
