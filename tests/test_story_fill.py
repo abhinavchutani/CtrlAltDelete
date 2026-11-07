@@ -36,3 +36,13 @@ def test_every_value_has_a_source_or_reason(con):
         assert x["source"], name
         assert x["value"] is not None or x["pending"], name
     assert vals["A1_DEV_SCORE"]["value"] and vals["FLAG_SHARE_AFTER"]["value"]
+
+
+def test_c2_values_are_signed_yield_changes(con):
+    for cat, v in [("FI_SW:potato", -7.08), ("FI_SW:turnip_rape", -4.37), ("SE_SKANE:pea", 2.69)]:
+        L.write_result(con, f"C2:ssp585:{cat}:yield_change_pct", metric="yield_change_pct", value=v, unit="%",
+                       method="test", produced_by="test", category=cat, scenario="ssp585",
+                       lineage=[L.src("doc", "test")])
+    vals = story_fill.compute_values(con)
+    assert [vals[k]["value"] for k in ("C2_POTATO_FI_585_PCT", "C2_RAPE_FI_585_PCT", "C2_PEA_SE_585_PCT")] == \
+        ["-7.1", "-4.4", "+2.7"]

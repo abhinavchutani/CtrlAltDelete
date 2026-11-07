@@ -26,7 +26,7 @@
  },
  "C1_BACKTEST_MAPE": {
   "value": "5.1 %",
-  "source": "out/scores/C1_backtest.json",
+  "source": "results C1:backtest:production_mape_pct",
   "pending": ""
  },
  "PEAT_BEFORE": {
@@ -64,15 +64,20 @@
   "source": "a_inventory.flag_share(2025, with organic soils)",
   "pending": ""
  },
- "C2_PEA_SE_585_PCT": {
-  "value": null,
-  "source": "results yield_change_pct ssp585 SE_SKANE:pea",
-  "pending": "C2 (#18) not published yet"
+ "C2_POTATO_FI_585_PCT": {
+  "value": "-7.1",
+  "source": "results C2:ssp585:FI_SW:potato:yield_change_pct",
+  "pending": ""
  },
- "C2_PEA_SE_585_PBAD": {
-  "value": null,
-  "source": "results p_bad_year ssp585 / baseline, SE_SKANE:pea",
-  "pending": "C2 (#18) not published yet"
+ "C2_RAPE_FI_585_PCT": {
+  "value": "-4.4",
+  "source": "results C2:ssp585:FI_SW:turnip_rape:yield_change_pct",
+  "pending": ""
+ },
+ "C2_PEA_SE_585_PCT": {
+  "value": "+2.7",
+  "source": "results C2:ssp585:SE_SKANE:pea:yield_change_pct",
+  "pending": ""
  },
  "C3_EUR_AT_RISK": {
   "value": null,
