@@ -84,14 +84,12 @@ def compute_values(con: duckdb.DuckDBPyConnection) -> dict[str, dict]:
     put("FLAG_SHARE_BEFORE", f"{before['flag_share_pct']:.1f} %", "a_inventory.flag_share(2025, mineral soils only)")
     put("FLAG_SHARE_AFTER", f"{after['flag_share_pct']:.1f} %", "a_inventory.flag_share(2025, with organic soils)")
 
-    # Track C: read whatever the climate pipeline has published to `results`
-    c2 = _results(con, "metric IN ('yield_change_pct','p_bad_year') AND scenario='ssp585' AND category LIKE 'SE_SKANE:pea%'")
-    base = _results(con, "metric='p_bad_year' AND category LIKE 'SE_SKANE:pea%' AND scenario = 'baseline'")
-    yc = c2[c2.metric == "yield_change_pct"].value
-    put("C2_PEA_SE_585_PCT", f"{yc.iloc[0]:+.1f}" if len(yc) else None, "results yield_change_pct ssp585 SE_SKANE:pea", "C2 (#18) not published yet")
-    pb = c2[c2.metric == "p_bad_year"].value
-    put("C2_PEA_SE_585_PBAD", f"{pb.iloc[0] / base.value.iloc[0]:.1f}" if len(pb) and len(base) and base.value.iloc[0] else None,
-        "results p_bad_year ssp585 / baseline, SE_SKANE:pea", "C2 (#18) not published yet")
+    # Track C: C2 mean yield change at SSP5-8.5, 2041–60 (signed; peas gain, potato and turnip rape lose)
+    c2 = _results(con, "metric='yield_change_pct' AND scenario='ssp585'").set_index("category").value
+    for name, cat in [("C2_POTATO_FI_585_PCT", "FI_SW:potato"), ("C2_RAPE_FI_585_PCT", "FI_SW:turnip_rape"),
+                      ("C2_PEA_SE_585_PCT", "SE_SKANE:pea")]:
+        put(name, f"{c2[cat]:+.1f}" if cat in c2.index else None,
+            f"results C2:ssp585:{cat}:yield_change_pct", "C2 (#18) not published yet: run make c")
     for name, metric in [("C3_EUR_AT_RISK", "eur_at_risk"), ("C3_HEDGE_EUR", "eur_hedge"), ("C3_IRRIGATION_EUR", "eur_irrigation")]:
         r = _results(con, "metric = ? AND (scenario LIKE 'ssp245%' OR scenario='today')", [metric])
         put(name, f"€{fmt(r.value.sum())}" if len(r) else None, f"results metric={metric}", "C3 (#19) not published yet")

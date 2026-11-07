@@ -66,5 +66,5 @@
 | `{{ISSUES_FOUND}}`, `{{LEGIT_SUPPRESSED}}` | `issues` counts by status |
 | `{{PEAT_BEFORE}}`, `{{PEAT_AFTER}}`, `{{PEAT_EXTRA_TCO2E}}`, `{{PEAT_SHARE_PCT}}`, `{{PEAT_TOP_FARMS}}` | A peat results (#12) |
 | `{{FLAG_SHARE_BEFORE}}`, `{{FLAG_SHARE_AFTER}}` | A inventory FLAG split |
-| `{{C2_PEA_SE_585_PCT}}`, `{{C2_PEA_SE_585_PBAD}}` | C2 results (#18) |
+| `{{C2_POTATO_FI_585_PCT}}`, `{{C2_RAPE_FI_585_PCT}}`, `{{C2_PEA_SE_585_PCT}}` | C2 results (#18), `yield_change_pct` at ssp585 |
 | `{{C3_EUR_AT_RISK}}`, `{{C3_HEDGE_EUR}}`, `{{C3_IRRIGATION_EUR}}`, `{{C3_REBALANCE_PCT}}` | C3 results (#19) |

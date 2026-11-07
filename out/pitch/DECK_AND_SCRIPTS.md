@@ -66,5 +66,5 @@
 | `729`, `204` | `issues` counts by status |
 | `10,951 t CO2e`, `22,705 t CO2e`, `11,754`, `52`, `6` | A peat results (#12) |
 | `67.6 %`, `69.2 %` | A inventory FLAG split |
-| `{{C2_PEA_SE_585_PCT}}`, `{{C2_PEA_SE_585_PBAD}}` | C2 results (#18) |
+| `-7.1`, `-4.4`, `+2.7` | C2 results (#18), `yield_change_pct` at ssp585 |
 | `{{C3_EUR_AT_RISK}}`, `{{C3_HEDGE_EUR}}`, `{{C3_IRRIGATION_EUR}}`, `{{C3_REBALANCE_PCT}}` | C3 results (#19) |
