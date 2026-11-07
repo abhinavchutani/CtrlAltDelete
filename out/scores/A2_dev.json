@@ -1,16 +1,16 @@
 {
- "method": "a_inventory@0a8e435",
+ "method": "a_inventory@e9de994",
  "scores": {
   "2023": {
-   "score": 91.47,
+   "score": 91.32,
    "error_pct": {
     "scope1_total": 0.0,
-    "scope2_location_total": 0.05,
+    "scope2_location_total": 0.19,
     "scope2_market_total": 0.0,
     "scope3_total": 1.01,
     "cat01_purchased_goods_services": 1.11,
     "cat02_capital_goods": 0.0,
-    "cat03_fuel_energy": 0.03,
+    "cat03_fuel_energy": 0.11,
     "cat04_upstream_transport": 0.0,
     "cat05_waste": 0.0,
     "cat06_business_travel": 0.0,
@@ -21,15 +21,15 @@
    }
   },
   "2024": {
-   "score": 74.83,
+   "score": 74.89,
    "error_pct": {
     "scope1_total": 0.0,
-    "scope2_location_total": 0.1,
-    "scope2_market_total": 23.29,
+    "scope2_location_total": 0.02,
+    "scope2_market_total": 5.92,
     "scope3_total": 1.55,
     "cat01_purchased_goods_services": 1.72,
     "cat02_capital_goods": 0.0,
-    "cat03_fuel_energy": 0.02,
+    "cat03_fuel_energy": 0.0,
     "cat04_upstream_transport": 0.0,
     "cat05_waste": 0.0,
     "cat06_business_travel": 0.0,

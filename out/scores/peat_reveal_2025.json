@@ -1,0 +1,9 @@
+{
+ "year": 2025,
+ "mineral_only_t": 10951.4,
+ "with_organic_soils_t": 25307.5,
+ "extra_from_peat_t": 14356.1,
+ "peat_share_of_farm_emissions_pct": 56.7,
+ "farms_with_peat_emissions": 125,
+ "top10_farms_share_of_peat_pct": 59.7
+}
