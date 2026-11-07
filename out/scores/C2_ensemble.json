@@ -1,0 +1,299 @@
+{
+  "method": "c_ensemble:delta_method_v1",
+  "n_parcels_2025_mix": 2410,
+  "mix_area_ha": 12926.3,
+  "submitted": [
+    {
+      "region": "FI_SW",
+      "crop": "carrot",
+      "scenario": "ssp126",
+      "period": "2041-2060",
+      "mean_yield_change_pct": 0.49,
+      "p_bad_year": 0.0
+    },
+    {
+      "region": "FI_SW",
+      "crop": "pea",
+      "scenario": "ssp126",
+      "period": "2041-2060",
+      "mean_yield_change_pct": 1.31,
+      "p_bad_year": 0.033
+    },
+    {
+      "region": "FI_SW",
+      "crop": "potato",
+      "scenario": "ssp126",
+      "period": "2041-2060",
+      "mean_yield_change_pct": -2.75,
+      "p_bad_year": 0.067
+    },
+    {
+      "region": "FI_SW",
+      "crop": "spinach",
+      "scenario": "ssp126",
+      "period": "2041-2060",
+      "mean_yield_change_pct": 1.42,
+      "p_bad_year": 0.0
+    },
+    {
+      "region": "FI_SW",
+      "crop": "turnip_rape",
+      "scenario": "ssp126",
+      "period": "2041-2060",
+      "mean_yield_change_pct": -2.76,
+      "p_bad_year": 0.033
+    },
+    {
+      "region": "FI_SW",
+      "crop": "carrot",
+      "scenario": "ssp245",
+      "period": "2041-2060",
+      "mean_yield_change_pct": -0.43,
+      "p_bad_year": 0.0
+    },
+    {
+      "region": "FI_SW",
+      "crop": "pea",
+      "scenario": "ssp245",
+      "period": "2041-2060",
+      "mean_yield_change_pct": 1.84,
+      "p_bad_year": 0.033
+    },
+    {
+      "region": "FI_SW",
+      "crop": "potato",
+      "scenario": "ssp245",
+      "period": "2041-2060",
+      "mean_yield_change_pct": -4.07,
+      "p_bad_year": 0.067
+    },
+    {
+      "region": "FI_SW",
+      "crop": "spinach",
+      "scenario": "ssp245",
+      "period": "2041-2060",
+      "mean_yield_change_pct": 2.02,
+      "p_bad_year": 0.0
+    },
+    {
+      "region": "FI_SW",
+      "crop": "turnip_rape",
+      "scenario": "ssp245",
+      "period": "2041-2060",
+      "mean_yield_change_pct": -3.3,
+      "p_bad_year": 0.033
+    },
+    {
+      "region": "FI_SW",
+      "crop": "carrot",
+      "scenario": "ssp585",
+      "period": "2041-2060",
+      "mean_yield_change_pct": -2.94,
+      "p_bad_year": 0.033
+    },
+    {
+      "region": "FI_SW",
+      "crop": "pea",
+      "scenario": "ssp585",
+      "period": "2041-2060",
+      "mean_yield_change_pct": 2.7,
+      "p_bad_year": 0.067
+    },
+    {
+      "region": "FI_SW",
+      "crop": "potato",
+      "scenario": "ssp585",
+      "period": "2041-2060",
+      "mean_yield_change_pct": -7.08,
+      "p_bad_year": 0.067
+    },
+    {
+      "region": "FI_SW",
+      "crop": "spinach",
+      "scenario": "ssp585",
+      "period": "2041-2060",
+      "mean_yield_change_pct": 2.15,
+      "p_bad_year": 0.0
+    },
+    {
+      "region": "FI_SW",
+      "crop": "turnip_rape",
+      "scenario": "ssp585",
+      "period": "2041-2060",
+      "mean_yield_change_pct": -4.37,
+      "p_bad_year": 0.033
+    },
+    {
+      "region": "SE_SKANE",
+      "crop": "pea",
+      "scenario": "ssp126",
+      "period": "2041-2060",
+      "mean_yield_change_pct": 1.58,
+      "p_bad_year": 0.033
+    },
+    {
+      "region": "SE_SKANE",
+      "crop": "pea",
+      "scenario": "ssp245",
+      "period": "2041-2060",
+      "mean_yield_change_pct": 2.44,
+      "p_bad_year": 0.0
+    },
+    {
+      "region": "SE_SKANE",
+      "crop": "pea",
+      "scenario": "ssp585",
+      "period": "2041-2060",
+      "mean_yield_change_pct": 2.69,
+      "p_bad_year": 0.033
+    }
+  ],
+  "baseline_p_bad_year": [
+    {
+      "region": "FI_SW",
+      "crop": "carrot",
+      "p_bad_year": 0.0
+    },
+    {
+      "region": "FI_SW",
+      "crop": "pea",
+      "p_bad_year": 0.1
+    },
+    {
+      "region": "FI_SW",
+      "crop": "potato",
+      "p_bad_year": 0.0
+    },
+    {
+      "region": "FI_SW",
+      "crop": "spinach",
+      "p_bad_year": 0.0
+    },
+    {
+      "region": "FI_SW",
+      "crop": "turnip_rape",
+      "p_bad_year": 0.033
+    },
+    {
+      "region": "SE_SKANE",
+      "crop": "pea",
+      "p_bad_year": 0.033
+    }
+  ],
+  "cross_check_pack_realisation_2041_2060": {
+    "ssp126": [
+      {
+        "region": "FI_SW",
+        "crop": "carrot",
+        "mean_yield_change_pct": 3.58,
+        "p_bad_year": 0.0
+      },
+      {
+        "region": "FI_SW",
+        "crop": "pea",
+        "mean_yield_change_pct": 0.817,
+        "p_bad_year": 0.0
+      },
+      {
+        "region": "FI_SW",
+        "crop": "potato",
+        "mean_yield_change_pct": 5.15,
+        "p_bad_year": 0.0
+      },
+      {
+        "region": "FI_SW",
+        "crop": "spinach",
+        "mean_yield_change_pct": 2.537,
+        "p_bad_year": 0.0
+      },
+      {
+        "region": "FI_SW",
+        "crop": "turnip_rape",
+        "mean_yield_change_pct": -0.732,
+        "p_bad_year": 0.0
+      },
+      {
+        "region": "SE_SKANE",
+        "crop": "pea",
+        "mean_yield_change_pct": 8.658,
+        "p_bad_year": 0.0
+      }
+    ],
+    "ssp245": [
+      {
+        "region": "FI_SW",
+        "crop": "carrot",
+        "mean_yield_change_pct": 0.695,
+        "p_bad_year": 0.0
+      },
+      {
+        "region": "FI_SW",
+        "crop": "pea",
+        "mean_yield_change_pct": -0.14,
+        "p_bad_year": 0.05
+      },
+      {
+        "region": "FI_SW",
+        "crop": "potato",
+        "mean_yield_change_pct": -1.278,
+        "p_bad_year": 0.0
+      },
+      {
+        "region": "FI_SW",
+        "crop": "spinach",
+        "mean_yield_change_pct": 2.444,
+        "p_bad_year": 0.0
+      },
+      {
+        "region": "FI_SW",
+        "crop": "turnip_rape",
+        "mean_yield_change_pct": -2.848,
+        "p_bad_year": 0.0
+      },
+      {
+        "region": "SE_SKANE",
+        "crop": "pea",
+        "mean_yield_change_pct": 6.075,
+        "p_bad_year": 0.0
+      }
+    ],
+    "ssp585": [
+      {
+        "region": "FI_SW",
+        "crop": "carrot",
+        "mean_yield_change_pct": -3.855,
+        "p_bad_year": 0.0
+      },
+      {
+        "region": "FI_SW",
+        "crop": "pea",
+        "mean_yield_change_pct": 1.852,
+        "p_bad_year": 0.1
+      },
+      {
+        "region": "FI_SW",
+        "crop": "potato",
+        "mean_yield_change_pct": -7.593,
+        "p_bad_year": 0.0
+      },
+      {
+        "region": "FI_SW",
+        "crop": "spinach",
+        "mean_yield_change_pct": 1.887,
+        "p_bad_year": 0.0
+      },
+      {
+        "region": "FI_SW",
+        "crop": "turnip_rape",
+        "mean_yield_change_pct": -1.927,
+        "p_bad_year": 0.0
+      },
+      {
+        "region": "SE_SKANE",
+        "crop": "pea",
+        "mean_yield_change_pct": 5.88,
+        "p_bad_year": 0.0
+      }
+    ]
+  }
+}

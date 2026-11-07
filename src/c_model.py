@@ -57,10 +57,18 @@ SCORES_PATH = REPO_ROOT / "out" / "scores" / "C1_backtest.json"
 
 
 # ── weather and parcel features ───────────────────────────────────────
-def cell_year_weather(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
-    """One row per (cell_id, scenario, year) with Apr–Sep monthly columns, e.g. precip_mm_m6."""
-    w = con.execute(f"SELECT cell_id, scenario, year, month, {', '.join(WVARS)} FROM raw_weather_monthly "
-                    f"WHERE month BETWEEN {min(MONTHS)} AND {max(MONTHS)}").df()
+def cell_year_weather(con: duckdb.DuckDBPyConnection, daily_source: str | None = None) -> pd.DataFrame:
+    """One row per (cell_id, scenario, year) with Apr–Sep monthly columns, e.g. precip_mm_m6.
+    Default: the pack's monthly table. With `daily_source`, the same aggregates from a daily table."""
+    rng = f"BETWEEN {min(MONTHS)} AND {max(MONTHS)}"
+    if daily_source is None:
+        sql = f"SELECT cell_id, scenario, year, month, {', '.join(WVARS)} FROM raw_weather_monthly WHERE month {rng}"
+    else:
+        sql = f"""SELECT cell_id, scenario, year(date) AS year, month(date) AS month, avg(tmean_c) AS tmean_c,
+                         sum(precip_mm) AS precip_mm, sum(pet_mm) AS pet_mm,
+                         count(*) FILTER (WHERE tmax_c >= 27) AS hot_days_tmax_ge_27
+                  FROM {daily_source} WHERE month(date) {rng} GROUP BY ALL"""
+    w = con.execute(sql).df()
     w["wb_mm"] = w["precip_mm"] - w["pet_mm"]
     wide = w.pivot_table(index=["cell_id", "scenario", "year"], columns="month",
                          values=[*WVARS, "wb_mm"], aggfunc="first")

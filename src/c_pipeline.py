@@ -1,5 +1,5 @@
-"""Track C entry point for `make c`: parcel → cell link, then the yield model and C1 CSV."""
-from src import c_features, c_model, c_weather
+"""Track C entry point for `make c`: parcel → cell link, stage features, yield model + C1 CSV, C2 ensemble."""
+from src import c_ensemble, c_features, c_model, c_weather
 from src.db import connect
 
 
@@ -9,6 +9,7 @@ def main() -> None:
     c_features.write(con, c_features.build(con))
     con.close()
     c_model.main()
+    c_ensemble.main()
 
 
 if __name__ == "__main__":
