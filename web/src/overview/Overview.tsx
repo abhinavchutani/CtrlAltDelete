@@ -77,7 +77,7 @@ function MiniMap({ o }: { o: Outlook }) {
     <div className="minimap" role="img"
       aria-label={`Farm status in ${o.focus_year}: SW Finland ${counts("FI_SW")} farms in a bad year, Skåne ${counts("SE_SKANE")}`}>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
-        <line x1={W / 2} x2={W / 2} y1={0} y2={H} stroke="#D9E6EA" strokeWidth={6} />
+        <line x1={W / 2} x2={W / 2} y1={0} y2={H} stroke="var(--map-water)" strokeWidth={6} />
         {box("FI_SW", 0)}{box("SE_SKANE", W / 2)}
       </svg>
       <span className="lbl" style={{ left: 12 }}>SW Finland</span>

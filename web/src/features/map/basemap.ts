@@ -3,24 +3,22 @@
 import type { LayerSpecification, StyleSpecification } from "maplibre-gl";
 
 const STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
-const C = {
-  land: "#F1EBDD", // --surface-sunk
-  water: "#D9E6EA",
-  woods: "#E3E4CF",
-  town: "#ECE4D3",
-  building: "#E4DBC8",
-  casing: "#D9D0BE", // --line
-  road: "#FFFFFF",
-  rail: "#D9D0BE",
-  label: "#596455", // --ink-muted
-  halo: "#F1EBDD",
-  boundary: "#A79C86",
+type Palette = { land: string; water: string; woods: string; town: string; building: string; casing: string;
+  road: string; rail: string; label: string; halo: string; boundary: string };
+/** Mirrors the --map-* tokens in tokens.css (MapLibre paints need literal colours). */
+const PALETTES: Record<"light" | "dark", Palette> = {
+  light: { land: "#ECEEE6", water: "#CFE0E8", woods: "#DFE6D2", town: "#E6E5DC", building: "#DDDBD0", casing: "#D4D4C8",
+    road: "#FFFFFF", rail: "#D4D4C8", label: "#5D6659", halo: "#ECEEE6", boundary: "#A3A595" },
+  dark: { land: "#121615", water: "#0D1D26", woods: "#142019", town: "#191D1B", building: "#1E2321", casing: "#252A28",
+    road: "#2B312E", rail: "#252A28", label: "#8A948C", halo: "#121615", boundary: "#3C4440" },
 };
 
+
 /** Shown while the vector style loads (or if it can't be reached): plain land, fields on top. */
-export const PLAIN: StyleSpecification = {
-  version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": C.land } }],
-};
+export const plainStyle = (theme: "light" | "dark"): StyleSpecification => ({
+  version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": PALETTES[theme].land } }],
+});
+export const PLAIN: StyleSpecification = plainStyle("light");
 
 export const SATELLITE: StyleSpecification = {
   version: 8,
@@ -33,7 +31,7 @@ export const SATELLITE: StyleSpecification = {
   layers: [{ id: "imagery", type: "raster", source: "imagery", paint: { "raster-saturation": -0.3, "raster-brightness-max": 0.9 } }],
 };
 
-function paintFor(l: LayerSpecification): Record<string, unknown> | null {
+function paintFor(l: LayerSpecification, C: Palette): Record<string, unknown> | null {
   const id = l.id;
   if (l.type === "background") return { "background-color": C.land };
   if (l.type === "raster" || l.type === "hillshade") return null; // drop shaded relief: nothing busy behind fields
@@ -56,7 +54,7 @@ function paintFor(l: LayerSpecification): Record<string, unknown> | null {
 }
 
 /** Fetch Positron and recolour every layer to the tokens. Falls back to PLAIN if offline. */
-export async function lightStyle(): Promise<string | StyleSpecification> {
+export async function lightStyle(theme: "light" | "dark" = "light"): Promise<string | StyleSpecification> {
   if (import.meta.env.VITE_BASEMAP_STYLE) return import.meta.env.VITE_BASEMAP_STYLE as string;
   try {
     const res = await fetch(STYLE_URL);
@@ -64,12 +62,12 @@ export async function lightStyle(): Promise<string | StyleSpecification> {
     const style = (await res.json()) as StyleSpecification;
     const layers: LayerSpecification[] = [];
     for (const l of style.layers) {
-      const p = paintFor(l);
+      const p = paintFor(l, PALETTES[theme]);
       if (p === null) continue;
       layers.push({ ...l, paint: { ...(("paint" in l && l.paint) || {}), ...p } } as LayerSpecification);
     }
     return { ...style, layers };
   } catch {
-    return PLAIN;
+    return plainStyle(theme);
   }
 }

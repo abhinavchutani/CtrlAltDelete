@@ -8,7 +8,8 @@ import type { GeoParcel } from "../../api/types";
 import { HOME_VIEW, useStore } from "../../state/store";
 import { FieldCard } from "../fieldradar/FieldCard";
 import { useFieldData } from "../fieldradar/useFieldData";
-import { lightStyle, PLAIN, SATELLITE } from "./basemap";
+import { lightStyle, plainStyle, SATELLITE } from "./basemap";
+import { useTheme } from "../../theme/theme";
 import { cardClickedJustNow } from "./isolate";
 import { fieldLayers } from "./layers/parcels";
 
@@ -20,7 +21,7 @@ function DeckOverlay({ onReady, ...props }: MapboxOverlayProps & { onReady: (o: 
   return null;
 }
 
-let LIGHT: Promise<string | StyleSpecification> | null = null;
+const STYLES: Partial<Record<"light" | "dark", Promise<string | StyleSpecification>>> = {};
 
 /** The light map with every contract field coloured by status. Click a field for its card. MapLibre owns the camera. */
 export function MapView({ satellite }: { satellite: boolean }) {
@@ -29,8 +30,13 @@ export function MapView({ satellite }: { satellite: boolean }) {
   const selectedParcel = useStore((s) => s.selectedParcel);
   const selectParcel = useStore((s) => s.selectParcel);
   const d = useFieldData();
-  const [light, setLight] = useState<string | StyleSpecification>(PLAIN);
-  useEffect(() => { void (LIGHT ??= lightStyle()).then(setLight); }, []);
+  const theme = useTheme((s) => s.theme);
+  const [light, setLight] = useState<string | StyleSpecification>(() => plainStyle(theme));
+  useEffect(() => {
+    let live = true;
+    void (STYLES[theme] ??= lightStyle(theme)).then((st) => { if (live) setLight(st); });
+    return () => { live = false; };
+  }, [theme]);
   const layers = fieldLayers(d.parcels, d.statusOf, selectedParcel?.parcel_id ?? null, d.trigger);
 
   useEffect(() => {

@@ -208,3 +208,15 @@ export const PodMark = ({ size = 28 }: P) => (
     {[11, 20, 29].map((x) => <circle key={x} cx={x} cy={12} r={4.2} fill="var(--leaf-soft)" />)}
   </svg>
 );
+
+/** The Field Radar mark: a sweep over furrows, in a lit green squircle. */
+export const BrandMark = ({ size = 30 }: P) => (
+  <span className="brand-mark" style={{ width: size, height: size, borderRadius: size * 0.3 }} aria-hidden="true">
+    <svg width={size * 0.66} height={size * 0.66} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round">
+      <path d="M3.5 18.5a10 10 0 0 1 17 0" strokeWidth={1.8} opacity={0.55} />
+      <path d="M7 18.5a6 6 0 0 1 10 0" strokeWidth={1.8} opacity={0.8} />
+      <path d="M12 18.5 18.5 7" strokeWidth={2.2} />
+      <circle cx={12} cy={18.5} r={1.9} fill="currentColor" stroke="none" />
+    </svg>
+  </span>
+);

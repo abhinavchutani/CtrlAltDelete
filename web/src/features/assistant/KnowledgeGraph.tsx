@@ -99,7 +99,7 @@ export function KnowledgeGraph() {
                   {on ? <circle r={r + 8} fill={FILL[n.kind]} opacity={0.18} /> : null}
                   {n.kind === "gap" ? (
                     <>
-                      <circle r={r} fill="rgba(255,255,255,.7)" stroke="var(--kg-tacit)" strokeWidth={1.5} strokeDasharray="3 3" />
+                      <circle r={r} fill="var(--surface-raised)" stroke="var(--kg-tacit)" strokeWidth={1.5} strokeDasharray="3 3" />
                       <text textAnchor="middle" dy={4} className="gapt">?</text>
                     </>
                   ) : <circle r={r} fill={FILL[n.kind]} />}
