@@ -26,7 +26,7 @@
  },
  "C1_BACKTEST_MAPE": {
   "value": "5.1 %",
-  "source": "out/scores/C1_backtest_*.json",
+  "source": "results C1:backtest:production_mape_pct",
   "pending": ""
  },
  "PEAT_BEFORE": {

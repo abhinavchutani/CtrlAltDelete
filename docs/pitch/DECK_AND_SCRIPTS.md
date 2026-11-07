@@ -26,7 +26,7 @@
 | 0:00–0:30 | Title → farm & peat page | "Apetit's farm calculator assumes every field is mineral soil. Drained peat emits 29 t CO2 per hectare per year." |
 | 0:30–1:30 | Data quality page | "Raw files in. Our detectors found {{ISSUES_FOUND}} problems; the allow-list ignored {{LEGIT_SUPPRESSED}} legitimate oddities." Approve one soil misreport live; the total updates. |
 | 1:30–2:15 | Inventory page | Click Scope 3 cat 1 → supplier lines → the invoice record → factor + source. "Every number has a trail." |
-| 2:15–3:15 | Climate page | "Trained only on years up to 2023, the model sees 2026 coming: strong Finnish peas, drought-hit Swedish peas." Drag the SSP slider: € at risk, the two-region hedge. |
+| 2:15–3:15 | Climate page | "Trained only on years up to 2023, the model sees 2026 coming: strong Finnish peas, heat- and drought-hit Swedish peas." Drag the SSP slider: € at risk, the two-region hedge. |
 | 3:15–3:45 | Copilot panel | Ask: "What share of 2025 contract-farm emissions comes from drained organic soils?" The answer opens its evidence. |
 | 3:45–4:00 | Final slide | Three actions, each with an owner. |
 
