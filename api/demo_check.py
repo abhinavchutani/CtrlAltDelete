@@ -52,8 +52,12 @@ def b2():
 
 
 def b2b():
-    r = c.post("/api/ask", json={"question": "Make that a report: pea deliveries from Swedish farms 2021 vs 2026"}).json()
-    return bool(r.get("report")), f"report: {r.get('report') or 'none (src.r_report not built yet, #92)'}"
+    q = "How did pea deliveries from Swedish farms in 2026 compare with 2021?"
+    r = c.post("/api/ask", json={"question": "Make that a report", "history": [{"question": q}]}).json()
+    if not r.get("report"):
+        return False, "no report in the answer"
+    f = c.get(r["report"]["url"])
+    return f.status_code == 200 and f.content[:2] == b"PK", f"{r['report']['filename']} ({len(f.content) // 1024} kB)"
 
 
 def b3():

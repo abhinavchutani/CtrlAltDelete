@@ -87,10 +87,10 @@ export function useDecide() {
   });
 }
 
-export const useAsk = (question: string | null) =>
+export const useAsk = (question: string | null, history: string[] = []) =>
   useQuery({
-    queryKey: ["ask", question],
-    queryFn: () => post<AskOut>("/api/ask", { question, history: [] }),
+    queryKey: ["ask", question, history],
+    queryFn: () => post<AskOut>("/api/ask", { question, history: history.map((q) => ({ question: q })) }),
     enabled: !!question,
     ...forever,
   });

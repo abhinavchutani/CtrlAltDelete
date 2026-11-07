@@ -26,6 +26,7 @@ type State = {
   selectedAlert: Alert | null;
   door: Door;
   question: string | null;
+  askHistory: string[]; // earlier questions, oldest first (sent as history so "make that a report" works)
   boardDialogRow: string | null;
 };
 
@@ -56,6 +57,7 @@ export const useStore = create<State & Actions>((set) => ({
   selectedAlert: null,
   door: "simulate",
   question: null,
+  askHistory: [],
   boardDialogRow: null,
   pickPreset: (id) => set({ scenarioId: id, customSpec: null, selectedAlert: null, year: START_YEAR, playing: false }),
   runSpec: (spec) => set({ customSpec: spec, pendingSpec: null, selectedAlert: null, door: "simulate" }),
@@ -65,7 +67,11 @@ export const useStore = create<State & Actions>((set) => ({
   setLayer: (layer) => set({ layer }),
   setView: (view) => set({ view }),
   selectAlert: (a) => set(a ? { selectedAlert: a, year: a.year, view: REGION_VIEW[a.region], playing: false } : { selectedAlert: null }),
-  ask: (question) => set({ question, door: "ask" }),
+  ask: (question) =>
+    set((s) => ({
+      question, door: "ask",
+      askHistory: s.question && s.question !== question ? [...s.askHistory, s.question].slice(-5) : s.askHistory,
+    })),
   setDoor: (door) => set({ door }),
   openDecision: (boardDialogRow) => set({ boardDialogRow }),
 }));

@@ -9,7 +9,8 @@ import { ResultTable } from "./ResultTable";
 /** Retrieval answers (src.r_agent in real mode). */
 export function AskPanel() {
   const question = useStore((s) => s.question);
-  const ask = useAsk(question);
+  const history = useStore((s) => s.askHistory);
+  const ask = useAsk(question, history);
   const a = ask.data;
   const fixture = useRetrievalIsFixture("ask");
   return (
