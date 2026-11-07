@@ -398,6 +398,131 @@
     }
    }
   },
+  "/api/provenance": {
+   "get": {
+    "summary": "Provenance",
+    "operationId": "provenance_api_provenance_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Provenance"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/weather/months": {
+   "get": {
+    "summary": "Weather Months",
+    "operationId": "weather_months_api_weather_months_get",
+    "parameters": [
+     {
+      "name": "region",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "enum": [
+        "FI_SW",
+        "SE_SKANE"
+       ],
+       "type": "string",
+       "title": "Region"
+      }
+     },
+     {
+      "name": "year",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 2060,
+       "minimum": 1991,
+       "default": 2026,
+       "title": "Year"
+      }
+     },
+     {
+      "name": "climate",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "ssp126",
+        "ssp245",
+        "ssp585"
+       ],
+       "type": "string",
+       "default": "ssp245",
+       "title": "Climate"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MonthsFrame"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/search": {
+   "post": {
+    "summary": "Search",
+    "description": "The plan finder: every change the engine can run, then their combinations, ranked; streamed as SSE.",
+    "operationId": "search_api_search_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SearchIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/ask": {
    "post": {
     "summary": "Ask",
@@ -1097,6 +1222,37 @@
      "evidence"
     ],
     "title": "AskOut"
+   },
+   "Backtest": {
+    "properties": {
+     "train_until": {
+      "type": "integer",
+      "title": "Train Until"
+     },
+     "test_years": {
+      "items": {
+       "type": "integer"
+      },
+      "type": "array",
+      "title": "Test Years"
+     },
+     "model_error_pct": {
+      "type": "number",
+      "title": "Model Error Pct"
+     },
+     "baseline_error_pct": {
+      "type": "number",
+      "title": "Baseline Error Pct"
+     }
+    },
+    "type": "object",
+    "required": [
+     "train_until",
+     "test_years",
+     "model_error_pct",
+     "baseline_error_pct"
+    ],
+    "title": "Backtest"
    },
    "BetterOption": {
     "properties": {
@@ -1840,6 +1996,92 @@
     ],
     "title": "Meters"
    },
+   "MonthWeather": {
+    "properties": {
+     "month": {
+      "type": "integer",
+      "title": "Month"
+     },
+     "precip_mm": {
+      "type": "number",
+      "title": "Precip Mm"
+     },
+     "precip_anom_pct": {
+      "type": "integer",
+      "title": "Precip Anom Pct"
+     },
+     "tmean_c": {
+      "type": "number",
+      "title": "Tmean C"
+     },
+     "tmean_anom_c": {
+      "type": "number",
+      "title": "Tmean Anom C"
+     },
+     "hot_days": {
+      "type": "number",
+      "title": "Hot Days"
+     }
+    },
+    "type": "object",
+    "required": [
+     "month",
+     "precip_mm",
+     "precip_anom_pct",
+     "tmean_c",
+     "tmean_anom_c",
+     "hot_days"
+    ],
+    "title": "MonthWeather"
+   },
+   "MonthsFrame": {
+    "properties": {
+     "climate": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "ssp126",
+         "ssp245",
+         "ssp585"
+        ]
+       },
+       {
+        "type": "string",
+        "const": "historical"
+       }
+      ],
+      "title": "Climate"
+     },
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "months": {
+      "items": {
+       "$ref": "#/components/schemas/MonthWeather"
+      },
+      "type": "array",
+      "title": "Months"
+     }
+    },
+    "type": "object",
+    "required": [
+     "climate",
+     "year",
+     "region",
+     "months"
+    ],
+    "title": "MonthsFrame"
+   },
    "PathwayItem": {
     "properties": {
      "crop": {
@@ -1937,6 +2179,142 @@
      "simulated"
     ],
     "title": "PathwayItem"
+   },
+   "Provenance": {
+    "properties": {
+     "farms": {
+      "type": "integer",
+      "title": "Farms"
+     },
+     "parcels": {
+      "type": "integer",
+      "title": "Parcels"
+     },
+     "crop_history_years": {
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       }
+      ],
+      "type": "array",
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Crop History Years"
+     },
+     "fi_yield_records": {
+      "type": "integer",
+      "title": "Fi Yield Records"
+     },
+     "fi_yield_years": {
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       }
+      ],
+      "type": "array",
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Fi Yield Years"
+     },
+     "se_delivery_records": {
+      "type": "integer",
+      "title": "Se Delivery Records"
+     },
+     "se_delivery_years": {
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       }
+      ],
+      "type": "array",
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Se Delivery Years"
+     },
+     "weather_cells": {
+      "type": "integer",
+      "title": "Weather Cells"
+     },
+     "weather_years": {
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       }
+      ],
+      "type": "array",
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Weather Years"
+     },
+     "weather_days": {
+      "type": "integer",
+      "title": "Weather Days"
+     },
+     "climate_paths": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Climate Paths"
+     },
+     "climate_years": {
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       }
+      ],
+      "type": "array",
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Climate Years"
+     },
+     "backtest": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Backtest"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "synthetic": {
+      "type": "boolean",
+      "title": "Synthetic",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "farms",
+     "parcels",
+     "crop_history_years",
+     "fi_yield_records",
+     "fi_yield_years",
+     "se_delivery_records",
+     "se_delivery_years",
+     "weather_cells",
+     "weather_years",
+     "weather_days",
+     "climate_paths",
+     "climate_years"
+    ],
+    "title": "Provenance"
    },
    "RegionSplit": {
     "properties": {
@@ -2117,6 +2495,33 @@
     },
     "type": "object",
     "title": "ScenarioSpec"
+   },
+   "SearchIn": {
+    "properties": {
+     "climate": {
+      "type": "string",
+      "enum": [
+       "ssp126",
+       "ssp245",
+       "ssp585"
+      ],
+      "title": "Climate",
+      "default": "ssp245"
+     },
+     "horizon_end": {
+      "type": "integer",
+      "enum": [
+       2031,
+       2040,
+       2050,
+       2060
+      ],
+      "title": "Horizon End",
+      "default": 2040
+     }
+    },
+    "type": "object",
+    "title": "SearchIn"
    },
    "SimResult": {
     "properties": {

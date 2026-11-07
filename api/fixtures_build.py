@@ -264,15 +264,16 @@ def geo_farms(con) -> dict:
 
 def geo_parcels(con, n: int = 400) -> dict:
     """A sample of parcels as squares of their area around the parcel point (fixture only; V2-3 serves real ones)."""
-    rows = con.execute("""SELECT parcel_id, farm_id, lat, lon, area_ha FROM raw_parcels
-                          ORDER BY hash(parcel_id) LIMIT ?""", [n]).fetchall()
+    rows = con.execute("""SELECT p.parcel_id, p.farm_id, p.lat, p.lon, p.area_ha, c.crop FROM raw_parcels p
+                          LEFT JOIN raw_parcel_crop_history_and_plan c ON c.parcel_id = p.parcel_id AND c.year = 2025
+                          ORDER BY hash(p.parcel_id) LIMIT ?""", [n]).fetchall()
     feats = []
-    for pid, fid, lat, lon, ha in rows:
+    for pid, fid, lat, lon, ha, crop in rows:
         half = (ha * 1e4) ** 0.5 / 2
         dy, dx = half / 111_320, half / (111_320 * np.cos(np.radians(lat)))
         ring = [[round(lon + sx * dx, 5), round(lat + sy * dy, 5)] for sx, sy in [(-1, -1), (1, -1), (1, 1), (-1, 1), (-1, -1)]]
         feats.append({"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [ring]},
-                      "properties": {"parcel_id": pid, "farm_id": fid, "area_ha": round(ha, 2)}})
+                      "properties": {"parcel_id": pid, "farm_id": fid, "area_ha": round(ha, 2), "crop": crop}})
     return {"type": "FeatureCollection", "features": feats}
 
 

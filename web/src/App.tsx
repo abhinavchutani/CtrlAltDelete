@@ -1,55 +1,39 @@
-// Layout only: no data logic here.
-import { SyntheticBanner } from "./components/SyntheticBanner";
-import { AlertList } from "./features/alerts/AlertList";
-import { AlertPopup } from "./features/alerts/AlertPopup";
-import { AskPanel } from "./features/ask/AskPanel";
-import { DecisionBoard } from "./features/board/DecisionBoard";
-import { HedgeChart } from "./features/hedge/HedgeChart";
+// Layout only: no data logic here. The map is always mounted (switching tabs keeps its place and data); the
+// Overview sits over a dimmed map, and the assistant and the all-plans table float over whichever is open.
+import { useState } from "react";
+import { ChatDock } from "./features/chat/ChatDock";
+import { ViewPanel } from "./features/fieldradar/ViewPanel";
+import { YearBar } from "./features/fieldradar/YearBar";
 import { MapView } from "./features/map/MapView";
-import { Meters } from "./features/meters/Meters";
-import { PathwaysGantt } from "./features/pathways/PathwaysGantt";
-import { LeverEditor } from "./features/simulate/LeverEditor";
-import { ScenarioPicker } from "./features/simulate/ScenarioPicker";
-import { SpecChips } from "./features/simulate/SpecChips";
-import { Timeline } from "./features/timeline/Timeline";
-import { CommandBar } from "./features/voice/CommandBar";
+import { PlanFinder } from "./features/plans/PlanFinder";
+import { PlansModal } from "./features/plans/PlansModal";
+import { Overview } from "./overview/Overview";
+import { TopBar } from "./shell/TopBar";
 import { useStore } from "./state/store";
+import { Tour } from "./tour/Tour";
 
 export default function App() {
-  const door = useStore((s) => s.door);
-  const setDoor = useStore((s) => s.setDoor);
+  const tab = useStore((s) => s.tab);
+  const [allPlans, setAllPlans] = useState(false);
+  const openAll = () => setAllPlans(true);
   return (
-    <div className="app">
-      <header>
-        <strong>Navigator</strong>
-        <ScenarioPicker />
-        <CommandBar />
-      </header>
-      <SyntheticBanner />
-      <main className="map">
+    <div className={`fr tab-${tab}`}>
+      <main className="stage">
         <MapView />
-        <AlertPopup />
-      </main>
-      <aside className="side">
-        <div className="tabs row" role="tablist">
-          <button role="tab" aria-selected={door === "simulate"} onClick={() => setDoor("simulate")}>Simulate</button>
-          <button role="tab" aria-selected={door === "ask"} onClick={() => setDoor("ask")}>Ask</button>
-        </div>
-        {door === "ask" ? <AskPanel /> : (
+        <TopBar />
+        {tab === "map" ? (
           <>
-            <SpecChips />
-            <LeverEditor />
-            <Meters />
-            <AlertList />
+            <ViewPanel />
+            <div className="right-stack"><PlanFinder onAll={openAll} /></div>
+            <YearBar />
           </>
+        ) : (
+          <div className="page-layer"><Overview onAll={openAll} /></div>
         )}
-        <HedgeChart />
-        <PathwaysGantt />
-      </aside>
-      <footer className="bottom">
-        <Timeline />
-        <DecisionBoard />
-      </footer>
+        <ChatDock />
+        {allPlans ? <PlansModal onClose={() => setAllPlans(false)} /> : null}
+      </main>
+      <Tour />
     </div>
   );
 }

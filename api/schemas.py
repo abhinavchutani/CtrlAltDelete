@@ -297,3 +297,71 @@ class Health(BaseModel):
     llm: bool  # an LLM key is configured
     warming: bool = False  # the prediction context is still loading (V2-3)
     layers: dict[str, bool] = {}  # which src.p_* / src.r_* modules are importable (API_MOCK=0)
+
+
+# ── UI v3: provenance, month-by-month weather, plan finder ─────────
+class Backtest(BaseModel):
+    train_until: int
+    test_years: list[int]
+    model_error_pct: float  # production MAPE on the held-out years
+    baseline_error_pct: float  # the farm-mean baseline on the same years
+
+
+class Provenance(BaseModel):  # GET /api/provenance: what the model is built on, counted from the snapshot
+    farms: int
+    parcels: int
+    crop_history_years: tuple[int, int]
+    fi_yield_records: int
+    fi_yield_years: tuple[int, int]
+    se_delivery_records: int
+    se_delivery_years: tuple[int, int]
+    weather_cells: int
+    weather_years: tuple[int, int]
+    weather_days: int
+    climate_paths: list[str]
+    climate_years: tuple[int, int]
+    backtest: Backtest | None = None
+    synthetic: bool = True
+
+
+class MonthWeather(BaseModel):
+    month: int
+    precip_mm: float
+    precip_anom_pct: int  # vs the same month in 1991–2020
+    tmean_c: float
+    tmean_anom_c: float
+    hot_days: float  # days with Tmax ≥ 27 °C (region mean)
+
+
+class MonthsFrame(BaseModel):  # GET /api/weather/months
+    climate: Climate | Literal["historical"]
+    year: int
+    region: Region
+    months: list[MonthWeather]
+
+
+class SearchIn(BaseModel):  # POST /api/search (text/event-stream of src.p_search events)
+    climate: Climate = "ssp245"
+    horizon_end: Literal[2031, 2040, 2050, 2060] = 2040
+
+
+class PlanFuture(BaseModel):
+    vs_current_plan: Literal["better", "same", "worse"]
+    eur_at_risk_per_year: EurBand
+    saves: EurBand | None = None
+
+
+class PlanCandidate(BaseModel):  # one simulated plan in the search stream
+    id: str
+    label: str
+    levers: list[Lever]
+    phase: Literal["single", "combo", "stress"]
+    eur_at_risk_per_year: EurBand
+    saves: EurBand | None = None
+    vs_current_plan: Literal["better", "same", "worse"]
+    costly_years: int  # years with € at risk ≥ €250k (all contract crops)
+    worst_year: EurBand
+    plan_costly_years: int
+    co2e_direction: Literal["lower", "same", "higher"]
+    assumption: bool
+    futures: dict[str, PlanFuture] | None = None

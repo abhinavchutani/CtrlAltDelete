@@ -27,6 +27,20 @@ def test_simplify_keeps_three_props_and_rounds():
     assert f["geometry"]["coordinates"][0][0] == [22.12346, 60.98765]
 
 
+def test_with_crops_adds_the_2025_crop_or_none():
+    g = {"features": [{"properties": {"parcel_id": "P1"}}, {"properties": {"parcel_id": "P2"}}]}
+    out = geo.with_crops(g, {"P1": "pea"})
+    assert [f["properties"]["crop"] for f in out["features"]] == ["pea", None]
+
+
+def test_real_parcels_carry_a_crop():
+    from src import serve_db
+    if not serve_db.exists() or not (geo.CACHE.exists() or geo.pack_parcels_path().exists()):
+        pytest.skip("needs out/serve.duckdb and the parcels")
+    feats = geo.parcels()["features"]
+    assert sum(f["properties"]["crop"] is not None for f in feats) == len(feats)
+
+
 def test_simulate_before_warm_is_503(monkeypatch):
     monkeypatch.setitem(P._state, "ctx", None)
     with pytest.raises(HTTPException) as e:
@@ -113,3 +127,20 @@ def test_report_download_round_trip(real):
     r = real.get(a["report"]["url"])
     assert r.status_code == 200 and r.content[:2] == b"PK"  # an .xlsx is a zip
     assert real.get("/api/report/nope").status_code == 404
+
+
+def test_provenance_and_months_come_from_the_snapshot(real):
+    from src import serve_db
+    if not serve_db.exists():
+        pytest.skip("needs out/serve.duckdb")
+    p = real.get("/api/provenance").json()
+    assert p["parcels"] > 0 and p["weather_cells"] > 0 and p["synthetic"] is True
+    m = real.get("/api/weather/months?region=FI_SW&year=2032&climate=ssp245").json()
+    assert m["climate"] == "ssp245" and [x["month"] for x in m["months"]] == list(range(1, 13))
+    assert real.get("/api/weather/months?region=FI_SW&year=2020").json()["climate"] == "historical"
+
+
+def test_search_waits_for_the_warm_model(real, monkeypatch):
+    monkeypatch.setitem(P._state, "ctx", None)
+    monkeypatch.setitem(P._state, "warming", True)
+    assert real.post("/api/search", json={"climate": "ssp245", "horizon_end": 2040}).status_code == 503

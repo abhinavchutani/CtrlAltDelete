@@ -3,6 +3,8 @@ import { leverLabel, withLever } from "../../domain";
 import { useStore } from "../../state/store";
 import { EvidenceChips } from "../ask/EvidenceChips";
 
+const plain = (s: string) => s.replace(/SE_SKANE/g, "Skåne").replace(/FI_SW/g, "SW Finland");
+
 export function AlertPopup() {
   const { selectedAlert: a, selectAlert, runSpec } = useStore();
   const sim = useActiveScenario();
@@ -13,8 +15,8 @@ export function AlertPopup() {
     <aside className="popup" aria-label="alert">
       <div className="row"><strong className={`sev-${a.severity}`}>{a.severity}</strong> <span>{a.year}{a.month ? `-${String(a.month).padStart(2, "0")}` : ""}</span>
         <button onClick={() => selectAlert(null)} aria-label="close">×</button></div>
-      <h4>{a.title}</h4>
-      <p>{a.why}</p>
+      <h4>{plain(a.title)}</h4>
+      <p>{plain(a.why)}</p>
       <p>€ at risk: <strong>{a.eur_at_risk ?? "—"}</strong> {a.hazard ? `· hazard ${a.hazard}` : ""}</p>
       {a.suggested_lever ? (
         <p>Suggested: {leverLabel(a.suggested_lever)} <button onClick={tryIt}>Try it</button></p>
