@@ -14,7 +14,7 @@ st.set_page_config(page_title="Climate & Nature Navigator", page_icon="🌱", la
 
 pages = [
     st.Page("views/data_quality.py", title="Data quality", icon="🔎", default=True),
-    st.Page("views/inventory.py", title="Inventory 2025", icon="📊"),
+    st.Page("views/inventory.py", title="Inventory", icon="📊"),
     st.Page("views/farm_peat.py", title="Farm & peat", icon="🌾"),
     st.Page("views/climate_risk.py", title="Climate risk", icon="🌦️"),
 ]

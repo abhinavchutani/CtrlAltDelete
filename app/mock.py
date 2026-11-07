@@ -20,8 +20,8 @@ ISSUE_TYPES = ["unit_error", "duplicate_record", "meter_spike", "soil_misreport"
                "missing_leg", "pcf_stale_period", "wrong_gas_code"]
 LEGIT = [("erp_purchase_lines", "credit note (movement 122)"), ("erp_purchase_lines", "vessel lot in tonnes (uom TO)"),
          ("energy_meter_readings", "seasonal harvest peak"), ("refrigerant_service_log", "R717 ammonia system (GWP 0)")]
-SCOPES = [("1", "stationary_combustion"), ("1", "refrigerants"), ("2_location", "electricity"),
-          ("2_market", "electricity"), ("3", "cat1"), ("3", "cat4"), ("3", "cat5"), ("3", "cat6"), ("3", "cat7")]
+SCOPES = [("scope1", "stationary_and_mobile_combustion"), ("scope1", "fugitive_refrigerants"), ("scope2_location", "purchased_electricity"),
+          ("scope2_market", "purchased_electricity"), ("scope3", "cat01_purchased_goods_services"), ("scope3", "cat04_upstream_transport"), ("scope3", "cat05_waste"), ("scope3", "cat06_business_travel"), ("scope3", "cat07_employee_commuting")]
 CROPS = ["pea", "potato", "turnip_rape", "wheat"]
 REGIONS = ["FI_southwest", "SE_skane"]
 SSPS = ["ssp126", "ssp245", "ssp585"]
@@ -45,12 +45,29 @@ def seed(path=MOCK_DB) -> None:
                         confidence=1.0, rule_id="allow_list", explanation=f"checked, legitimate: {why}",
                         evidence={"mock": True}, proposed_fix=None, created_by=BY, status="legitimate")
 
+    # Same shape as Track A's inventory (#44): line items (tco2e_line) → category rows → scope totals
+    totals: dict[str, float] = {}
     for scope, cat in SCOPES:
-        rid = f"MOCK:A2:2025:{scope}:{cat}"
-        L.write_result(con, rid, metric="tco2e", value=round(float(rng.uniform(50, 5000))), unit="t CO2e",
+        line_ids = []
+        for j in range(2):
+            lid = f"MOCK:A2:2025:actual:{scope}:{cat}:line{j}"
+            v = round(float(rng.uniform(25, 2500)))
+            L.write_result(con, lid, metric="tco2e_line", value=v, unit="t CO2e", scope=scope, category=cat,
+                           year=2025, method=METHOD, produced_by=BY,
+                           lineage=[L.src("record", f"erp:MOCK{j:04d}:1"), L.src("factor", f"EF-MOCK-{cat}")])
+            line_ids.append((lid, v))
+        value = sum(v for _, v in line_ids)
+        totals[scope] = totals.get(scope, 0.0) + value
+        L.write_result(con, f"MOCK:A2:2025:actual:{scope}:{cat}", metric="tco2e", value=value, unit="t CO2e",
                        scope=scope, category=cat, year=2025, method=METHOD, produced_by=BY,
-                       lineage=[L.src("record", f"erp:MOCK{j:04d}:1", round(float(rng.uniform(1, 50)), 1)) for j in range(3)]
-                       + [L.src("factor", f"EF-MOCK-{cat}"), L.src("doc", "METHODOLOGY.md#mock")])
+                       lineage=[L.src("doc", lid) for lid, _ in line_ids])
+    for scope, value in totals.items():
+        L.write_result(con, f"MOCK:A2:2025:actual:{scope}_total", metric="tco2e", value=value, unit="t CO2e",
+                       scope="total", category=f"{scope}_total", year=2025, method=METHOD, produced_by=BY,
+                       lineage=[L.src("doc", "sum of category rows (mock)")])
+    L.write_result(con, "MOCK:A2:2025:actual:biogenic_co2_scope1", metric="tco2e", value=round(float(rng.uniform(100, 900))),
+                   unit="t CO2e", scope="memo", category="biogenic_co2_scope1", year=2025, method=METHOD,
+                   produced_by=BY, lineage=[L.src("doc", "METHODOLOGY.md#3")])
 
     for farm in [f"F{n:04d}" for n in range(1, 13)]:
         mineral = round(float(rng.uniform(100, 400)))

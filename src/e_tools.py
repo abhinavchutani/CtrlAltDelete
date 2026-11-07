@@ -1,6 +1,9 @@
 """Copilot tools (Track E). The only places an answer's facts may come from.
 
 * query_results(...)     parameterised SQL over `results` + `lineage`; optional deterministic sum.
+                         Track A naming (#44): summary rows metric='tco2e', scope in
+                         scope1|scope2_location|scope2_market|scope3|total|memo, category 'scopeN_total'
+                         (scope='total') or 'catNN_<name>'; line items metric='tco2e_line'.
 * search_frameworks(q)   keyword (BM25) retrieval over the pack's framework digest, source registry
                          and docs/; returns passages with file and section.
 
@@ -28,7 +31,8 @@ PENDING = "pending expert approval"
 # ── query_results ─────────────────────────────────────────────────────
 def query_results(con: duckdb.DuckDBPyConnection, *, metric: str | None = None, scope: str | None = None,
                   category: str | None = None, year: int | None = None, scenario: str | None = None,
-                  text: str | None = None, aggregate: str | None = None, include_drafts: bool | None = None,
+                  category_prefix: str | None = None, text: str | None = None, aggregate: str | None = None,
+                  include_drafts: bool | None = None,
                   limit: int = 25) -> dict:
     """Rows of `results` matching every given filter, each with its lineage.
 
@@ -43,6 +47,9 @@ def query_results(con: duckdb.DuckDBPyConnection, *, metric: str | None = None, 
         if val is not None:
             where.append(f"{col} = ?")
             params.append(val)
+    if category_prefix:
+        where.append("category LIKE ?")
+        params.append(category_prefix.replace("%", "") + "%")
     if text:
         where.append("(lower(result_id) LIKE ? OR lower(coalesce(category,'')) LIKE ?)")
         params += [f"%{text.lower()}%"] * 2
@@ -55,7 +62,7 @@ def query_results(con: duckdb.DuckDBPyConnection, *, metric: str | None = None, 
         if r["status"] == "draft":
             r["badge"] = PENDING
     out: dict = {"filters": {k: v for k, v in dict(metric=metric, scope=scope, category=category, year=year,
-                                                     scenario=scenario, text=text).items() if v is not None},
+                                                     scenario=scenario, category_prefix=category_prefix, text=text).items() if v is not None},
                  "n_rows": len(rows), "rows": rows}
     if aggregate == "sum" and rows:
         units = {r["unit"] for r in rows}

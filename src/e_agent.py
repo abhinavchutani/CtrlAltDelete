@@ -40,10 +40,14 @@ TOOLS = [
     {"type": "function", "function": {
         "name": "query_results",
         "description": "Rows of the results table (published/approved; drafts flagged) with lineage. "
-                       "scope: '1', '2_location', '2_market', '3'. category e.g. 'cat1'. "
-                       "metric e.g. 'tco2e', 'yield_change_pct', 'eur_at_risk'.",
+                       "Inventory summary rows: metric='tco2e'; totals have scope='total' and category "
+                       "'scope1_total' | 'scope2_location_total' | 'scope2_market_total' | 'scope3_total'; "
+                       "Scope 3 categories have scope='scope3' and category 'catNN_<name>' (use category_prefix "
+                       "'cat01_'); line items have metric='tco2e_line' (filter with text, e.g. a site id). "
+                       "Climate: metric 'yield_change_pct' | 'p_bad_year' | 'eur_at_risk', scenario 'ssp245' etc.",
         "parameters": {"type": "object", "properties": {
             "metric": {"type": "string"}, "scope": {"type": "string"}, "category": {"type": "string"},
+            "category_prefix": {"type": "string"},
             "year": {"type": "integer"}, "scenario": {"type": "string"},
             "text": {"type": "string", "description": "substring of result_id or category"},
             "aggregate": {"type": "string", "enum": ["sum"]}}}}},
@@ -94,12 +98,12 @@ def finish(question: str, prose: str, results: list[dict], mode: str,
 
 
 # ── offline stub ──────────────────────────────────────────────────────
-_SCOPE_PATTERNS = [
-    (r"\bmarket[- ]based scope 2\b", "2_market", None),
-    (r"\blocation[- ]based scope 2\b", "2_location", None),
-    (r"\bscope 3 category (\d+)\b", "3", "cat{}"),
-    (r"\b(?:total )?scope 1\b", "1", None),
-    (r"\b(?:total )?scope 3\b", "3", None),
+_SCOPE_PATTERNS = [  # phrase → Track A result filters (naming from #44)
+    (r"market[- ]based scope 2", {"scope": "total", "category": "scope2_market_total"}),
+    (r"location[- ]based scope 2", {"scope": "total", "category": "scope2_location_total"}),
+    (r"scope 3 category (\d+)", {"scope": "scope3", "category_prefix": "cat{:02d}_"}),
+    (r"scope 1", {"scope": "total", "category": "scope1_total"}),
+    (r"scope 3", {"scope": "total", "category": "scope3_total"}),
 ]
 _PLAIN = re.compile(r"^what (?:were|was) (?:the )?(?:total )?(.+?) emissions in (\d{4})(?: \(tco2e\))?\??$")
 
@@ -110,11 +114,13 @@ def parse_plain_numeric(question: str) -> dict | None:
     if not m:
         return None
     phrase, year = m.group(1).strip(), int(m.group(2))
-    for pat, scope, cat in _SCOPE_PATTERNS:
+    for pat, filters in _SCOPE_PATTERNS:
         g = re.fullmatch(pat, phrase)
         if g:
-            return {"metric": "tco2e", "scope": scope, "year": year,
-                    "category": cat.format(g.group(1)) if cat else None}
+            f = {"metric": "tco2e", "year": year, **filters}
+            if "category_prefix" in f:
+                f["category_prefix"] = f["category_prefix"].format(int(g.group(1)))
+            return f
     return None
 
 
@@ -126,11 +132,7 @@ def stub_answer(con: duckdb.DuckDBPyConnection, question: str, kind: str | None)
                 return Answer(question, f"{NOT_IN_DATA} (The offline stub only resolves '<scope> emissions in "
                                         "<year>' questions; this one needs the LLM mode.)")
         else:
-            res = e_tools.query_results(con, **{k: v for k, v in f.items() if v is not None}, aggregate="sum")
-            if f["category"] is None:  # prefer an explicit total row, else the code-computed sum
-                tot = [r for r in res["rows"] if (r["category"] or "total") in ("total", "all")]
-                if tot:
-                    res = {**res, "rows": tot, "sum": tot[0]["value"], "n_rows": 1}
+            res = e_tools.query_results(con, **f, aggregate="sum")
             if not res["rows"] or "sum" not in res:
                 return Answer(question, f"{NOT_IN_DATA} No results match {json.dumps(f)}.")
             v, unit = res["sum"], res.get("sum_unit", "")
@@ -146,7 +148,7 @@ def stub_answer(con: duckdb.DuckDBPyConnection, question: str, kind: str | None)
 # ── LLM mode ──────────────────────────────────────────────────────────
 def _run_tool(con, name: str, args: dict) -> dict:
     if name == "query_results":
-        allowed = {"metric", "scope", "category", "year", "scenario", "text", "aggregate"}
+        allowed = {"metric", "scope", "category", "category_prefix", "year", "scenario", "text", "aggregate"}
         return e_tools.query_results(con, **{k: v for k, v in args.items() if k in allowed})
     if name == "search_frameworks":
         return e_tools.search_frameworks(str(args.get("query", "")))
