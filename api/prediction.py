@@ -2,7 +2,7 @@
 
 * Presets, their cubes and the weather frames are precomputed by `make v2` into out/v2/ and read from disk
   (fast, no model needed). A missing file → None (404) or an HTTPException 503 saying "run make v2".
-* `simulate` needs the fitted v1 models: `warm()` loads `p_engine.load_context()` once, in a background thread
+* `simulate` needs the fitted v1 models: `warm()` loads `p_engine.warm()` once, in a background thread
   started by the API lifespan; until it finishes /api/health says `warming: true` and simulate answers 503.
 * Custom runs keep their farm cube in memory (keyed by scenario_id) for /api/cube/{id}/farms.
 Endpoints whose module is not built yet (hedge, pathways, intent: #90/#91) are left to api/layers.py, which
@@ -39,7 +39,7 @@ def warm() -> None:
     try:
         from src import p_engine
 
-        _state["ctx"] = p_engine.load_context()
+        _state["ctx"] = p_engine.warm()  # the engine's own process-wide context
         _state["seconds"] = round(time.time() - t, 1)
     except Exception as e:  # noqa: BLE001 - surfaced through /api/health and simulate's 503
         _state["error"] = f"{e.__class__.__name__}: {e}"
@@ -90,9 +90,12 @@ def simulate(spec: S.ScenarioSpec) -> S.SimResult:
     if ctx is None:
         why = _state["error"] or ("the model is warming up, try again in a few seconds" if warming() else "not loaded")
         raise HTTPException(503, f"simulate unavailable: {why}")
-    from src import p_engine
+    from src import p_engine, p_spec
 
-    sim, cube = p_engine.simulate(ctx, spec.model_dump(mode="json"))
+    clean, _ = p_spec.validate(spec.model_dump(mode="json"))
+    c, h = clean["climate"], clean["horizon_end"]
+    # run_sim (not p_engine.simulate) so the farm cube comes back too; plan + grid give meters, alerts, better
+    sim, cube = p_engine.run_sim(ctx, clean, plan=p_engine.plan_for(ctx, c, h), grid=p_engine.grid_for(ctx, c, h))
     _custom_farms[sim["scenario_id"]] = cube["farms"]
     return S.SimResult(**sim)
 

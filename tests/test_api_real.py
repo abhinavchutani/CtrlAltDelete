@@ -58,3 +58,22 @@ def test_real_presets_weather_farms(real):
     farms = real.get("/api/cube/current_plan_ssp245/farms?year=2030").json()
     assert farms and all(f["year"] == 2030 for f in farms)
     assert real.get("/api/health").json()["mock"] is False
+
+
+@pytest.mark.skipif(not HAVE_V2, reason="needs `make v2` output and the snapshot")
+def test_real_simulate_end_to_end(monkeypatch):
+    """Warm the engine, run a custom spec, then read its farm cube from memory."""
+    P.warm()
+    if P.context_error():
+        pytest.skip(P.context_error())
+    sim = P.simulate(S.ScenarioSpec(climate="ssp245", horizon_end=2031, levers=[{"type": "irrigate", "crop": "pea"}]))
+    assert sim.scenario_id and len(sim.alerts) <= 12 and sim.meters.vs_current_plan in ("better", "same", "worse")
+    assert P.farms(sim.scenario_id, 2030)
+
+
+def test_retrieval_live_per_module(monkeypatch):
+    monkeypatch.setenv("API_MOCK", "0")
+    from api import layers
+    live = layers.live()
+    assert live["live:ask"] == layers._imports("src.r_agent")
+    assert live["live:board"] == layers._imports("src.r_board")

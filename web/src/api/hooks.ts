@@ -15,10 +15,10 @@ export const useHealth = () =>
     queryFn: () => get<Health>("/api/health"),
     refetchInterval: (q) => (q.state.data?.warming ? 2000 : false), // poll while the model warms up
   });
-/** True when ask/options/board answer from fixtures (mock mode, or retrieval not wired yet). */
-export function useRetrievalIsFixture() {
+/** True when this retrieval endpoint answers from fixtures (mock mode, or its src.r_* module isn't built yet). */
+export function useRetrievalIsFixture(kind: "ask" | "options" | "board") {
   const h = useHealth();
-  return !!h.data && (h.data.mock || !h.data.layers?.retrieval_live);
+  return !!h.data && (h.data.mock || !h.data.layers?.[`live:${kind}`]);
 }
 
 export const useScenarios = () => useQuery({ queryKey: ["scenarios"], queryFn: () => get<ScenarioPreset[]>("/api/scenarios"), ...forever });

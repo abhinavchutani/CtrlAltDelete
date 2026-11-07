@@ -4,17 +4,17 @@ import { Panel, Status } from "../../components/Status";
 import { EvidenceChips } from "../ask/EvidenceChips";
 import { DecisionDialog } from "./DecisionDialog";
 
-/** Decision board (on fixtures while retrieval is on hold). */
+/** Decision board (fixtures until src.r_board exists). */
 export function DecisionBoard() {
   const sim = useActiveScenario();
   const board = useBoard(sim.data?.scenario_id);
   const { boardDialogRow, openDecision } = useStore();
   const rows = board.data ?? [];
-  const fixture = useRetrievalIsFixture();
+  const fixture = useRetrievalIsFixture("board");
   const open = rows.find((r) => r.row_id === boardDialogRow);
   return (
     <Panel title="Decision board">
-      {fixture ? <p className="small sev-notable">Fixture rows (illustrative): the retrieval layer is not wired into the API yet.</p> : null}
+      {fixture ? <p className="small sev-notable">Fixture rows (illustrative): this retrieval module is not built yet.</p> : null}
       <Status loading={board.isLoading} error={board.error} empty={!board.isLoading && !rows.length} />
       {rows.length ? (
         <table>

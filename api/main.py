@@ -45,7 +45,7 @@ def _found(x, what: str):
 def health() -> S.Health:
     llm = any(env(k) for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY"))
     return S.Health(ok=True, mock=L.mock_mode(), serve_db=str(serve_db.serve_path()) if serve_db.exists() else None,
-                    llm=llm, warming=P.warming(), layers={**L.available(), "retrieval_live": L.RETRIEVAL_LIVE})
+                    llm=llm, warming=P.warming(), layers={**L.available(), **L.live()})
 
 
 @app.get("/api/geo/farms")
