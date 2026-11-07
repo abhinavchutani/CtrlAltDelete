@@ -1,14 +1,15 @@
 // Every server read/write the app does. Components call these; they never fetch directly.
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { useStore } from "../state/store";
-import { get, post, qs } from "./client";
+import { activeSpec, START_YEAR, useStore } from "../state/store";
+import { ApiError, get, post, qs } from "./client";
 import type {
-  AdaptationOption, AskOut, BoardRow, Climate, Decision, FarmYear, FeatureCollection, GeoParcel, GeoPoint, Health, Hazard,
-  Hedge, IntentOut, MonthsFrame, PathwayItem, Provenance, Region, ScenarioPreset, ScenarioSpec, SimResult, WeatherFrame,
+  AdaptationOption, Climate, FarmYear, FeatureCollection, Filed, GeoParcel, GeoPoint, Graph, Health, Interview, IntentOut,
+  KnowledgeItem, Lever, MonthsFrame, Outlook, Provenance, RadarAskOut, Region, ScenarioSpec, SimResult, WeatherFrame,
 } from "./types";
 
 const forever = { staleTime: Infinity };
+const warmRetry = { retry: (n: number, e: unknown) => n < (e instanceof ApiError && e.status === 503 ? 30 : 1), retryDelay: 3000 }; // 503 = model warming
 
 export const useHealth = () =>
   useQuery({
@@ -16,23 +17,29 @@ export const useHealth = () =>
     queryFn: () => get<Health>("/api/health"),
     refetchInterval: (q) => (q.state.data?.warming ? 2000 : false), // poll while the model warms up
   });
-/** True when this retrieval endpoint answers from fixtures (mock mode, or its src.r_* module isn't built yet). */
-export function useRetrievalIsFixture(kind: "ask" | "options" | "board") {
-  const h = useHealth();
-  return !!h.data && (h.data.mock || !h.data.layers?.[`live:${kind}`]);
-}
 
-export const useScenarios = () => useQuery({ queryKey: ["scenarios"], queryFn: () => get<ScenarioPreset[]>("/api/scenarios"), ...forever });
-
-/** The scenario on screen: a preset, or a custom spec run through /api/simulate. */
-export function useActiveScenario() {
-  const scenarioId = useStore((s) => s.scenarioId);
-  const customSpec = useStore((s) => s.customSpec);
-  return useQuery({
-    queryKey: customSpec ? ["simulate", customSpec] : ["scenario", scenarioId],
-    queryFn: () =>
-      customSpec ? post<SimResult>("/api/simulate", customSpec) : get<SimResult>(`/api/scenario/${encodeURIComponent(scenarioId)}`),
+/** The Overview's numbers (api/radar.py): today's plan, or a plan's levers, on one climate path, 2026–2040. */
+export const useOutlook = (climate: Climate, levers: Lever[] | null) =>
+  useQuery({
+    queryKey: ["outlook", climate, levers ?? []],
+    queryFn: () => post<Outlook>("/api/radar/outlook", { climate, levers: levers ?? [] }),
     placeholderData: keepPreviousData,
+    ...warmRetry,
+    ...forever,
+  });
+
+/** The scenario on the map: the climate's preset (today's plan) or the chosen plan via /api/simulate. */
+export function useActiveScenario() {
+  const climate = useStore((s) => s.climate);
+  const planLevers = useStore((s) => s.planLevers);
+  const planLabel = useStore((s) => s.planLabel);
+  const spec = activeSpec({ climate, planLevers, planLabel });
+  const presetId = `current_plan_${climate}`;
+  return useQuery({
+    queryKey: spec ? ["simulate", spec] : ["scenario", presetId],
+    queryFn: () => (spec ? post<SimResult>("/api/simulate", spec) : get<SimResult>(`/api/scenario/${presetId}`)),
+    placeholderData: keepPreviousData,
+    ...warmRetry,
     ...forever,
   });
 }
@@ -49,8 +56,8 @@ const weatherQuery = (climate: Climate | "historical", year: number) => ({
   ...forever,
 });
 /** The weather frame a year is drawn with: observed up to START_YEAR, the scenario's climate after. */
-export const climateFor = (year: number, climate: Climate | undefined, startYear: number): Climate | "historical" =>
-  year <= startYear ? "historical" : (climate ?? "ssp245");
+export const climateFor = (year: number, climate: Climate | undefined): Climate | "historical" =>
+  year <= START_YEAR ? "historical" : (climate ?? "ssp245");
 
 export const useFarms = (scenarioId: string | undefined, year: number) =>
   useQuery({ ...farmsQuery(scenarioId, year), enabled: !!scenarioId, placeholderData: keepPreviousData });
@@ -58,95 +65,29 @@ export const useFarms = (scenarioId: string | undefined, year: number) =>
 export const useWeather = (climate: Climate | "historical", year: number) =>
   useQuery({ ...weatherQuery(climate, year), placeholderData: keepPreviousData });
 
-/** Load every year of the scenario in the background, so play and scrubbing never wait on the network. */
-export function usePrefetchYears(scenarioId: string | undefined, years: number[], climate: Climate | undefined, startYear: number) {
+/** Load every year in the background, so play and scrubbing never wait on the network. */
+export function usePrefetchYears(scenarioId: string | undefined, years: number[], climate: Climate | undefined) {
   const qc = useQueryClient();
   useEffect(() => {
     if (!scenarioId || !years.length) return;
     for (const y of years) {
       void qc.prefetchQuery(farmsQuery(scenarioId, y));
-      void qc.prefetchQuery(weatherQuery(climateFor(y, climate, startYear), y));
+      void qc.prefetchQuery(weatherQuery(climateFor(y, climate), y));
     }
-    // years is a fresh array each render; its ends and length identify it
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qc, scenarioId, climate, startYear, years.length, years[0]]);
+  }, [qc, scenarioId, climate, years.length, years[0]]);
 }
-
-export const useHedge = (climate: Climate) =>
-  useQuery({ queryKey: ["hedge", climate], queryFn: () => get<Hedge>(`/api/hedge${qs({ climate })}`), ...forever });
-
-export const usePathways = (scenarioId: string | undefined) =>
-  useQuery({
-    queryKey: ["pathways", scenarioId],
-    queryFn: () => get<PathwayItem[]>(`/api/pathways/${encodeURIComponent(scenarioId!)}`),
-    enabled: !!scenarioId,
-    ...forever,
-  });
-
-export const useOptions = (hazard: Hazard | null, crop: string | null) =>
-  useQuery({
-    queryKey: ["options", hazard, crop],
-    queryFn: () => get<AdaptationOption[]>(`/api/options${qs({ hazard, crop })}`),
-    enabled: !!hazard,
-    ...forever,
-  });
-
-export const useBoard = (scenarioId: string | undefined) =>
-  useQuery({
-    queryKey: ["board", scenarioId],
-    queryFn: () => get<BoardRow[]>(`/api/board/${encodeURIComponent(scenarioId!)}`),
-    enabled: !!scenarioId,
-  });
-
-export function useDecide() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ rowId, decision }: { rowId: string; decision: Decision }) =>
-      post<BoardRow>(`/api/board/${encodeURIComponent(rowId)}/decision`, decision),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["board"] }),
-  });
-}
-
-export const useAsk = (question: string | null, history: string[] = []) =>
-  useQuery({
-    queryKey: ["ask", question, history],
-    queryFn: () => post<AskOut>("/api/ask", { question, history: history.map((q) => ({ question: q })) }),
-    enabled: !!question,
-    ...forever,
-  });
-
-/** One chat line → its intent (door ask or simulate). Cached per text + the spec it would extend. */
-export const useIntentQuery = (text: string, base: ScenarioSpec | null) =>
-  useQuery({ queryKey: ["intent", text, base], queryFn: () => post<IntentOut>("/api/intent", { text, base }), ...forever });
-
-export const useIntent = () =>
-  useMutation({ mutationFn: ({ text, base }: { text: string; base: ScenarioSpec | null }) => post<IntentOut>("/api/intent", { text, base }) });
 
 export const useGeoFarms = () =>
   useQuery({ queryKey: ["geo", "farms"], queryFn: () => get<FeatureCollection<GeoPoint>>("/api/geo/farms"), ...forever });
 export const useGeoParcels = () =>
   useQuery({ queryKey: ["geo", "parcels"], queryFn: () => get<FeatureCollection<GeoParcel>>("/api/geo/parcels"), ...forever });
 
-/** Text or speech → intent → either an ask question or a pending spec (confirmed by the user before it runs). */
-export function useSubmitText() {
-  const intent = useIntent();
-  const sim = useActiveScenario();
-  const { ask, setPending } = useStore();
-  return {
-    ...intent,
-    submit: (text: string) =>
-      intent.mutate({ text, base: sim.data?.spec ?? null }, {
-        onSuccess: (r) => (r.door === "ask" || !r.spec ? ask(r.text) : setPending(r.spec as ScenarioSpec, r.heard ?? [], r.problems ?? [])),
-      }),
-  };
-}
-
-// ── UI v3 ──────────────────────────────────────────────────────────
 /** What the model is built on, counted from the data by the API. */
 export const useProvenance = () =>
   useQuery({ queryKey: ["provenance"], queryFn: () => get<Provenance>("/api/provenance"), ...forever });
 
-/** Month-by-month weather of one region in one year (drives the map's weather effects and the alert card). */
+/** Month-by-month weather of one region in one year. */
 export const useMonths = (region: Region | null, year: number, climate: Climate | undefined) =>
   useQuery({
     queryKey: ["months", region, year, climate ?? "ssp245"],
@@ -156,17 +97,63 @@ export const useMonths = (region: Region | null, year: number, climate: Climate 
     ...forever,
   });
 
-/** Every adaptation option in the knowledge base (cost level, lead time, robustness per lever). */
+/** Every adaptation option in the knowledge base (cost level per lever). */
 export const useAllOptions = () =>
   useQuery({ queryKey: ["options", "all"], queryFn: () => get<AdaptationOption[]>("/api/options"), ...forever });
 
-/** A spec simulated on its own (the assistant's what-if cards), without changing what the map shows. */
+/** A spec simulated on its own (the assistant's Simulate cards), without changing what the map shows. */
 export const useSimulation = (spec: ScenarioSpec | null) =>
+  useQuery({ queryKey: ["simulate", spec], queryFn: () => post<SimResult>("/api/simulate", spec), enabled: !!spec, ...warmRetry, ...forever });
+
+/** One Simulate line → the plan it describes (src.p_parse, deterministic). */
+export const useIntentQuery = (text: string, base: ScenarioSpec | null) =>
+  useQuery({ queryKey: ["intent", text, base], queryFn: () => post<IntentOut>("/api/intent", { text, base }), ...forever });
+
+// ── assistant ─────────────────────────────────────────────────────
+export const useGraph = () => useQuery({ queryKey: ["graph"], queryFn: () => get<Graph>("/api/graph"), staleTime: 30_000 });
+
+export const useRadarAsk = (question: string, history: string[]) =>
   useQuery({
-    queryKey: ["simulate", spec],
-    queryFn: () => post<SimResult>("/api/simulate", spec),
-    enabled: !!spec,
-    retry: (n, e) => n < 8 && String(e).startsWith("503"), // the model may still be warming
-    retryDelay: 2500,
+    queryKey: ["radar-ask", question, history],
+    queryFn: () => post<RadarAskOut>("/api/radar/ask", { question, history: history.map((q) => ({ question: q })) }),
+    ...forever,
+  });
+
+export const useTopics = () => useQuery({ queryKey: ["topics"], queryFn: () => get<string[]>("/api/tacit/topics"), ...forever });
+
+export function useFileNote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (b: { text: string; contributed_by: string; role?: string | null; farm_id?: string | null; gap_id?: string | null }) =>
+      post<Filed>("/api/tacit/notes", b),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["graph"] }),
+  });
+}
+
+export function useConfirmNote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reviewer }: { id: string; reviewer: string }) =>
+      post<KnowledgeItem>(`/api/tacit/notes/${encodeURIComponent(id)}/confirm`, { reviewer }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["graph"] }),
+  });
+}
+
+export function useRefileNote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, topic }: { id: string; topic: string }) =>
+      fetch(`/api/tacit/notes/${encodeURIComponent(id)}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ topic }),
+      }).then(async (r) => { if (!r.ok) throw new Error(`${r.status}: ${(await r.json()).detail}`); return r.json() as Promise<Filed>; }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["graph"] }),
+  });
+}
+
+export const useInterview = (gapId: string | null) =>
+  useQuery({
+    queryKey: ["interview", gapId],
+    queryFn: () => post<Interview>("/api/tacit/interviews", { gap_id: gapId }),
+    enabled: !!gapId,
     ...forever,
   });

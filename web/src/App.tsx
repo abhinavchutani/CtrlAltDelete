@@ -1,38 +1,31 @@
-// Layout only: no data logic here. The map is always mounted (switching tabs keeps its place and data); the
-// Overview sits over a dimmed map, and the assistant and the all-plans table float over whichever is open.
-import { useState } from "react";
-import { ChatDock } from "./features/chat/ChatDock";
-import { ViewPanel } from "./features/fieldradar/ViewPanel";
-import { YearBar } from "./features/fieldradar/YearBar";
-import { MapView } from "./features/map/MapView";
-import { PlanFinder } from "./features/plans/PlanFinder";
-import { PlansModal } from "./features/plans/PlansModal";
+// Layout only: no data logic here. One fixed backdrop, the glass header, then the open tab.
+import { useEffect } from "react";
+import { AssistantPage } from "./features/assistant/AssistantPage";
+import { MapPage } from "./features/map/MapPage";
 import { Overview } from "./overview/Overview";
-import { TopBar } from "./shell/TopBar";
+import { PlansSheet } from "./overview/Sheets";
+import { Backdrop, TopBar } from "./shell/TopBar";
 import { useStore } from "./state/store";
 import { Tour } from "./tour/Tour";
 
 export default function App() {
   const tab = useStore((s) => s.tab);
-  const [allPlans, setAllPlans] = useState(false);
-  const openAll = () => setAllPlans(true);
+  const sheet = useStore((s) => s.sheet);
+  const closeSheet = useStore((s) => s.closeSheet);
+  const setTab = useStore((s) => s.setTab);
+  // the tab lives in the URL hash (#map, #assistant), so links and the back button work
+  useEffect(() => {
+    const read = () => { const h = window.location.hash.slice(1); if (h === "map" || h === "assistant" || h === "overview") setTab(h); };
+    window.addEventListener("hashchange", read);
+    return () => window.removeEventListener("hashchange", read);
+  }, [setTab]);
+  useEffect(() => { if (window.location.hash.slice(1) !== tab) history.replaceState(null, "", `#${tab}`); }, [tab]);
   return (
-    <div className={`fr tab-${tab}`}>
-      <main className="stage">
-        <MapView />
-        <TopBar />
-        {tab === "map" ? (
-          <>
-            <ViewPanel />
-            <div className="right-stack"><PlanFinder onAll={openAll} /></div>
-            <YearBar />
-          </>
-        ) : (
-          <div className="page-layer"><Overview onAll={openAll} /></div>
-        )}
-        <ChatDock />
-        {allPlans ? <PlansModal onClose={() => setAllPlans(false)} /> : null}
-      </main>
+    <div className={`app tab-${tab}`}>
+      {tab !== "map" ? <Backdrop /> : null}
+      <TopBar />
+      {tab === "overview" ? <Overview /> : tab === "map" ? <MapPage /> : <AssistantPage />}
+      {tab !== "overview" && sheet?.kind === "plans" ? <PlansSheet onClose={closeSheet} /> : null}
       <Tour />
     </div>
   );

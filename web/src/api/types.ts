@@ -60,3 +60,19 @@ export type SearchEvent =
   | { type: "stress"; id: string; futures: Record<string, PlanFuture> }
   | { type: "done"; ranking: string[]; best: string | null; tested: number; seconds: number }
   | { type: "error"; detail: string };
+
+// Field Radar v4 (api/radar.py, api/kgraph.py)
+export type Outlook = S["Outlook"];
+export type OutlookIn = S["OutlookIn"];
+export type Season = S["Season"];
+export type Issue = S["Issue"];
+export type SourceRef = S["SourceRef"];
+export type Status = Season["status"];
+export type Bucket = Season["bucket"];
+export type Graph = S["Graph"];
+export type GraphNode = S["Node"];
+export type RadarAskOut = S["RadarAskOut"];
+export type SourceChip = S["SourceChip"];
+export type Filed = S["Filed"];
+export type Interview = S["Interview"];
+export type KnowledgeItem = S["KnowledgeItem"];
