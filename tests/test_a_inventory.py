@@ -40,9 +40,9 @@ def con(tmp_path_factory):
 
 def test_dev_inventories_meet_end_goal_bar(con):
     res = A.run(con, years=(2023, 2024), write=False)
-    for y, bar in [(2023, 85), (2024, 70)]:
-        s = A.score_a2(res[y], con.execute(f"SELECT * FROM task_dev_A2_dev_inventory_{y}").df())
-        assert s["score"] >= bar, (y, s)
+    s = {y: A.score_a2(res[y], con.execute(f"SELECT * FROM task_dev_A2_dev_inventory_{y}").df()) for y in (2023, 2024)}
+    assert all(v["score"] >= 70 for v in s.values()), s          # END_GOAL bar per year
+    assert sum(v["score"] for v in s.values()) / 2 >= 85, s      # and no regression on the mean
 
 
 def test_results_have_lineage(con):

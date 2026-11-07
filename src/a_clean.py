@@ -36,11 +36,31 @@ def propose_and_assume(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
         cands["status"] = "proposed"
     cands["status"] = cands["status"].fillna("proposed")
     ids = persist(con, cands, CREATED_BY)
+    retire_stale(con, ids)
     if L.dev_mode():
         for iid, st, fix in zip(ids, cands.status, cands.proposed_fix):
             if st == "proposed" and isinstance(fix, dict):
                 L.apply_correction(con, iid, approved_by=L.DEV_ASSUMED, reason="dev-mode assumption for scoring")
     return cands
+
+
+def retire_stale(con: duckdb.DuckDBPyConnection, current_ids: list[str]) -> int:
+    """Drop this agent's earlier detector issues that no rule raises any more (a rule was tightened), with their
+    DEV-ASSUMED corrections, so re-running `make a` on an existing database gives the same result as a fresh one.
+    Anything a human touched (approved/rejected, or a human-approved correction) is kept."""
+    con.register("_cur", pd.DataFrame({"issue_id": list(current_ids) or [""]}))
+    stale = con.execute("""
+        SELECT i.issue_id FROM issues i WHERE i.created_by = ? AND i.status IN ('proposed', 'legitimate', 'observation')
+          AND i.issue_id NOT IN (SELECT issue_id FROM _cur)
+          AND NOT EXISTS (SELECT 1 FROM corrections c WHERE c.issue_id = i.issue_id AND c.approved_by <> ?)""",
+                        [CREATED_BY, L.DEV_ASSUMED]).df().issue_id.tolist()
+    con.unregister("_cur")
+    if stale:
+        con.register("_st", pd.DataFrame({"issue_id": stale}))
+        con.execute("DELETE FROM corrections WHERE issue_id IN (SELECT issue_id FROM _st)")
+        con.execute("DELETE FROM issues WHERE issue_id IN (SELECT issue_id FROM _st)")
+        con.unregister("_st")
+    return len(stale)
 
 
 def active_corrections(con: duckdb.DuckDBPyConnection, table_name: str) -> pd.DataFrame:

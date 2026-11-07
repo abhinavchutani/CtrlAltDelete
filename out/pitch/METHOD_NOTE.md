@@ -49,8 +49,8 @@
 
 | Task | Baseline | Ours |
 |---|---|---|
-| A1 | 52.17 | 96.0 |
-| A2 (2023 / 2024) | 25.5 / 23.2 | 91.3 / 74.9 |
+| A1 | 52.17 | 96.7 |
+| A2 (2023 / 2024) | 25.5 / 23.2 | 85.0 / 87.2 |
 | C1 backtest | — | MAPE 5.1 % |
 
 **Reproduce:** `make all` from the unzipped pack (see README).

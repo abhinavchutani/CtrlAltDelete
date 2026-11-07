@@ -4,9 +4,11 @@ tuned on the public 2023–24 dev labels (see docs/BASELINES.md / PR notes).
 * area_mismatch       survey area vs the farm's declared parcels for that crop and year (±10 %)
 * decimal_shift       n_mineral_kg_ha ≥5× or ≤0.2× the crop median (non-zero): ×10 / ÷10 typo
 * outlier_implausible yield_t_ha ≥5× the crop median: ÷10 typo (low yields are real crop failures)
-* soil_misreport      survey says "Mineral soil" but the soil map puts ≥30 % of that crop's area,
-                      or ≥50 % of the farm's area that year, on organic soil (map ≈ 88 % accurate,
-                      so these always need individual expert review)
+* soil_misreport      survey says "Mineral soil" but either the soil map puts ≥30 % of both that crop's area
+                      and the farm's area that year on organic soil, or the same farm reported "Organic soil"
+                      for the same crop in another year and the map agrees (≥30 % of the crop's area or ≥50 % of
+                      the farm). Map alone (≈ 88 % accurate) was 12/23 right on the dev years; these always
+                      need individual expert review
 * coordinate_swap     farm_registry lat/lon swapped (lat < lon in the Nordics)
 """
 from __future__ import annotations
@@ -38,6 +40,8 @@ def survey_with_parcels(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
     d = sv.merge(ph, on=["farm_id", "crop", "year"], how="left")
     d = d.merge(fy[["farm_id", "year", "farm_organic_share"]], on=["farm_id", "year"], how="left")
     d["crop_organic_share"] = d.organic_ha / d.parcel_ha
+    org = d.soil_type_reported.eq("Organic soil").astype(int)
+    d["crop_organic_reports"] = org.groupby([d.farm_id, d.crop]).transform("sum") - org  # other years only
     return d
 
 
@@ -87,9 +91,11 @@ def yield_outlier(d: pd.DataFrame) -> pd.DataFrame:
 
 def soil_misreport(d: pd.DataFrame) -> pd.DataFrame:
     cs, fs = d.crop_organic_share.fillna(0), d.farm_organic_share.fillna(0)
-    hit = d.soil_type_reported.eq("Mineral soil") & ((cs >= SOIL_CROP_SHARE) | (fs >= SOIL_FARM_SHARE))
+    hist = d.get("crop_organic_reports", pd.Series(0, index=d.index)).fillna(0) > 0
+    both = (cs >= SOIL_CROP_SHARE) & (fs >= SOIL_CROP_SHARE)
+    hit = d.soil_type_reported.eq("Mineral soil") & (both | (hist & ((cs >= SOIL_CROP_SHARE) | (fs >= SOIL_FARM_SHARE))))
     r = d.assign(cs=cs, fs=fs)[hit]
-    conf = np.where((r.cs >= SOIL_CROP_SHARE) & (r.fs >= SOIL_CROP_SHARE), 0.85, 0.6)
+    conf = np.where(both[hit], 0.85, 0.75)
     return _cands(r, issue_type="soil_misreport", rule_id="farm_soilmap_organic",
                   confidence=conf,
                   explanation=[f"survey says mineral; soil map: {c:.0%} of this crop's area and {f:.0%} of the farm is organic" for c, f in zip(r.cs, r.fs)],

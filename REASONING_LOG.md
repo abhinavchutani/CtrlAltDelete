@@ -28,6 +28,7 @@ Each line names the trap, our rule and its source in the pack. Code that impleme
 | R15 | Categories 11 and 12 differ from the sample | Method choices (market-grid use phase; Finnish packaging mix): state the choice, don't "fix" it | METHODOLOGY §4 |
 | R16 | Better data (lever L27) shows as a "reduction" | Measurement changes and structural changes are never reductions | SCENARIOS_AND_RISK B |
 | R17 | FLAG vs non-FLAG farm emissions | FLAG = N2O, organic soils, liming; fertiliser manufacture, diesel, electricity and pesticides are non-FLAG | METHODOLOGY §5 |
+| R26 | Soil map read as the soil (≈ 88 % accurate) | The map is evidence for a soil_misreport review, not a quantity: flag only when crop and farm area agree, or the farm reported peat for that crop in another year; peat counts on areas the reviewed survey calls organic | METHODOLOGY §5; dev labels 2023–24 |
 
 ## Climate risk (Track C)
 
