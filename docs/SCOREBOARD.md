@@ -11,8 +11,8 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 | G1 | C1 CSV | exists + valid | 12,064 rows = template (#31/#39) | done (draft; #17 upgrades) |
 | G1 | C2 CSV | exists + valid | — | open (#18) |
 | G1 | E CSV | exists + valid | — | open (#23) |
-| G2 | A1 dev score, overall | ≥ 80 | **95.78** (all 200 dev labels; P 0.95, R 0.965) | ✅ met (#9) |
-| G2 | A2 dev score, 2023 / 2024 | ≥ 70 / ≥ 70 | — | open |
+| G2 | A1 dev score, overall | ≥ 80 | **96.04** (all 200 dev labels; P 0.95, R 0.97) | ✅ met |
+| G2 | A2 dev score, 2023 / 2024 | ≥ 70 / ≥ 70 | **91.47 / 74.83** | ✅ met (#11); cat01 +1.1–1.7 % from soil-map share is the next lever |
 | G2 | C1 backtest MAPE / nRMSE | ≤ 8 % / ≤ 0.25 | 8.16 % / 0.134 (stage features in #17: 5.6 % / 0.115 in experiment) | MAPE open, nRMSE met |
 | G2 | E dev E90–E92 | 3/3 within tolerance | — | open |
 | G3 | App on real results; peat; C3 actions; click-through | done | — | open |
@@ -25,5 +25,7 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 | 2026-11-07 00:40 | #33 | A1 dev, farm tables only | — → 87.8 | 5 farm detectors; 5 soil misses are soil-map errors |
 | 2026-11-07 00:55 | #37 | A1 dev, ops tables | — → 99.12 | ERP/energy/fuel/GoO/refrigerant + allow-list |
 | 2026-11-07 01:05 | #9 PR | A1 dev, all labels | 95.16 (farm+ops) → 95.78 | + travel/shipments/waste/PCF/report/commuting (ops2 tables 100) |
+| 2026-11-07 01:35 | #11 PR | A2 dev 2023 / 2024 | — → 91.32 / 67.62 | first inventory with corrections + organic soils |
+| 2026-11-07 01:45 | #11 PR | A2 dev 2023 / 2024; A1 all | 91.32 / 67.62 → 91.47 / 74.83; A1 95.78 → 96.04 | stacked kWh+spike fix, year-level gap estimates, SEK capex lines |
 | 2026-11-07 01:20 | #31 | C1 backtest MAPE / nRMSE | — → 8.20 % / 0.136 | monthly→seasonal ridge + farm effect, raw survey ×3 filter (baseline 9.89 % / 0.153) |
 | 2026-11-07 01:50 | #39 | C1 backtest MAPE / nRMSE | 8.20 % → 8.16 % / 0.134 | clean_farm_survey labels |
