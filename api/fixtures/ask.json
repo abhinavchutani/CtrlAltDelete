@@ -1,0 +1,103 @@
+[
+ {
+  "status": "answered",
+  "answer_md": "Year-on-year change in pea deliveries from Swedish (SE_SKANE) farms, 2021–2026. In 2026 they fell 13.0 % on 2025 (the drought year). *(fixture answer)*",
+  "table": {
+   "columns": [
+    "year",
+    "delivery_change_pct"
+   ],
+   "rows": [
+    [
+     2021,
+     -29.46
+    ],
+    [
+     2022,
+     42.5
+    ],
+    [
+     2023,
+     -23.47
+    ],
+    [
+     2024,
+     39.43
+    ],
+    [
+     2025,
+     -13.64
+    ],
+    [
+     2026,
+     -13.02
+    ]
+   ]
+  },
+  "evidence": [
+   {
+    "kind": "result",
+    "ref": "C:deliveries:SE_SKANE:pea:2021",
+    "label": "delivery change 2021"
+   },
+   {
+    "kind": "result",
+    "ref": "C:deliveries:SE_SKANE:pea:2022",
+    "label": "delivery change 2022"
+   },
+   {
+    "kind": "result",
+    "ref": "C:deliveries:SE_SKANE:pea:2023",
+    "label": "delivery change 2023"
+   },
+   {
+    "kind": "result",
+    "ref": "C:deliveries:SE_SKANE:pea:2024",
+    "label": "delivery change 2024"
+   },
+   {
+    "kind": "result",
+    "ref": "C:deliveries:SE_SKANE:pea:2025",
+    "label": "delivery change 2025"
+   },
+   {
+    "kind": "result",
+    "ref": "C:deliveries:SE_SKANE:pea:2026",
+    "label": "delivery change 2026"
+   }
+  ],
+  "report": {
+   "report_id": "fixture-pea-deliveries-se",
+   "filename": "pea_deliveries_se_2021_2026.xlsx",
+   "url": "/api/report/fixture-pea-deliveries-se"
+  },
+  "pending_approval": true
+ },
+ {
+  "status": "answered",
+  "answer_md": "A guarantee of origin counts only if its vintage year equals the consumption year, capped at the site's consumption; the registry statement beats the internal log. *(fixture answer)*",
+  "table": null,
+  "evidence": [
+   {
+    "kind": "doc",
+    "ref": "REASONING_LOG.md#goo",
+    "label": "GoO rule"
+   },
+   {
+    "kind": "table_row",
+    "ref": "raw_goo_registry_statement",
+    "label": "GoO registry statement"
+   }
+  ],
+  "report": null,
+  "pending_approval": false
+ },
+ {
+  "status": "not_in_data",
+  "answer_md": "Not in the data: the pack has no 2019 energy meter readings. *(fixture answer)*",
+  "table": null,
+  "evidence": [],
+  "report": null,
+  "pending_approval": false
+ }
+]

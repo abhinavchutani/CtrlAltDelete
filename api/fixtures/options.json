@@ -1,0 +1,156 @@
+[
+ {
+  "option_id": "A01",
+  "hazards": [
+   "H1"
+  ],
+  "crops": [
+   "all"
+  ],
+  "option": "Efficient irrigation systems",
+  "window": "strategic",
+  "lead_time_yrs": [
+   2,
+   3
+  ],
+  "cost_level": "high",
+  "ghg": "worse",
+  "nutrients": "worse",
+  "water": "worse",
+  "robustness": "scenario_dependent",
+  "simulated": "simulated",
+  "lever": {
+   "type": "irrigate",
+   "crop": "pea",
+   "target": "drought_exposed"
+  },
+  "source_name": "LIFE AgriAdapt; RISK_MITIGATION_AND_ADAPTATION.md §7",
+  "source_url": "https://agriadapt.eu/northern-region/",
+  "reviewed_by": null
+ },
+ {
+  "option_id": "A04",
+  "hazards": [
+   "H1",
+   "H2"
+  ],
+  "crops": [
+   "pea",
+   "turnip_rape"
+  ],
+  "option": "Heat/drought-tolerant varieties (breeding partnership / trials)",
+  "window": "strategic",
+  "lead_time_yrs": [
+   8,
+   12
+  ],
+  "cost_level": "med",
+  "ghg": "same",
+  "nutrients": "same",
+  "water": "better",
+  "robustness": "no_regret",
+  "simulated": "assumption",
+  "lever": {
+   "type": "heat_tolerant_variety",
+   "crop": "pea",
+   "from_year": 2030,
+   "penalty_cut": 0.3
+  },
+  "source_name": "LIFE AgriAdapt; RISK_MITIGATION_AND_ADAPTATION.md §7",
+  "source_url": "https://agriadapt.eu/northern-region/",
+  "reviewed_by": null
+ },
+ {
+  "option_id": "A06",
+  "hazards": [
+   "H2",
+   "H5"
+  ],
+  "crops": [
+   "pea",
+   "turnip_rape"
+  ],
+  "option": "Change sowing time (earlier sowing to escape heat at flowering)",
+  "window": "pre_season",
+  "lead_time_yrs": [
+   1,
+   1
+  ],
+  "cost_level": "low",
+  "ghg": "same",
+  "nutrients": "same",
+  "water": "same",
+  "robustness": "no_regret",
+  "simulated": "simulated_with_caveat",
+  "lever": {
+   "type": "earlier_sowing",
+   "crop": "pea"
+  },
+  "source_name": "LIFE AgriAdapt; RISK_MITIGATION_AND_ADAPTATION.md §7",
+  "source_url": "https://agriadapt.eu/northern-region/",
+  "reviewed_by": null
+ },
+ {
+  "option_id": "A07",
+  "hazards": [
+   "H1",
+   "H2",
+   "H3",
+   "H4",
+   "H5"
+  ],
+  "crops": [
+   "all"
+  ],
+  "option": "Diversify sourcing regions (FI/SE portfolio)",
+  "window": "strategic",
+  "lead_time_yrs": [
+   1,
+   1
+  ],
+  "cost_level": "med",
+  "ghg": "same",
+  "nutrients": "same",
+  "water": "same",
+  "robustness": "no_regret",
+  "simulated": "simulated",
+  "lever": {
+   "type": "region_split",
+   "crop": "pea",
+   "fi_share": 0.45
+  },
+  "source_name": "LIFE AgriAdapt; RISK_MITIGATION_AND_ADAPTATION.md §7",
+  "source_url": "https://agriadapt.eu/northern-region/",
+  "reviewed_by": null
+ },
+ {
+  "option_id": "A08",
+  "hazards": [
+   "H3"
+  ],
+  "crops": [
+   "all"
+  ],
+  "option": "Parcel selection: avoid poorly drained clay for sensitive crops",
+  "window": "pre_season",
+  "lead_time_yrs": [
+   1,
+   1
+  ],
+  "cost_level": "low",
+  "ghg": "same",
+  "nutrients": "better",
+  "water": "same",
+  "robustness": "no_regret",
+  "simulated": "simulated",
+  "lever": {
+   "type": "crop_area",
+   "crop": "pea",
+   "region": "FI_SW",
+   "change_pct": -10.0
+  },
+  "source_name": "LIFE AgriAdapt; RISK_MITIGATION_AND_ADAPTATION.md §7",
+  "source_url": "https://agriadapt.eu/northern-region/",
+  "reviewed_by": null
+ }
+]

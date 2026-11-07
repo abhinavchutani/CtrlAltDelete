@@ -1,0 +1,153 @@
+{
+ "climate": "ssp245",
+ "points": [
+  {
+   "fi_share": 0.0,
+   "expected_loss": "€250k–1M",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.05,
+   "expected_loss": "€250k–1M",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.1,
+   "expected_loss": "€250k–1M",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.15,
+   "expected_loss": "€250k–1M",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.2,
+   "expected_loss": "€250k–1M",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.25,
+   "expected_loss": "€100–250k",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.3,
+   "expected_loss": "€100–250k",
+   "tail_loss": "€250k–1M",
+   "is_now": true,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.35,
+   "expected_loss": "€100–250k",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.4,
+   "expected_loss": "€100–250k",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.45,
+   "expected_loss": "€100–250k",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": true
+  },
+  {
+   "fi_share": 0.5,
+   "expected_loss": "€100–250k",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.55,
+   "expected_loss": "€100–250k",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.6,
+   "expected_loss": "€100–250k",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.65,
+   "expected_loss": "€100–250k",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.7,
+   "expected_loss": "€100–250k",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.75,
+   "expected_loss": "€100–250k",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.8,
+   "expected_loss": "€250k–1M",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.85,
+   "expected_loss": "€250k–1M",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.9,
+   "expected_loss": "€250k–1M",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 0.95,
+   "expected_loss": "€250k–1M",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  },
+  {
+   "fi_share": 1.0,
+   "expected_loss": "€250k–1M",
+   "tail_loss": "€250k–1M",
+   "is_now": false,
+   "is_best": false
+  }
+ ],
+ "why": "Moving 15 pp of pea to FI_SW cuts the 1-in-10-year loss by one band (fixture: illustrative values, not model output)."
+}

@@ -1,7 +1,7 @@
 # One command per output (docs/CONTRACTS.md). Targets for pipelines not yet built print a note.
 PY := $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python)
 
-.PHONY: schema load a c d e pitch app all test
+.PHONY: schema load a c d e pitch app all test snapshot v2 fixtures openapi api web v2-check
 
 schema:            ## create the four shared tables in NAVIGATOR_DB
 	$(PY) -m src.lineage
@@ -31,3 +31,27 @@ all: load a c d e pitch   ## every submission file + pitch values from the unzip
 
 test:
 	$(PY) -m pytest -q
+
+# ── v2 (docs/V2_ARCHITECTURE.md "Run it"); never runs make a/c/e, reads only out/serve.duckdb ──
+snapshot:          ## out/navigator.duckdb → out/serve.duckdb (the frozen v1 data v2 reads)
+	$(PY) -m src.serve_db
+
+v2:                ## presets, weather frames, catalog → out/v2/ (layers that aren't built yet print a note)
+	@for m in p_presets p_weather r_catalog; do \
+	  if [ -f src/$$m.py ]; then $(PY) -m src.$$m || exit 1; else echo "make v2: src/$$m.py not built yet"; fi; done
+
+fixtures:          ## rebuild api/fixtures/*.json from serve.duckdb (mock values; committed)
+	$(PY) -m api.fixtures_build
+
+openapi:           ## api/schemas.py → web/src/api/openapi.json (web: npm run gen:types)
+	$(PY) -m api.export_openapi
+
+api:               ## FastAPI on :8000 (API_MOCK=1 make api serves the fixtures)
+	$(PY) -m uvicorn api.main:app --port 8000 --reload
+
+web:               ## React app on :5173, proxies /api → :8000
+	@if [ -f web/package.json ]; then cd web && npm install && npm run dev; else echo "make web: not built yet (#88)"; fi
+
+v2-check:          ## v2 tests + the web build/typecheck when web/ exists
+	$(PY) -m pytest -q tests/test_api_contract.py tests/test_v2_guard.py $$(ls tests/test_p_*.py tests/test_r_*.py 2>/dev/null)
+	@if [ -f web/package.json ]; then cd web && npm ci && npm run build && npx tsc --noEmit; fi

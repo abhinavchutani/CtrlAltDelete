@@ -1,0 +1,2310 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "Navigator v2",
+  "description": "Synthetic data: not Apetit's real figures. Contract: api/schemas.py.",
+  "version": "0.1.0"
+ },
+ "paths": {
+  "/api/health": {
+   "get": {
+    "summary": "Health",
+    "operationId": "health_api_health_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Health"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/geo/farms": {
+   "get": {
+    "summary": "Geo Farms",
+    "operationId": "geo_farms_api_geo_farms_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Geo Farms Api Geo Farms Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/geo/parcels": {
+   "get": {
+    "summary": "Geo Parcels",
+    "operationId": "geo_parcels_api_geo_parcels_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Geo Parcels Api Geo Parcels Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/intent": {
+   "post": {
+    "summary": "Intent",
+    "operationId": "intent_api_intent_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/IntentIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/IntentOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/scenarios": {
+   "get": {
+    "summary": "Scenarios",
+    "operationId": "scenarios_api_scenarios_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/ScenarioPreset"
+         },
+         "type": "array",
+         "title": "Response Scenarios Api Scenarios Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/scenario/{scenario_id}": {
+   "get": {
+    "summary": "Scenario",
+    "operationId": "scenario_api_scenario__scenario_id__get",
+    "parameters": [
+     {
+      "name": "scenario_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Scenario Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SimResult"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/simulate": {
+   "post": {
+    "summary": "Simulate",
+    "operationId": "simulate_api_simulate_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScenarioSpec"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SimResult"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/cube/{scenario_id}/farms": {
+   "get": {
+    "summary": "Farms",
+    "operationId": "farms_api_cube__scenario_id__farms_get",
+    "parameters": [
+     {
+      "name": "scenario_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Scenario Id"
+      }
+     },
+     {
+      "name": "year",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Year"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/FarmYear"
+         },
+         "title": "Response Farms Api Cube  Scenario Id  Farms Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/weather": {
+   "get": {
+    "summary": "Weather",
+    "operationId": "weather_api_weather_get",
+    "parameters": [
+     {
+      "name": "climate",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "default": "ssp245",
+       "title": "Climate"
+      }
+     },
+     {
+      "name": "year",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "default": 2026,
+       "title": "Year"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/WeatherFrame"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/hedge": {
+   "get": {
+    "summary": "Hedge",
+    "operationId": "hedge_api_hedge_get",
+    "parameters": [
+     {
+      "name": "climate",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "ssp126",
+        "ssp245",
+        "ssp585"
+       ],
+       "type": "string",
+       "default": "ssp245",
+       "title": "Climate"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Hedge"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/pathways/{scenario_id}": {
+   "get": {
+    "summary": "Pathways",
+    "operationId": "pathways_api_pathways__scenario_id__get",
+    "parameters": [
+     {
+      "name": "scenario_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Scenario Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/PathwayItem"
+         },
+         "title": "Response Pathways Api Pathways  Scenario Id  Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/ask": {
+   "post": {
+    "summary": "Ask",
+    "operationId": "ask_api_ask_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AskIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AskOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/report/{report_id}": {
+   "get": {
+    "summary": "Report",
+    "operationId": "report_api_report__report_id__get",
+    "parameters": [
+     {
+      "name": "report_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Report Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/options": {
+   "get": {
+    "summary": "Options",
+    "operationId": "options_api_options_get",
+    "parameters": [
+     {
+      "name": "hazard",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "enum": [
+          "H1",
+          "H2",
+          "H3",
+          "H4",
+          "H5",
+          "H6",
+          "H7"
+         ],
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Hazard"
+      }
+     },
+     {
+      "name": "crop",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Crop"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/AdaptationOption"
+         },
+         "title": "Response Options Api Options Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/board/{scenario_id}": {
+   "get": {
+    "summary": "Board",
+    "operationId": "board_api_board__scenario_id__get",
+    "parameters": [
+     {
+      "name": "scenario_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Scenario Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/BoardRow"
+         },
+         "title": "Response Board Api Board  Scenario Id  Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/board/{row_id}/decision": {
+   "post": {
+    "summary": "Decide",
+    "operationId": "decide_api_board__row_id__decision_post",
+    "parameters": [
+     {
+      "name": "row_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Row Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Decision"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BoardRow"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "AdaptationOption": {
+    "properties": {
+     "option_id": {
+      "type": "string",
+      "title": "Option Id"
+     },
+     "hazards": {
+      "items": {
+       "type": "string",
+       "enum": [
+        "H1",
+        "H2",
+        "H3",
+        "H4",
+        "H5",
+        "H6",
+        "H7"
+       ]
+      },
+      "type": "array",
+      "title": "Hazards"
+     },
+     "crops": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Crops"
+     },
+     "option": {
+      "type": "string",
+      "title": "Option"
+     },
+     "window": {
+      "type": "string",
+      "enum": [
+       "strategic",
+       "pre_season",
+       "in_season"
+      ],
+      "title": "Window"
+     },
+     "lead_time_yrs": {
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       }
+      ],
+      "type": "array",
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Lead Time Yrs"
+     },
+     "cost_level": {
+      "type": "string",
+      "enum": [
+       "low",
+       "low_med",
+       "med",
+       "high"
+      ],
+      "title": "Cost Level"
+     },
+     "ghg": {
+      "type": "string",
+      "enum": [
+       "better",
+       "same",
+       "worse"
+      ],
+      "title": "Ghg"
+     },
+     "nutrients": {
+      "type": "string",
+      "enum": [
+       "better",
+       "same",
+       "worse",
+       "depends"
+      ],
+      "title": "Nutrients"
+     },
+     "water": {
+      "type": "string",
+      "enum": [
+       "better",
+       "same",
+       "worse"
+      ],
+      "title": "Water"
+     },
+     "robustness": {
+      "type": "string",
+      "enum": [
+       "no_regret",
+       "scenario_dependent",
+       "maladaptive",
+       "reactive"
+      ],
+      "title": "Robustness"
+     },
+     "simulated": {
+      "type": "string",
+      "enum": [
+       "simulated",
+       "simulated_with_caveat",
+       "assumption"
+      ],
+      "title": "Simulated"
+     },
+     "lever": {
+      "anyOf": [
+       {
+        "oneOf": [
+         {
+          "$ref": "#/components/schemas/Irrigate"
+         },
+         {
+          "$ref": "#/components/schemas/EarlierSowing"
+         },
+         {
+          "$ref": "#/components/schemas/RegionSplit"
+         },
+         {
+          "$ref": "#/components/schemas/HeatTolerant"
+         },
+         {
+          "$ref": "#/components/schemas/CropArea"
+         }
+        ],
+        "discriminator": {
+         "propertyName": "type",
+         "mapping": {
+          "crop_area": "#/components/schemas/CropArea",
+          "earlier_sowing": "#/components/schemas/EarlierSowing",
+          "heat_tolerant_variety": "#/components/schemas/HeatTolerant",
+          "irrigate": "#/components/schemas/Irrigate",
+          "region_split": "#/components/schemas/RegionSplit"
+         }
+        }
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lever"
+     },
+     "source_name": {
+      "type": "string",
+      "title": "Source Name"
+     },
+     "source_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Url"
+     },
+     "reviewed_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reviewed By"
+     }
+    },
+    "type": "object",
+    "required": [
+     "option_id",
+     "hazards",
+     "crops",
+     "option",
+     "window",
+     "lead_time_yrs",
+     "cost_level",
+     "ghg",
+     "nutrients",
+     "water",
+     "robustness",
+     "simulated",
+     "source_name"
+    ],
+    "title": "AdaptationOption"
+   },
+   "Alert": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "month": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Month"
+     },
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "crop": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "pea",
+         "potato",
+         "carrot",
+         "spinach",
+         "wheat",
+         "barley",
+         "oats",
+         "turnip_rape",
+         "grass_ley",
+         "fallow"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Crop"
+     },
+     "severity": {
+      "type": "string",
+      "enum": [
+       "critical",
+       "notable"
+      ],
+      "title": "Severity"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "drought_flowering",
+       "heat_flowering",
+       "waterlogging",
+       "wet_harvest",
+       "blight_weather",
+       "beetle_weather",
+       "supply_shortfall",
+       "risk_threshold",
+       "assumption"
+      ],
+      "title": "Kind"
+     },
+     "hazard": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "H1",
+         "H2",
+         "H3",
+         "H4",
+         "H5",
+         "H6",
+         "H7"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Hazard"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "why": {
+      "type": "string",
+      "title": "Why"
+     },
+     "eur_at_risk": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "< €50k",
+         "€50–100k",
+         "€100–250k",
+         "€250k–1M",
+         "> €1M"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Eur At Risk"
+     },
+     "suggested_lever": {
+      "anyOf": [
+       {
+        "oneOf": [
+         {
+          "$ref": "#/components/schemas/Irrigate"
+         },
+         {
+          "$ref": "#/components/schemas/EarlierSowing"
+         },
+         {
+          "$ref": "#/components/schemas/RegionSplit"
+         },
+         {
+          "$ref": "#/components/schemas/HeatTolerant"
+         },
+         {
+          "$ref": "#/components/schemas/CropArea"
+         }
+        ],
+        "discriminator": {
+         "propertyName": "type",
+         "mapping": {
+          "crop_area": "#/components/schemas/CropArea",
+          "earlier_sowing": "#/components/schemas/EarlierSowing",
+          "heat_tolerant_variety": "#/components/schemas/HeatTolerant",
+          "irrigate": "#/components/schemas/Irrigate",
+          "region_split": "#/components/schemas/RegionSplit"
+         }
+        }
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Suggested Lever"
+     },
+     "evidence": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Evidence",
+      "default": []
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "year",
+     "region",
+     "severity",
+     "kind",
+     "title",
+     "why"
+    ],
+    "title": "Alert"
+   },
+   "AskIn": {
+    "properties": {
+     "question": {
+      "type": "string",
+      "title": "Question"
+     },
+     "history": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "History",
+      "default": []
+     }
+    },
+    "type": "object",
+    "required": [
+     "question"
+    ],
+    "title": "AskIn"
+   },
+   "AskOut": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "answered",
+       "not_in_data"
+      ],
+      "title": "Status"
+     },
+     "answer_md": {
+      "type": "string",
+      "title": "Answer Md"
+     },
+     "table": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Table"
+     },
+     "evidence": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Evidence"
+     },
+     "report": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Report"
+     },
+     "pending_approval": {
+      "type": "boolean",
+      "title": "Pending Approval",
+      "default": false
+     }
+    },
+    "type": "object",
+    "required": [
+     "status",
+     "answer_md",
+     "evidence"
+    ],
+    "title": "AskOut"
+   },
+   "BetterOption": {
+    "properties": {
+     "spec": {
+      "$ref": "#/components/schemas/ScenarioSpec"
+     },
+     "saves": {
+      "type": "string",
+      "enum": [
+       "< €50k",
+       "€50–100k",
+       "€100–250k",
+       "€250k–1M",
+       "> €1M"
+      ],
+      "title": "Saves"
+     },
+     "why": {
+      "type": "string",
+      "title": "Why"
+     }
+    },
+    "type": "object",
+    "required": [
+     "spec",
+     "saves",
+     "why"
+    ],
+    "title": "BetterOption"
+   },
+   "BoardRow": {
+    "properties": {
+     "row_id": {
+      "type": "string",
+      "title": "Row Id"
+     },
+     "scenario_id": {
+      "type": "string",
+      "title": "Scenario Id"
+     },
+     "risk": {
+      "type": "string",
+      "title": "Risk"
+     },
+     "crop": {
+      "type": "string",
+      "enum": [
+       "pea",
+       "potato",
+       "carrot",
+       "spinach",
+       "wheat",
+       "barley",
+       "oats",
+       "turnip_rape",
+       "grass_ley",
+       "fallow"
+      ],
+      "title": "Crop"
+     },
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "hazard": {
+      "type": "string",
+      "enum": [
+       "H1",
+       "H2",
+       "H3",
+       "H4",
+       "H5",
+       "H6",
+       "H7"
+      ],
+      "title": "Hazard"
+     },
+     "eur_at_risk": {
+      "type": "string",
+      "enum": [
+       "< €50k",
+       "€50–100k",
+       "€100–250k",
+       "€250k–1M",
+       "> €1M"
+      ],
+      "title": "Eur At Risk"
+     },
+     "eur_tail": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "< €50k",
+         "€50–100k",
+         "€100–250k",
+         "€250k–1M",
+         "> €1M"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Eur Tail"
+     },
+     "action": {
+      "type": "string",
+      "title": "Action"
+     },
+     "option_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Option Ids"
+     },
+     "owner": {
+      "type": "string",
+      "title": "Owner"
+     },
+     "decide_by": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decide By"
+     },
+     "trigger": {
+      "type": "string",
+      "title": "Trigger"
+     },
+     "evidence": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Evidence"
+     },
+     "robustness": {
+      "type": "string",
+      "title": "Robustness"
+     },
+     "simulated": {
+      "type": "string",
+      "enum": [
+       "simulated",
+       "simulated_with_caveat",
+       "assumption"
+      ],
+      "title": "Simulated"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "pending",
+       "approved",
+       "edited",
+       "rejected"
+      ],
+      "title": "Status",
+      "default": "pending"
+     },
+     "decided_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decided By"
+     },
+     "decided_at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decided At"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     }
+    },
+    "type": "object",
+    "required": [
+     "row_id",
+     "scenario_id",
+     "risk",
+     "crop",
+     "region",
+     "hazard",
+     "eur_at_risk",
+     "action",
+     "option_ids",
+     "owner",
+     "decide_by",
+     "trigger",
+     "evidence",
+     "robustness",
+     "simulated"
+    ],
+    "title": "BoardRow"
+   },
+   "CropArea": {
+    "properties": {
+     "type": {
+      "type": "string",
+      "const": "crop_area",
+      "title": "Type"
+     },
+     "crop": {
+      "type": "string",
+      "enum": [
+       "pea",
+       "potato",
+       "carrot",
+       "spinach",
+       "wheat",
+       "barley",
+       "oats",
+       "turnip_rape",
+       "grass_ley",
+       "fallow"
+      ],
+      "title": "Crop"
+     },
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "change_pct": {
+      "type": "number",
+      "title": "Change Pct"
+     }
+    },
+    "type": "object",
+    "required": [
+     "type",
+     "crop",
+     "region",
+     "change_pct"
+    ],
+    "title": "CropArea"
+   },
+   "Decision": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "approved",
+       "edited",
+       "rejected"
+      ],
+      "title": "Status"
+     },
+     "decided_by": {
+      "type": "string",
+      "minLength": 1,
+      "title": "Decided By"
+     },
+     "reason": {
+      "type": "string",
+      "title": "Reason"
+     },
+     "action": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Action"
+     }
+    },
+    "type": "object",
+    "required": [
+     "status",
+     "decided_by",
+     "reason"
+    ],
+    "title": "Decision"
+   },
+   "EarlierSowing": {
+    "properties": {
+     "type": {
+      "type": "string",
+      "const": "earlier_sowing",
+      "title": "Type"
+     },
+     "crop": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "pea",
+         "potato",
+         "carrot",
+         "spinach",
+         "wheat",
+         "barley",
+         "oats",
+         "turnip_rape",
+         "grass_ley",
+         "fallow"
+        ]
+       },
+       {
+        "type": "string",
+        "const": "all"
+       }
+      ],
+      "title": "Crop",
+      "default": "all"
+     }
+    },
+    "type": "object",
+    "required": [
+     "type"
+    ],
+    "title": "EarlierSowing"
+   },
+   "EvidenceRef": {
+    "properties": {
+     "kind": {
+      "type": "string",
+      "enum": [
+       "result",
+       "lineage",
+       "weather",
+       "table_row",
+       "doc",
+       "assumption"
+      ],
+      "title": "Kind"
+     },
+     "ref": {
+      "type": "string",
+      "title": "Ref"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     }
+    },
+    "type": "object",
+    "required": [
+     "kind",
+     "ref",
+     "label"
+    ],
+    "title": "EvidenceRef"
+   },
+   "FarmYear": {
+    "properties": {
+     "farm_id": {
+      "type": "string",
+      "title": "Farm Id"
+     },
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "change_vs_baseline_pct": {
+      "type": "number",
+      "title": "Change Vs Baseline Pct"
+     },
+     "risk": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "watch",
+       "bad"
+      ],
+      "title": "Risk"
+     }
+    },
+    "type": "object",
+    "required": [
+     "farm_id",
+     "year",
+     "change_vs_baseline_pct",
+     "risk"
+    ],
+    "title": "FarmYear"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "type": "array",
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "title": "HTTPValidationError"
+   },
+   "Health": {
+    "properties": {
+     "ok": {
+      "type": "boolean",
+      "title": "Ok"
+     },
+     "mock": {
+      "type": "boolean",
+      "title": "Mock"
+     },
+     "serve_db": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Serve Db"
+     },
+     "llm": {
+      "type": "boolean",
+      "title": "Llm"
+     },
+     "warming": {
+      "type": "boolean",
+      "title": "Warming",
+      "default": false
+     },
+     "layers": {
+      "additionalProperties": {
+       "type": "boolean"
+      },
+      "type": "object",
+      "title": "Layers",
+      "default": {}
+     }
+    },
+    "type": "object",
+    "required": [
+     "ok",
+     "mock",
+     "serve_db",
+     "llm"
+    ],
+    "title": "Health"
+   },
+   "HeatTolerant": {
+    "properties": {
+     "type": {
+      "type": "string",
+      "const": "heat_tolerant_variety",
+      "title": "Type"
+     },
+     "crop": {
+      "type": "string",
+      "const": "pea",
+      "title": "Crop",
+      "default": "pea"
+     },
+     "from_year": {
+      "type": "integer",
+      "title": "From Year",
+      "default": 2030
+     },
+     "penalty_cut": {
+      "type": "number",
+      "title": "Penalty Cut",
+      "default": 0.3
+     }
+    },
+    "type": "object",
+    "required": [
+     "type"
+    ],
+    "title": "HeatTolerant"
+   },
+   "Hedge": {
+    "properties": {
+     "climate": {
+      "type": "string",
+      "enum": [
+       "ssp126",
+       "ssp245",
+       "ssp585"
+      ],
+      "title": "Climate"
+     },
+     "points": {
+      "items": {
+       "$ref": "#/components/schemas/HedgePoint"
+      },
+      "type": "array",
+      "title": "Points"
+     },
+     "why": {
+      "type": "string",
+      "title": "Why"
+     }
+    },
+    "type": "object",
+    "required": [
+     "climate",
+     "points",
+     "why"
+    ],
+    "title": "Hedge"
+   },
+   "HedgePoint": {
+    "properties": {
+     "fi_share": {
+      "type": "number",
+      "title": "Fi Share"
+     },
+     "expected_loss": {
+      "type": "string",
+      "enum": [
+       "< €50k",
+       "€50–100k",
+       "€100–250k",
+       "€250k–1M",
+       "> €1M"
+      ],
+      "title": "Expected Loss"
+     },
+     "tail_loss": {
+      "type": "string",
+      "enum": [
+       "< €50k",
+       "€50–100k",
+       "€100–250k",
+       "€250k–1M",
+       "> €1M"
+      ],
+      "title": "Tail Loss"
+     },
+     "is_now": {
+      "type": "boolean",
+      "title": "Is Now"
+     },
+     "is_best": {
+      "type": "boolean",
+      "title": "Is Best"
+     }
+    },
+    "type": "object",
+    "required": [
+     "fi_share",
+     "expected_loss",
+     "tail_loss",
+     "is_now",
+     "is_best"
+    ],
+    "title": "HedgePoint"
+   },
+   "IntentIn": {
+    "properties": {
+     "text": {
+      "type": "string",
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "text"
+    ],
+    "title": "IntentIn"
+   },
+   "IntentOut": {
+    "properties": {
+     "door": {
+      "type": "string",
+      "enum": [
+       "ask",
+       "simulate"
+      ],
+      "title": "Door"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     },
+     "spec": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ScenarioSpec"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "heard": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Heard",
+      "default": []
+     },
+     "problems": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Problems",
+      "default": []
+     }
+    },
+    "type": "object",
+    "required": [
+     "door",
+     "text"
+    ],
+    "title": "IntentOut"
+   },
+   "Irrigate": {
+    "properties": {
+     "type": {
+      "type": "string",
+      "const": "irrigate",
+      "title": "Type"
+     },
+     "crop": {
+      "type": "string",
+      "enum": [
+       "pea",
+       "potato"
+      ],
+      "title": "Crop"
+     },
+     "target": {
+      "type": "string",
+      "enum": [
+       "drought_exposed",
+       "all"
+      ],
+      "title": "Target",
+      "default": "drought_exposed"
+     }
+    },
+    "type": "object",
+    "required": [
+     "type",
+     "crop"
+    ],
+    "title": "Irrigate"
+   },
+   "Meters": {
+    "properties": {
+     "eur_at_risk_per_year": {
+      "type": "string",
+      "enum": [
+       "< €50k",
+       "€50–100k",
+       "€100–250k",
+       "€250k–1M",
+       "> €1M"
+      ],
+      "title": "Eur At Risk Per Year"
+     },
+     "vs_current_plan": {
+      "type": "string",
+      "enum": [
+       "better",
+       "same",
+       "worse"
+      ],
+      "title": "Vs Current Plan"
+     },
+     "co2e_direction": {
+      "type": "string",
+      "enum": [
+       "lower",
+       "same",
+       "higher"
+      ],
+      "title": "Co2E Direction"
+     },
+     "confidence": {
+      "type": "string",
+      "enum": [
+       "high",
+       "medium",
+       "low"
+      ],
+      "title": "Confidence"
+     },
+     "confidence_why": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Confidence Why"
+     }
+    },
+    "type": "object",
+    "required": [
+     "eur_at_risk_per_year",
+     "vs_current_plan",
+     "co2e_direction",
+     "confidence",
+     "confidence_why"
+    ],
+    "title": "Meters"
+   },
+   "PathwayItem": {
+    "properties": {
+     "crop": {
+      "type": "string",
+      "enum": [
+       "pea",
+       "potato",
+       "carrot",
+       "spinach",
+       "wheat",
+       "barley",
+       "oats",
+       "turnip_rape",
+       "grass_ley",
+       "fallow"
+      ],
+      "title": "Crop"
+     },
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "climate": {
+      "type": "string",
+      "enum": [
+       "ssp126",
+       "ssp245",
+       "ssp585"
+      ],
+      "title": "Climate"
+     },
+     "threshold": {
+      "type": "string",
+      "title": "Threshold"
+     },
+     "tipping_year": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tipping Year"
+     },
+     "option_id": {
+      "type": "string",
+      "title": "Option Id"
+     },
+     "option": {
+      "type": "string",
+      "title": "Option"
+     },
+     "decide_by": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decide By"
+     },
+     "signpost": {
+      "type": "string",
+      "title": "Signpost"
+     },
+     "simulated": {
+      "type": "string",
+      "enum": [
+       "simulated",
+       "simulated_with_caveat",
+       "assumption"
+      ],
+      "title": "Simulated"
+     }
+    },
+    "type": "object",
+    "required": [
+     "crop",
+     "region",
+     "climate",
+     "threshold",
+     "tipping_year",
+     "option_id",
+     "option",
+     "decide_by",
+     "signpost",
+     "simulated"
+    ],
+    "title": "PathwayItem"
+   },
+   "RegionSplit": {
+    "properties": {
+     "type": {
+      "type": "string",
+      "const": "region_split",
+      "title": "Type"
+     },
+     "crop": {
+      "type": "string",
+      "const": "pea",
+      "title": "Crop",
+      "default": "pea"
+     },
+     "fi_share": {
+      "type": "number",
+      "title": "Fi Share"
+     }
+    },
+    "type": "object",
+    "required": [
+     "type",
+     "fi_share"
+    ],
+    "title": "RegionSplit"
+   },
+   "RegionYear": {
+    "properties": {
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "crop": {
+      "type": "string",
+      "enum": [
+       "pea",
+       "potato",
+       "carrot",
+       "spinach",
+       "wheat",
+       "barley",
+       "oats",
+       "turnip_rape",
+       "grass_ley",
+       "fallow"
+      ],
+      "title": "Crop"
+     },
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "change_vs_baseline_pct": {
+      "type": "number",
+      "title": "Change Vs Baseline Pct"
+     },
+     "eur_at_risk": {
+      "type": "string",
+      "enum": [
+       "< €50k",
+       "€50–100k",
+       "€100–250k",
+       "€250k–1M",
+       "> €1M"
+      ],
+      "title": "Eur At Risk"
+     },
+     "bad_year": {
+      "type": "boolean",
+      "title": "Bad Year"
+     }
+    },
+    "type": "object",
+    "required": [
+     "region",
+     "crop",
+     "year",
+     "change_vs_baseline_pct",
+     "eur_at_risk",
+     "bad_year"
+    ],
+    "title": "RegionYear"
+   },
+   "ScenarioPreset": {
+    "properties": {
+     "scenario_id": {
+      "type": "string",
+      "title": "Scenario Id"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "spec": {
+      "$ref": "#/components/schemas/ScenarioSpec"
+     }
+    },
+    "type": "object",
+    "required": [
+     "scenario_id",
+     "label",
+     "spec"
+    ],
+    "title": "ScenarioPreset"
+   },
+   "ScenarioSpec": {
+    "properties": {
+     "climate": {
+      "type": "string",
+      "enum": [
+       "ssp126",
+       "ssp245",
+       "ssp585"
+      ],
+      "title": "Climate",
+      "default": "ssp245"
+     },
+     "horizon_end": {
+      "type": "integer",
+      "enum": [
+       2031,
+       2040,
+       2050,
+       2060
+      ],
+      "title": "Horizon End",
+      "default": 2040
+     },
+     "levers": {
+      "items": {
+       "oneOf": [
+        {
+         "$ref": "#/components/schemas/Irrigate"
+        },
+        {
+         "$ref": "#/components/schemas/EarlierSowing"
+        },
+        {
+         "$ref": "#/components/schemas/RegionSplit"
+        },
+        {
+         "$ref": "#/components/schemas/HeatTolerant"
+        },
+        {
+         "$ref": "#/components/schemas/CropArea"
+        }
+       ],
+       "discriminator": {
+        "propertyName": "type",
+        "mapping": {
+         "crop_area": "#/components/schemas/CropArea",
+         "earlier_sowing": "#/components/schemas/EarlierSowing",
+         "heat_tolerant_variety": "#/components/schemas/HeatTolerant",
+         "irrigate": "#/components/schemas/Irrigate",
+         "region_split": "#/components/schemas/RegionSplit"
+        }
+       }
+      },
+      "type": "array",
+      "title": "Levers",
+      "default": []
+     },
+     "label": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Label"
+     }
+    },
+    "type": "object",
+    "title": "ScenarioSpec"
+   },
+   "SimResult": {
+    "properties": {
+     "scenario_id": {
+      "type": "string",
+      "title": "Scenario Id"
+     },
+     "spec": {
+      "$ref": "#/components/schemas/ScenarioSpec"
+     },
+     "years": {
+      "items": {
+       "type": "integer"
+      },
+      "type": "array",
+      "title": "Years"
+     },
+     "regions": {
+      "items": {
+       "$ref": "#/components/schemas/RegionYear"
+      },
+      "type": "array",
+      "title": "Regions"
+     },
+     "farms_url": {
+      "type": "string",
+      "title": "Farms Url"
+     },
+     "alerts": {
+      "items": {
+       "$ref": "#/components/schemas/Alert"
+      },
+      "type": "array",
+      "maxItems": 12,
+      "title": "Alerts"
+     },
+     "meters": {
+      "$ref": "#/components/schemas/Meters"
+     },
+     "better": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/BetterOption"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "synthetic": {
+      "type": "boolean",
+      "title": "Synthetic",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "scenario_id",
+     "spec",
+     "years",
+     "regions",
+     "farms_url",
+     "alerts",
+     "meters"
+    ],
+    "title": "SimResult"
+   },
+   "ValidationError": {
+    "properties": {
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "type": "array",
+      "title": "Location"
+     },
+     "msg": {
+      "type": "string",
+      "title": "Message"
+     },
+     "type": {
+      "type": "string",
+      "title": "Error Type"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "ctx": {
+      "type": "object",
+      "title": "Context"
+     }
+    },
+    "type": "object",
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError"
+   },
+   "WeatherCell": {
+    "properties": {
+     "cell_id": {
+      "type": "string",
+      "title": "Cell Id"
+     },
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "lat": {
+      "type": "number",
+      "title": "Lat"
+     },
+     "lon": {
+      "type": "number",
+      "title": "Lon"
+     },
+     "tmax_anom_c": {
+      "type": "number",
+      "title": "Tmax Anom C"
+     },
+     "precip_anom_pct": {
+      "type": "number",
+      "title": "Precip Anom Pct"
+     },
+     "drought_index": {
+      "type": "number",
+      "title": "Drought Index"
+     },
+     "hot_days_flowering": {
+      "type": "integer",
+      "title": "Hot Days Flowering"
+     }
+    },
+    "type": "object",
+    "required": [
+     "cell_id",
+     "region",
+     "lat",
+     "lon",
+     "tmax_anom_c",
+     "precip_anom_pct",
+     "drought_index",
+     "hot_days_flowering"
+    ],
+    "title": "WeatherCell"
+   },
+   "WeatherFrame": {
+    "properties": {
+     "climate": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "ssp126",
+         "ssp245",
+         "ssp585"
+        ]
+       },
+       {
+        "type": "string",
+        "const": "historical"
+       }
+      ],
+      "title": "Climate"
+     },
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "cells": {
+      "items": {
+       "$ref": "#/components/schemas/WeatherCell"
+      },
+      "type": "array",
+      "title": "Cells"
+     }
+    },
+    "type": "object",
+    "required": [
+     "climate",
+     "year",
+     "cells"
+    ],
+    "title": "WeatherFrame"
+   }
+  }
+ }
+}

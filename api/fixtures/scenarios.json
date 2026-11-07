@@ -1,0 +1,81 @@
+[
+ {
+  "scenario_id": "current_plan_ssp126",
+  "label": "Current plan, low emissions",
+  "spec": {
+   "climate": "ssp126",
+   "horizon_end": 2040,
+   "levers": [],
+   "label": "Current plan, low emissions"
+  }
+ },
+ {
+  "scenario_id": "current_plan_ssp245",
+  "label": "Current plan, middle path",
+  "spec": {
+   "climate": "ssp245",
+   "horizon_end": 2040,
+   "levers": [],
+   "label": "Current plan, middle path"
+  }
+ },
+ {
+  "scenario_id": "current_plan_ssp585",
+  "label": "Current plan, high emissions",
+  "spec": {
+   "climate": "ssp585",
+   "horizon_end": 2060,
+   "levers": [],
+   "label": "Current plan, high emissions"
+  }
+ },
+ {
+  "scenario_id": "irrigate_dry_pea_ssp245",
+  "label": "Irrigate dry pea fields",
+  "spec": {
+   "climate": "ssp245",
+   "horizon_end": 2040,
+   "levers": [
+    {
+     "type": "irrigate",
+     "crop": "pea",
+     "target": "drought_exposed"
+    }
+   ],
+   "label": "Irrigate dry pea fields"
+  }
+ },
+ {
+  "scenario_id": "split_70_30_ssp245",
+  "label": "70/30 Finland–Sweden pea split",
+  "spec": {
+   "climate": "ssp245",
+   "horizon_end": 2040,
+   "levers": [
+    {
+     "type": "region_split",
+     "crop": "pea",
+     "fi_share": 0.7
+    }
+   ],
+   "label": "70/30 Finland–Sweden pea split"
+  }
+ },
+ {
+  "scenario_id": "heat_tolerant_pea_ssp585",
+  "label": "Heat-tolerant pea from 2030",
+  "spec": {
+   "climate": "ssp585",
+   "horizon_end": 2060,
+   "levers": [
+    {
+     "type": "heat_tolerant_variety",
+     "crop": "pea",
+     "from_year": 2030,
+     "penalty_cut": 0.3
+    }
+   ],
+   "label": "Heat-tolerant pea from 2030"
+  }
+ }
+]
