@@ -9,6 +9,7 @@ import {
 import { CLIMATES, climatePath, REGION_VIEW, useStore, type SheetKind } from "../state/store";
 import { BUCKET_LEVEL, cap, typeLabel, useBestPlan, useTodayOutlook } from "./data";
 import { OverviewSheets } from "./Sheets";
+import { Problems, ProblemSheets } from "./Problems";
 
 const BAR_H = { 1: 24, 2: 52, 3: 96 } as const;
 const rect = (e: MouseEvent) => (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -119,10 +120,16 @@ export function Overview() {
 
   return (
     <main className="page" aria-label="Overview">
-      <div className="ov-head">
+      <div className="ov-intro">
+        <div className="eyebrow">Apetit · climate and supply</div>
+        <h1 className="ov-hero">Clean data. Reports that build themselves. No more surprise harvests.</h1>
+      </div>
+      <div className={sheet ? "dimwrap dim" : "dimwrap"} aria-hidden={sheet ? true : undefined}><Problems /></div>
+
+      <div className="ov-head" id="radar">
         <div>
-          <div className="eyebrow">Contract crop supply outlook</div>
-          <h1 className="ov-title">Next 15 seasons, {climatePath(climate)}</h1>
+          <div className="eyebrow">Supply radar · so Sweden 2026 doesn't happen again</div>
+          <h2 className="ov-title">Next 15 seasons, {climatePath(climate)}</h2>
         </div>
         <Segmented className="glass" label="Weather path" value={climate} onChange={setClimate}
           options={CLIMATES.map((c) => ({ key: c.key, label: c.label }))} />
@@ -204,6 +211,7 @@ export function Overview() {
         </Widget>
       </div>
       {o ? <OverviewSheets o={o} /> : null}
+      <ProblemSheets />
     </main>
   );
 }

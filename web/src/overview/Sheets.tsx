@@ -196,7 +196,8 @@ export function OverviewSheets({ o }: { o: Outlook }) {
   if (sheet.kind === "issues") return <IssuesSheet key={sheet.issueId ?? "issues"} o={o} onClose={close} />;
   if (sheet.kind === "money") return <MoneySheet o={o} onClose={close} />;
   if (sheet.kind === "accuracy") return <AccuracySheet o={o} onClose={close} />;
-  return <PlansSheet onClose={close} />;
+  if (sheet.kind === "plans") return <PlansSheet onClose={close} />;
+  return null; // "data" / "report" are the problem sheets (Problems.tsx)
 }
 
 export { PlansSheet };

@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 
+from api import brief
 from api import geo
 from api import insight
 from api import kgraph
@@ -223,6 +224,27 @@ def ask(body: S.AskIn) -> S.AskOut:
 
 
 XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+@app.get("/api/brief")
+def get_brief() -> dict:
+    """The Overview's three problems (scattered data, hand-built reports, Sweden 2026), computed from the snapshot."""
+    _need_data()
+    return brief.brief()
+
+
+@app.get("/api/issues")
+def get_issues(status: str = Query("proposed", pattern="^(proposed|legitimate)$"), source: str | None = None,
+               limit: int = Query(40, ge=1, le=500)) -> list[dict]:
+    _need_data()
+    return brief.issues(status, source, limit)
+
+
+@app.post("/api/report/inventory")
+def make_inventory_report(year: int = Query(2025, ge=2023, le=2025)) -> dict:
+    if L.mock_mode():
+        raise HTTPException(503, "reports are made from the snapshot in real mode (API_MOCK=0)")
+    return brief.inventory_report(year)
 
 
 @app.get("/api/report/{report_id}")
