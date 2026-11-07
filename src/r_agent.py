@@ -225,6 +225,8 @@ def route_farm_yield_history(con, q: str) -> dict | None:
 def route_v1_totals(con, q: str) -> dict | None:
     """v1's resolver for plain scope totals ('What were total Scope 1 emissions in 2024?'), reused as is."""
     from src import e_agent, e_resolve
+    if re.search(r"\bhow many\b|\bcount\b|\bnumber of\b", q) and not re.search(r"emission|co2|tonnes|\bt\b", q):
+        return None   # a count question ('how many service events …'): v1's resolver would answer emissions instead
     f = e_agent.parse_plain_numeric(e_resolve.strip_method_clause(q))
     r = e_resolve.resolve(con, q) if f is None else None
     if f is None and r is None:
@@ -398,7 +400,15 @@ def _ask(question: str, history: list[dict] | None = None, con: duckdb.DuckDBPyC
         prev = previous_question(history)
         if wants_report(q) and prev:   # "make that a report": rerun the previous question with a report
             return _ask(f"{prev} as a report", None, con)
-        return not_in_data("No offline route answers this yet; the LLM mode (task #93) will try the tools.", hints(question))
+        from src import e_llm
+        if e_llm.available():          # #93: the tool loop, with the same number post-check as the routes
+            from src.r_loop import llm_ask
+            try:
+                return llm_ask(con, question, history)
+            except Exception as e:  # noqa: BLE001 — a model or network failure falls back to the offline answer
+                return not_in_data(f"The LLM tool loop failed ({str(e).splitlines()[0][:120]}).", hints(question))
+        return not_in_data("No offline route answers this, and no LLM key is set (the tool loop needs one).",
+                           hints(question))
     finally:
         if own:
             con.close()
