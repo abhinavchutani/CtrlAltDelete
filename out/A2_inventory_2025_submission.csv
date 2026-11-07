@@ -3,7 +3,7 @@ scope1,fugitive_refrigerants,908.35,kg top-up × AR6 GWP100; ammonia GWP 0
 scope1,stationary_and_mobile_combustion,3505.59,fuel MWh (deliveries − stock change) × fossil EF; biogenic CO2 as memo
 scope2_location,purchased_electricity,962.56,location: grid average; market: (MWh − same-vintage GoO from registry) × residual mix
 scope2_market,purchased_electricity,60.9,location: grid average; market: (MWh − same-vintage GoO from registry) × residual mix
-scope3,cat01_purchased_goods_services,205652.54,kg × valid PCF or library EF; contract farms incl. drained organic soils; services spend × EEIO
+scope3,cat01_purchased_goods_services,203050.44,kg × valid PCF or library EF; contract farms incl. drained organic soils; services spend × EEIO
 scope3,cat02_capital_goods,2866.61,capex spend × EEIO
 scope3,cat03_fuel_energy,1513.04,"WTT for fuels, upstream + T&D for electricity and heat"
 scope3,cat04_upstream_transport,4720.06,inbound tkm × WTW EF; missing sea legs added
@@ -16,5 +16,5 @@ scope3,cat12_end_of_life,1971.65,method choice: packaging × Finnish treatment m
 total,scope1_total,4413.93,sum of scope1 lines
 total,scope2_location_total,962.56,sum of scope2_location lines
 total,scope2_market_total,60.9,sum of scope2_market lines
-total,scope3_total,226718.45,sum of scope3 lines
+total,scope3_total,224116.35,sum of scope3 lines
 memo,biogenic_co2_scope1,12731.88,"memo item, not in Scope 1"

@@ -70,13 +70,11 @@ farm_registry,farm:F0180,coordinate_swap,0.95,"lat 23.16414 < lon 60.89255: impo
 farm_registry,farm:F0223,coordinate_swap,0.95,"lat 23.62987 < lon 60.74543: impossible for Finland/Sweden, coordinates swapped"
 farm_survey,farm_survey:FS00009,area_mismatch,0.95,survey area 12.56 ha vs 9.31 ha of declared parcels
 farm_survey,farm_survey:FS00052,decimal_shift,0.9,n_mineral_kg_ha 1503.0 is 11.2× the spinach median 133.8: likely a ×10 slip
-farm_survey,farm_survey:FS00156,soil_misreport,0.6,survey says mineral; soil map: 36% of this crop's area and 6% of the farm is organic
-farm_survey,farm_survey:FS00235,soil_misreport,0.6,survey says mineral; soil map: 56% of this crop's area and 8% of the farm is organic
 farm_survey,farm_survey:FS00251,area_mismatch,0.95,survey area 21.13 ha vs 15.65 ha of declared parcels
 farm_survey,farm_survey:FS00325,decimal_shift,0.9,n_mineral_kg_ha 230.0 is 9.3× the pea median 24.6: likely a ×10 slip
 farm_survey,farm_survey:FS00375,area_mismatch,0.95,survey area 20.86 ha vs 15.45 ha of declared parcels
 farm_survey,farm_survey:FS00507,soil_misreport,0.85,survey says mineral; soil map: 32% of this crop's area and 31% of the farm is organic
-farm_survey,farm_survey:FS00575,soil_misreport,0.6,survey says mineral; soil map: 80% of this crop's area and 27% of the farm is organic
+farm_survey,farm_survey:FS00575,soil_misreport,0.75,survey says mineral; soil map: 80% of this crop's area and 27% of the farm is organic
 farm_survey,farm_survey:FS00625,soil_misreport,0.85,survey says mineral; soil map: 100% of this crop's area and 71% of the farm is organic
 farm_survey,farm_survey:FS00932,outlier_implausible,0.9,yield 31.9 t/ha is 9.7× the pea median 3.28
 farm_survey,farm_survey:FS00940,area_mismatch,0.95,survey area 15.89 ha vs 11.77 ha of declared parcels
@@ -86,7 +84,6 @@ farm_survey,farm_survey:FS01444,soil_misreport,0.85,survey says mineral; soil ma
 farm_survey,farm_survey:FS01570,decimal_shift,0.9,n_mineral_kg_ha 8.0 is 0.1× the turnip_rape median 92.7: likely a ×10 slip
 farm_survey,farm_survey:FS01718,soil_misreport,0.85,survey says mineral; soil map: 62% of this crop's area and 68% of the farm is organic
 farm_survey,farm_survey:FS01783,soil_misreport,0.85,survey says mineral; soil map: 40% of this crop's area and 48% of the farm is organic
-farm_survey,farm_survey:FS01805,soil_misreport,0.6,survey says mineral; soil map: 68% of this crop's area and 15% of the farm is organic
 farm_survey,farm_survey:FS01851,area_mismatch,0.95,survey area 25.92 ha vs 19.21 ha of declared parcels
 farm_survey,farm_survey:FS01912,outlier_implausible,0.9,yield 15.7 t/ha is 10.7× the turnip_rape median 1.47
 farm_survey,farm_survey:FS01991,soil_misreport,0.85,survey says mineral; soil map: 76% of this crop's area and 61% of the farm is organic

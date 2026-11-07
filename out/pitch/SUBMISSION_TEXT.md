@@ -15,13 +15,13 @@ Climate & Nature Navigator: CtrlAltDelete
 
 **What we built.** One system where every number can be traced and signed:
 
-- **Clean data → 2025 inventory.** 18 deterministic detectors find the planted data errors, with an allow-list so legitimate oddities (credit notes, tonne-lots, harvest peaks, ammonia) are never flagged. An expert approves each correction. The organisers' reference calculator turns the clean data into the inventory, and every line clicks back to its source records and factor. Dev scores: A1 96.0 vs a 52 baseline; A2 74.9 vs ~23.
-- **The hidden peat.** The current farm calculator assumes mineral soil. On the parcel soil map, drained organic soils add 14,356 t CO2e (57 % of contract-farm emissions). That has to be fixed before an SBTi base year is set.
+- **Clean data → 2025 inventory.** 18 deterministic detectors find the planted data errors, with an allow-list so legitimate oddities (credit notes, tonne-lots, harvest peaks, ammonia) are never flagged. An expert approves each correction. The organisers' reference calculator turns the clean data into the inventory, and every line clicks back to its source records and factor. Dev scores: A1 96.7 vs a 52 baseline; A2 87.2 vs ~23.
+- **The hidden peat.** The current farm calculator assumes mineral soil. On the parcel soil map, drained organic soils add 11,754 t CO2e (52 % of contract-farm emissions). That has to be fixed before an SBTi base year is set.
 - **Harvest risk in €.** A yield model learns how drought, heat at flowering, waterlogging and harvest rain drive yields. Trained only on years up to 2023, it reproduces the 2026 split: strong Finnish peas, heat- and drought-hit Swedish peas. Under SSP5-8.5, 2041–60 pea yields change by {{C2_PEA_SE_585_PCT}} % and bad years become {{C2_PEA_SE_585_PBAD}}× as likely. We put € on it ({{C3_EUR_AT_RISK}}/yr expected) and on the hedges: two-region sourcing saves {{C3_HEDGE_EUR}}, and irrigation on drought-exposed fields saves {{C3_IRRIGATION_EUR}}.
 - **A copilot with receipts.** Ask "What were Säkylä's 2025 refrigerant emissions?" and get the number, its records and the rule applied. A code check blocks any number that didn't come from the data.
 
 **What Apetit could do next week:**
-1. Verify soil type on the 8 farms most likely on peat before fixing the SBTi base year (owner: sustainability lead).
+1. Verify soil type on the 6 farms most likely on peat before fixing the SBTi base year (owner: sustainability lead).
 2. Pilot irrigation scheduling on the highest-risk Skåne pea fields (owner: Apetit Sverige contract farming).
 3. Rebalance contracted pea area between Finland and Sweden by {{C3_REBALANCE_PCT}} % (owner: procurement).
 
