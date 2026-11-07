@@ -276,6 +276,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/knowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Knowledge Items */
+        get: operations["knowledge_items_api_knowledge_get"];
+        put?: never;
+        /**
+         * Knowledge Add
+         * @description Save a statement as pending_review. The conflict check reads serve.duckdb when it exists (real mode).
+         */
+        post: operations["knowledge_add_api_knowledge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/knowledge/{knowledge_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Knowledge Decide
+         * @description A person approves, rejects or supersedes. Blank reviewer or the contributor themself (four-eyes) → 422.
+         */
+        post: operations["knowledge_decide_api_knowledge__knowledge_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gaps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gaps
+         * @description Missing records with an owner and a drafted message. Drafts are copy-only: nothing is sent.
+         */
+        get: operations["gaps_api_gaps_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -563,6 +624,33 @@ export interface components {
              */
             risk: "ok" | "watch" | "bad";
         };
+        /** Gap */
+        Gap: {
+            /** Gap Id */
+            gap_id: string;
+            /** Record Key */
+            record_key: string;
+            /** Site Id */
+            site_id: string | null;
+            /** Domain */
+            domain: string;
+            /** Year */
+            year: number;
+            /** Month */
+            month: number | null;
+            /** Owner */
+            owner: string;
+            /** Impact */
+            impact: string;
+            /** Draft Message */
+            draft_message: string;
+            /** Estimate */
+            estimate: number | null;
+            /** Explanation */
+            explanation?: string | null;
+            /** Evidence */
+            evidence: components["schemas"]["EvidenceRef"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -691,6 +779,122 @@ export interface components {
              * @enum {string}
              */
             target: "drought_exposed" | "all";
+        };
+        /** KnowledgeDecision */
+        KnowledgeDecision: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject" | "supersede";
+            /** Reviewer */
+            reviewer: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
+        /** KnowledgeIn */
+        KnowledgeIn: {
+            /** Statement */
+            statement: string;
+            /**
+             * Type
+             * @default fact
+             * @enum {string}
+             */
+            type: "fact" | "explanation" | "process" | "contact";
+            /**
+             * Tags
+             * @default []
+             */
+            tags: string[];
+            /**
+             * Linked Refs
+             * @default []
+             */
+            linked_refs: string[];
+            /** Contributed By */
+            contributed_by: string;
+            /** Role */
+            role?: string | null;
+            /**
+             * Confidence
+             * @default sure
+             * @enum {string}
+             */
+            confidence: "sure" | "think_so" | "heard";
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid Until */
+            valid_until?: string | null;
+            /**
+             * Source
+             * @default chat
+             */
+            source: string;
+        };
+        /** KnowledgeItem */
+        KnowledgeItem: {
+            /** Statement */
+            statement: string;
+            /**
+             * Type
+             * @default fact
+             * @enum {string}
+             */
+            type: "fact" | "explanation" | "process" | "contact";
+            /**
+             * Tags
+             * @default []
+             */
+            tags: string[];
+            /**
+             * Linked Refs
+             * @default []
+             */
+            linked_refs: string[];
+            /** Contributed By */
+            contributed_by: string;
+            /** Role */
+            role?: string | null;
+            /**
+             * Confidence
+             * @default sure
+             * @enum {string}
+             */
+            confidence: "sure" | "think_so" | "heard";
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid Until */
+            valid_until?: string | null;
+            /**
+             * Source
+             * @default chat
+             */
+            source: string;
+            /** Knowledge Id */
+            knowledge_id: string;
+            /**
+             * Status
+             * @default pending_review
+             * @enum {string}
+             */
+            status: "pending_review" | "approved" | "rejected" | "superseded";
+            /** Created At */
+            created_at: string;
+            /** Reviewer */
+            reviewer?: string | null;
+            /** Review Note */
+            review_note?: string | null;
+            /** Reviewed At */
+            reviewed_at?: string | null;
+            /**
+             * Conflicts
+             * @default []
+             */
+            conflicts: components["schemas"]["EvidenceRef"][];
         };
         /** Meters */
         Meters: {
@@ -1353,6 +1557,136 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BoardRow"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    knowledge_items_api_knowledge_get: {
+        parameters: {
+            query?: {
+                status?: ("pending_review" | "approved" | "rejected" | "superseded") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    knowledge_add_api_knowledge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KnowledgeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeItem"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    knowledge_decide_api_knowledge__knowledge_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                knowledge_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KnowledgeDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeItem"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    gaps_api_gaps_get: {
+        parameters: {
+            query?: {
+                year?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Gap"][];
                 };
             };
             /** @description Validation Error */

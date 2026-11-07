@@ -19,7 +19,7 @@ Rules (doc §7.3–7.4):
   that site's readings continue) for the reviewer;
 * only work facts: the store keeps the statement, tags, links, contributor and review trail, nothing personal.
 The store is an append-only event log, out/v2/knowledge.jsonl (one line per add or decision); state = replay.
-The API shapes match the QUESTION posted in the agent chat (7 Nov); they live here until api/schemas.py adopts them.
+The API shapes (KnowledgeIn, KnowledgeItem, KnowledgeDecision) live in api/schemas.py and are re-exported here.
 """
 from __future__ import annotations
 
@@ -28,44 +28,12 @@ import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
 
-from pydantic import BaseModel, Field
-
-from api.schemas import EvidenceRef
+from api.schemas import EvidenceRef, KnowledgeDecision, KnowledgeIn, KnowledgeItem
 from src.db import REPO_ROOT
 
 STORE = REPO_ROOT / "out" / "v2" / "knowledge.jsonl"
 STOP_WORDS = r"decommission|shut down|closed|stopped|no longer|removed|discontinued|replaced"
-
-
-class KnowledgeIn(BaseModel):
-    statement: str = Field(min_length=3)
-    type: Literal["fact", "explanation", "process", "contact"] = "fact"
-    tags: list[str] = []
-    linked_refs: list[str] = []          # entity IDs (S-SAK, SUP073, …) or record keys
-    contributed_by: str = Field(min_length=1)   # typed by the person; code never fills it
-    role: str | None = None
-    confidence: Literal["sure", "think_so", "heard"] = "sure"
-    valid_from: str | None = None        # ISO date
-    valid_until: str | None = None
-    source: str = "chat"                 # chat message id or voice transcript snippet
-
-
-class KnowledgeItem(KnowledgeIn):
-    knowledge_id: str
-    status: Literal["pending_review", "approved", "rejected", "superseded"] = "pending_review"
-    created_at: str
-    reviewer: str | None = None
-    review_note: str | None = None
-    reviewed_at: str | None = None
-    conflicts: list[EvidenceRef] = []
-
-
-class KnowledgeDecision(BaseModel):
-    decision: Literal["approve", "reject", "supersede"]
-    reviewer: str = Field(min_length=1)  # a person; code never fills it
-    note: str = ""
 
 
 STATUS = {"approve": "approved", "reject": "rejected", "supersede": "superseded"}

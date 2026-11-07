@@ -289,6 +289,53 @@ class ReportRef(BaseModel):  # the documented shape of AskOut.report
     url: str
 
 
+KnowledgeStatus = Literal["pending_review", "approved", "rejected", "superseded"]
+
+
+class KnowledgeIn(BaseModel):  # POST /api/knowledge: one statement a person contributes (tacit knowledge)
+    statement: str = Field(min_length=3)
+    type: Literal["fact", "explanation", "process", "contact"] = "fact"
+    tags: list[str] = []
+    linked_refs: list[str] = []  # entity IDs (S-SAK, SUP073, …) or record keys
+    contributed_by: str = Field(min_length=1)  # typed by the person; code never fills it
+    role: str | None = None
+    confidence: Literal["sure", "think_so", "heard"] = "sure"
+    valid_from: str | None = None  # ISO date
+    valid_until: str | None = None
+    source: str = "chat"  # chat message id or voice transcript snippet
+
+
+class KnowledgeItem(KnowledgeIn):  # pending_review shows as "unreviewed"; only approved items are cited as fact
+    knowledge_id: str
+    status: KnowledgeStatus = "pending_review"
+    created_at: str
+    reviewer: str | None = None
+    review_note: str | None = None
+    reviewed_at: str | None = None
+    conflicts: list[EvidenceRef] = []  # data that contradicts the statement: show next to the approve button
+
+
+class KnowledgeDecision(BaseModel):
+    decision: Literal["approve", "reject", "supersede"]
+    reviewer: str = Field(min_length=1)  # a person other than the contributor; code never fills it
+    note: str = ""
+
+
+class Gap(BaseModel):  # GET /api/gaps: a record the inventory needs but nobody delivered
+    gap_id: str
+    record_key: str
+    site_id: str | None
+    domain: str
+    year: int
+    month: int | None
+    owner: str  # a role, not a person
+    impact: str
+    draft_message: str  # copy-only: nothing is sent
+    estimate: float | None  # MWh from the neighbouring months, used as a proposed correction
+    explanation: str | None = None
+    evidence: list[EvidenceRef]
+
+
 # ── platform ───────────────────────────────────────────────────────
 class Health(BaseModel):
     ok: bool

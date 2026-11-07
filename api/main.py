@@ -140,3 +140,52 @@ def board(scenario_id: str) -> list[S.BoardRow]:
 @app.post("/api/board/{row_id}/decision", response_model=S.BoardRow)
 def decide(row_id: str, d: S.Decision) -> S.BoardRow:
     return _found(L.get("decide")(row_id, d), f"board row {row_id}")
+
+
+# ── retrieval: tacit knowledge (human review) + the missing-data chaser ──
+def _knowledge():
+    try:
+        from src import r_knowledge
+    except ImportError as e:
+        raise HTTPException(503, f"src.r_knowledge not available: {e}") from e
+    return r_knowledge
+
+
+@app.post("/api/knowledge", response_model=S.KnowledgeItem, status_code=201)
+def knowledge_add(body: S.KnowledgeIn) -> S.KnowledgeItem:
+    """Save a statement as pending_review. The conflict check reads serve.duckdb when it exists (real mode)."""
+    K = _knowledge()
+    try:
+        if not L.mock_mode() and serve_db.exists():
+            with serve_db.connect() as con:
+                return K.add(body, con=con)
+        return K.add(body)
+    except ValueError as e:  # blank contributor
+        raise HTTPException(422, str(e)) from e
+
+
+@app.get("/api/knowledge", response_model=list[S.KnowledgeItem])
+def knowledge_items(status: S.KnowledgeStatus | None = None) -> list[S.KnowledgeItem]:
+    return _knowledge().items(status)
+
+
+@app.post("/api/knowledge/{knowledge_id}/decision", response_model=S.KnowledgeItem)
+def knowledge_decide(knowledge_id: str, d: S.KnowledgeDecision) -> S.KnowledgeItem:
+    """A person approves, rejects or supersedes. Blank reviewer or the contributor themself (four-eyes) → 422."""
+    try:
+        return _found(_knowledge().decide(knowledge_id, d), f"knowledge item {knowledge_id}")
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
+
+
+@app.get("/api/gaps", response_model=list[S.Gap])
+def gaps(year: int | None = None) -> list[S.Gap]:
+    """Missing records with an owner and a drafted message. Drafts are copy-only: nothing is sent."""
+    if L.mock_mode() or not serve_db.exists():
+        raise HTTPException(503, "gaps read out/serve.duckdb: run make snapshot and use real mode (API_MOCK=0)")
+    try:
+        from src import r_gaps
+    except ImportError as e:
+        raise HTTPException(503, f"src.r_gaps not available: {e}") from e
+    with serve_db.connect() as con:
+        return r_gaps.gaps(con, year)["gaps"]
