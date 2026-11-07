@@ -10,7 +10,7 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 | G1 | A2 CSV | exists + valid | all 19 template rows | ✅ (#12) |
 | G1 | C1 CSV | exists + valid | 12,064 rows = template, final model (#17) | ✅ done |
 | G1 | C2 CSV | exists + valid | 18 rows = template (#18) | ✅ done |
-| G1 | E CSV | exists + valid | 34 rows = template; **22/34 answered offline** (3 dev + 10 rubric with sources + 9 test numerics via deterministic resolvers); 12 left 'not in the data' with a reason | ✅ (#23, #59, #73) |
+| G1 | E CSV | exists + valid | 34 rows = template; **24/34 answered offline** (3 dev + 10 rubric with sources + 11 test numerics via deterministic resolvers); 10 left 'not in the data' with a reason | ✅ (#23, #59, #73, #78) |
 | G2 | A1 dev score, overall | ≥ 80 | **96.69** (all 200 dev labels; P 0.98, R 0.95) | ✅ met |
 | G2 | A2 dev score, 2023 / 2024 | ≥ 70 / ≥ 70 | **84.96 / 87.17** | ✅ met (cat01 −1.9 % / −0.1 %; 2024 Scope 2 market −5.9 % is the next lever) |
 | G2 | C1 backtest MAPE / nRMSE | ≤ 8 % / ≤ 0.25 | **5.12 % / 0.115** (FI pea 2026 7.4 %, SE pea 2026 4.4 %) | ✅ met (#17) |
@@ -39,3 +39,4 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 | 2026-11-07 06:30 | #13 PR | A1 all; A2 dev 2023 / 2024 | 96.04 → 96.69; 91.32 / 74.89 → 84.96 / 87.17 | soil_misreport needs crop+farm map agreement or the farm's own peat reports (8 of 11 false flags gone); peat only on reviewed-organic areas; stale issues retired on re-run |
 | 2026-11-07 03:30 | #19 PR | C3 (G3) | — → € at risk per region × crop × scenario, 3 actions with €/t/owner | baseline ≈ €325k/yr expected; two-region pea hedge €37–67k/yr; irrigation €33–37k/yr |
 | 2026-11-07 03:15 | #74 | E offline answered | 20 → 22/34 | E18 +26.1 % / E19 −13.0 % from C delivery rows; final check on a clean checkout of main |
+| 2026-11-07 09:00 | #78 | E offline answered | 22 → 24/34 | E06 FLAG share 69.23 % and E21 2032 FLAG target 124,687 t from the FLAG rows in #77 |
