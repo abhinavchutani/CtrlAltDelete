@@ -11,6 +11,7 @@ Rules (first match wins; anything ambiguous returns None → "not in the data"):
 * sea legs     "category 4 … sea legs … (bulk / reefer vessels / Ro-Pax)"
 * method total "<plain scope question> after <method clause>" → the plain total (our pipeline applies it)
 * peat share   "share … contract-farm … emissions … drained organic soils" → extra ÷ with-organic total
+* deliveries   "… <Finnish|Swedish/Foodhills> … pea deliveries change from Y0 to Y1" → Track C's delivery_change_pct
 * SBTi target  "with <Y0> as base year … <r> %/yr linear … Scope 1+2 (market-based) … <Y1> … target"
                → (S1 + S2 market)_Y0 × (1 − r/100 × (Y1 − Y0))
 """
@@ -148,7 +149,30 @@ def linear_target(con, q: str, year: int) -> Resolved | None:
                                  f"market) reduced linearly by {rate} % of the base per year.", parts + [derived])
 
 
-RULES = (linear_target, peat_share, sea_legs, site_lines)
+_REGION = (("swedish", "SE_SKANE"), ("foodhills", "SE_SKANE"), ("sweden", "SE_SKANE"),
+           ("finnish", "FI_SW"), ("finland", "FI_SW"))
+_CHANGE = re.compile(r"(?:pea )?deliveries change from (20\d{2}) to (20\d{2})")
+
+
+def delivery_change(con, q: str, year: int) -> Resolved | None:
+    """'… did <Finnish|Swedish (Foodhills)> … pea deliveries change from Y0 to Y1' → Track C's year-on-year row."""
+    m = _CHANGE.search(q)
+    regions = {r for word, r in _REGION if word in q}
+    if not (m and "pea" in q and len(regions) == 1):
+        return None
+    y0, y1 = int(m.group(1)), int(m.group(2))
+    if y1 != y0 + 1:
+        return None  # the rows are year-on-year only
+    region = regions.pop()
+    res = e_tools.query_results(con, metric="delivery_change_pct", category=f"{region}:pea", year=y1)
+    if not res["rows"]:
+        return None
+    row = res["rows"][0]
+    return Resolved(row["value"], "%", f"{row['value']:+.1f} % change in {region} pea deliveries from {y0} to {y1} "
+                                       f"({row['method']}).", [res])
+
+
+RULES = (linear_target, peat_share, sea_legs, delivery_change, site_lines)
 
 
 def resolve(con: duckdb.DuckDBPyConnection, question: str) -> Resolved | None:
