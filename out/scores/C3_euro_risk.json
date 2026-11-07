@@ -8,6 +8,43 @@
     "pooled_FI_SE_2026_vs_mean_pct": 0.8,
     "contracted_share_FI_pct": 28.4
   },
+  "pea_rebalance": {
+    "baseline": {
+      "fi_share_now_pct": 28.4,
+      "fi_share_opt_pct": 26.0,
+      "rebalance_pp": -2.4,
+      "eur_now": 164563.0,
+      "eur_opt": 164194.0
+    },
+    "ssp126": {
+      "fi_share_now_pct": 28.4,
+      "fi_share_opt_pct": 17.0,
+      "rebalance_pp": -11.4,
+      "eur_now": 131370.0,
+      "eur_opt": 128425.0
+    },
+    "ssp245": {
+      "fi_share_now_pct": 28.4,
+      "fi_share_opt_pct": 10.0,
+      "rebalance_pp": -18.4,
+      "eur_now": 112857.0,
+      "eur_opt": 109621.0
+    },
+    "ssp585": {
+      "fi_share_now_pct": 28.4,
+      "fi_share_opt_pct": 25.0,
+      "rebalance_pp": -3.4,
+      "eur_now": 113714.0,
+      "eur_opt": 112843.0
+    },
+    "robust_all_scenarios": {
+      "fi_share_now_pct": 28.4,
+      "fi_share_opt_pct": 26.0,
+      "rebalance_pp": -2.4,
+      "min_gain_pct": 0.22,
+      "max_gain_pct": 0.61
+    }
+  },
   "risk": [
     {
       "region": "FI_SW",

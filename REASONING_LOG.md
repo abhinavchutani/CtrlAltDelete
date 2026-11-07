@@ -36,9 +36,17 @@ Each line names the trap, our rule and its source in the pack. Code that impleme
 |---|---|---|---|
 | R18 | One weather realisation per SSP looks like "the future" | Build our own ensemble: change-signal deltas on resampled 1991–2020 years | SYSTEM_DESIGN Track C |
 | R19 | Training on dirty survey yields | Train on `clean_farm_survey` (A's corrections) only | SYSTEM_DESIGN Risks |
-| R20 | Claiming the model "predicted 2025" | 2025 is a normal year in the twin; the backtest story is 2026 (strong FI peas, drought-hit SE peas) | AGENTS.md §8 |
+| R20 | Claiming the model "predicted 2025" | 2025 is a normal year in the twin; the backtest story is 2026 (strong FI peas, heat- and drought-hit SE peas; drivers in `out/scores/C1_backtest.json`) | AGENTS.md §8 |
 | R21 | C2 future yields drift with management changes | Hold the 2025 parcel mix and current irrigation fixed | TASKS_AND_SCORING C2 |
 | R22 | Replacement imports treated as zero-emission | Add the import emissions (cat 1 and cat 4) to the € risk story | SCENARIOS_AND_RISK C3 |
+| R27 | The simulator's crop parameters are not in the pack | Stage features (sowing threshold, GDD stages, soil-water bucket per soil class) use documented agronomic assumptions (`src/c_features.py` `CROPS`, `BUCKET_MM`), labelled as ours; sowing can't start before 5 April (DOY 95) | SIMULATION_DESIGN §2–3 (structure only) |
+| R28 | Choosing the model on the test years | Feature set, ridge alpha and the ridge/GB average are chosen by rolling-origin CV inside the training years (predict 2020–23); 2024–26 is only reported | TASKS_AND_SCORING C1 |
+| R29 | Survey yields differ from parcel-level truth (labels per farm) | Parcel features are area-weighted to farm × crop × year for training; predictions are per parcel. Raw survey only as a fallback with a ×3-median filter | SYSTEM_DESIGN Track C step 4 |
+| R30 | One SSP realisation, but a Monte Carlo truth (C2) | Delta method: each 1991–2020 year perturbed with `climate_change_signals` (T + Δ, precip × factor, PET via the Hargreaves temperature term; wet-day factor not applied), same feature code as training; no CO2 fertilisation, technology trend or adaptation | TASKS_AND_SCORING C2; SCENARIOS_AND_RISK |
+| R31 | € at risk read as a net business case | € = shortfall vs contracted volume × 2025 contract price × replacement premium. Action values are **gross** avoided losses (irrigation capex/opex and water are not netted) | SCENARIOS_AND_RISK C3 |
+| R32 | No import factor for frozen peas / potato in the pack | Replacement imports use a stated proxy (EF-FROZ-CAUL-NL for vegetables, EF-RAP-PL for rapeseed) + 1,500 km reefer truck, net of the domestic farm factor; factor ids in lineage | emission_factor_library |
+| R33 | A noisy optimum sold as a recommendation | Pea sourcing split: report the share whose worst-case gain across all scenarios is largest (robust), not the per-scenario optimum (which moves 2–18 pp on a flat curve) | C3 analysis (#70) |
+| R34 | Farm survey sample changes year to year | Delivery changes (copilot E18) use same-farm matching; the raw sample total is shown next to it. FI uses surveyed production (ERP stops at 2025) | farm_survey_fi; #65 |
 
 ## Copilot (Track E) and presentation
 

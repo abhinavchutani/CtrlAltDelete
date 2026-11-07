@@ -33,11 +33,14 @@
 - Foodhills is in scope from Dec 2025 only, and its Swedish farms are excluded from 2025.
 - Categories 11 and 12 follow the pack's documented method choices (rule R15).
 - C2 holds the 2025 parcel mix and current irrigation fixed. There is no CO2 fertilisation and no adaptation in the baseline.
+- Track C crop parameters (sowing thresholds, degree-day stages, soil-water buckets) are our agronomic assumptions; the pack describes the simulator's structure but not its parameters (R27). Model choices were made by cross-validation inside the training years, never on the 2024–26 test years (R28).
 
 ## Limitations
 - The twin's weather is inspired by real seasons but is not real weather. Absolute numbers don't transfer to Apetit; the method does.
 - There is one weather realisation per SSP. Our ensemble approximates the truth Monte Carlo.
 - Scenario prices and lever costs are the pack's illustrative values.
+- **Climate € risk is gross and probably a lower bound.** Adaptation values are avoided losses before the actions' own costs (irrigation capex, opex and water use). The model's year-to-year yield spread is about 0.7–1.1× the observed one, so the 1-in-10-year loss is likely understated. Replacement-import emissions use a proxy frozen-vegetable factor (R31, R32).
+- **Total climate € risk is roughly flat to 2041–60; the mix shifts.** Peas hold up (+2–3 %), while potato and carrot losses grow 2–3×. The pea risk is year-to-year (2026: Finland +24 %, Sweden −8.5 %, pooled +0.8 %), which is why two-region sourcing is the hedge. Today's ~28/72 FI/SE split is close to the robust optimum (R33).
 
 ## How expert review works
 1. Every detector finding becomes a `proposed` issue, with the evidence and a proposed fix.
