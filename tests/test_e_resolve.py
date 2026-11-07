@@ -39,6 +39,10 @@ def con(tmp_path, monkeypatch):
     L.write_result(c, "PEAT:2025:with_organic_soils:all_farms", metric="farm_tco2e", value=4000.0, unit="t CO2e",
                    scope="3", category="all_farms", year=2025, scenario="with_organic_soils", method="fixture",
                    produced_by="test", lineage=[L.src("doc", "x")])
+    for region, v in [("FI_SW", 26.1), ("SE_SKANE", -13.0)]:
+        L.write_result(c, f"C:deliveries:{region}:pea:2026", metric="delivery_change_pct", value=v, unit="%",
+                       category=f"{region}:pea", year=2026, scenario="actual", produced_by="test",
+                       method="pea deliveries 2025→2026: fixture", lineage=[L.src("record", f"x:{region}")])
     return c
 
 
@@ -58,6 +62,8 @@ def _ask(con, q):
      "absolute Scope 1+2 (market-based) target in tCO2e?", 4460.0 * (1 - 0.042 * 7)),
     ("What were market-based Scope 2 emissions in 2025 after reconciling the internal GoO log with the registry "
      "statement (tCO2e)?", 60.0),
+    ("By how many percent did Finnish contract pea deliveries change from 2025 to 2026?", 26.1),
+    ("By how many percent did Swedish (Foodhills) pea deliveries change from 2025 to 2026?", -13.0),
 ])
 def test_rules_answer_from_results(con, q, expected):
     a = _ask(con, q)
@@ -73,6 +79,7 @@ def test_derived_numbers_show_their_formula(con):
     "What was biogenic CO2 from combustion at the Kantvik site in 2025 (t)?",            # no rule: memo is group-only
     "What were Scope 1 emissions from diesel at the Säkylä plant in 2025 (tCO2e)?",      # carrier not in the lines
     "What were Scope 1 emissions at the Säkylä and Kantvik plants in 2025 (tCO2e)?",     # two sites: ambiguous
+    "By how many percent did Finnish contract pea deliveries change from 2021 to 2026?",  # not year-on-year
     "Illustrative: with 2025 as base year and the SBTi FLAG minimum 3.03 %/yr linear rate, what is a 2032 FLAG target?",
 ])
 def test_ambiguous_or_unsupported_questions_stay_unanswered(con, q):
