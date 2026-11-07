@@ -2,7 +2,8 @@
 import pytest
 from streamlit.testing.v1 import AppTest
 
-PAGES = ["views/data_quality.py", "views/inventory.py", "views/farm_peat.py", "views/climate_risk.py"]
+PAGES = ["views/data_quality.py", "views/inventory.py", "views/farm_peat.py", "views/climate_risk.py",
+         "views/review.py"]
 
 
 @pytest.fixture(autouse=True)
@@ -10,13 +11,13 @@ def _mock(monkeypatch):
     monkeypatch.setenv("APP_MOCK", "1")
 
 
-def test_mock_seed_has_lineage_for_every_result():
+def test_mock_seed_has_lineage_for_every_result(tmp_path):
     from app import mock
     from src import lineage as L
     from src.db import connect
 
-    mock.seed()
-    con = connect(mock.MOCK_DB, read_only=True)
+    mock.seed(tmp_path / "m.duckdb")  # not out/mock.duckdb: an in-process app may hold it open
+    con = connect(tmp_path / "m.duckdb", read_only=True)
     n_orphans = con.execute("SELECT count(*) FROM results r WHERE NOT EXISTS "
                             "(SELECT 1 FROM lineage l WHERE l.result_id = r.result_id)").fetchone()[0]
     assert n_orphans == 0 and L.orphan_published(con) == []
