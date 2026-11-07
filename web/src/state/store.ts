@@ -3,6 +3,11 @@ import { create } from "zustand";
 import type { Alert, ScenarioSpec } from "../api/types";
 
 export type MapLayer = "parcels" | "farms" | "weather";
+export type ColorBy = "health" | "risk" | "drought" | "heat";
+export type Drawer = "none" | "insights" | "decisions";
+export type ChatMode = "collapsed" | "docked" | "max";
+export type ChatMsg = { id: number; text: string; history: string[] };
+export type ParcelPick = { parcel_id: string; farm_id: string; area_ha: number; ring: [number, number][] };
 export type Door = "ask" | "simulate";
 export type View = { longitude: number; latitude: number; zoom: number; pitch: number; bearing: number };
 
@@ -28,6 +33,12 @@ type State = {
   question: string | null;
   askHistory: string[]; // earlier questions, oldest first (sent as history so "make that a report" works)
   boardDialogRow: string | null;
+  colorBy: ColorBy;
+  selectedParcel: ParcelPick | null;
+  watched: string[];
+  drawer: Drawer;
+  chatMode: ChatMode;
+  chat: ChatMsg[];
 };
 
 type Actions = {
@@ -42,6 +53,12 @@ type Actions = {
   ask: (q: string) => void;
   setDoor: (d: Door) => void;
   openDecision: (rowId: string | null) => void;
+  setColorBy: (c: ColorBy) => void;
+  selectParcel: (p: ParcelPick | null) => void;
+  toggleWatch: (parcelId: string) => void;
+  setDrawer: (d: Drawer) => void;
+  setChatMode: (m: ChatMode) => void;
+  sendChat: (text: string) => void;
 };
 
 export const useStore = create<State & Actions>((set) => ({
@@ -52,8 +69,8 @@ export const useStore = create<State & Actions>((set) => ({
   problems: [],
   year: START_YEAR,
   playing: false,
-  layer: "farms", // parcels are sub-pixel at country zoom; they show when zoomed to a region
-  view: VIEW_ALL,
+  layer: "parcels",
+  view: { longitude: 13.45, latitude: 55.95, zoom: 11.5, pitch: 0, bearing: 0 },
   selectedAlert: null,
   door: "simulate",
   question: null,
@@ -74,4 +91,20 @@ export const useStore = create<State & Actions>((set) => ({
     })),
   setDoor: (door) => set({ door }),
   openDecision: (boardDialogRow) => set({ boardDialogRow }),
+  colorBy: "health",
+  selectedParcel: null,
+  watched: [],
+  drawer: "none",
+  chatMode: "docked",
+  chat: [],
+  setColorBy: (colorBy) => set({ colorBy }),
+  selectParcel: (selectedParcel) => set({ selectedParcel }),
+  toggleWatch: (id) => set((s) => ({ watched: s.watched.includes(id) ? s.watched.filter((w) => w !== id) : [...s.watched, id] })),
+  setDrawer: (drawer) => set((s) => ({ drawer: s.drawer === drawer ? "none" : drawer })),
+  setChatMode: (chatMode) => set({ chatMode }),
+  // each chat question remembers the questions before it, so follow-ups ("make that a report") resolve
+  sendChat: (text) => set((s) => ({
+    chat: [...s.chat, { id: Date.now(), text, history: s.chat.map((m) => m.text).slice(-5) }],
+    chatMode: s.chatMode === "collapsed" ? "docked" : s.chatMode,
+  })),
 }));

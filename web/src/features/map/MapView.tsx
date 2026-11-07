@@ -2,40 +2,37 @@ import DeckGL from "@deck.gl/react";
 import type { PickingInfo } from "@deck.gl/core";
 import Map from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useStore, type MapLayer } from "../../state/store";
-import { Status } from "../../components/Status";
-import { useMapData } from "./useMapData";
+import type { GeoParcel } from "../../api/types";
+import { useStore } from "../../state/store";
+import { useFieldData } from "../fieldradar/useFieldData";
+import { basemapStyle } from "./basemap";
+import { parcelLayers } from "./layers/parcels";
+import { RadarOverlay } from "./RadarOverlay";
 
-const BASEMAP = import.meta.env.VITE_BASEMAP_STYLE;
-const LAYERS: MapLayer[] = ["parcels", "farms", "weather"];
+const STYLE = basemapStyle();
 
-function tooltip({ object }: PickingInfo) {
-  if (!object) return null;
-  const o = object as Record<string, unknown> & { properties?: Record<string, unknown> };
-  const props = o.properties ?? o;
-  return { text: Object.entries(props).filter(([k]) => k !== "position").map(([k, v]) => `${k}: ${v}`).join("\n") };
-}
-
+/** Satellite imagery with the contract parcels glowing on top, coloured by the active layer. Click a field to inspect it. */
 export function MapView() {
-  const { view, setView, layer, setLayer } = useStore();
-  const { layers, pending, error } = useMapData();
+  const { view, setView, selectedParcel, selectParcel } = useStore();
+  const d = useFieldData();
+  const layers = parcelLayers(d.parcels, d.colorOf, selectedParcel?.parcel_id ?? null, d.trigger);
+  const onClick = ({ object }: PickingInfo) => {
+    const p = object as GeoParcel | undefined;
+    selectParcel(p ? { ...p.properties, ring: p.geometry.coordinates[0] } : null);
+  };
   return (
-    <div className="map">
-      <div className="map-layer-toggle tabs row" role="tablist">
-        {LAYERS.map((l) => (
-          <button key={l} role="tab" aria-selected={layer === l} onClick={() => setLayer(l)}>{l}</button>
-        ))}
-        <Status loading={pending} error={error} />
-      </div>
+    <div className="map-canvas">
       <DeckGL
         viewState={view}
         onViewStateChange={({ viewState }) => setView(viewState as typeof view)}
-        controller
+        controller={{ dragRotate: false }}
         layers={layers}
-        getTooltip={tooltip}
+        onClick={onClick}
+        getCursor={({ isHovering }) => (isHovering ? "pointer" : "grab")}
       >
-        {BASEMAP ? <Map mapStyle={BASEMAP} /> : null}
+        <Map mapStyle={STYLE} />
       </DeckGL>
+      <RadarOverlay />
     </div>
   );
 }

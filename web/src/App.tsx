@@ -1,55 +1,34 @@
-// Layout only: no data logic here.
+// Layout only: no data logic here. Field Radar: the map fills the stage; glass panels float over it;
+// the assistant docks beside it (or is maximised / collapsed).
 import { SyntheticBanner } from "./components/SyntheticBanner";
-import { AlertList } from "./features/alerts/AlertList";
 import { AlertPopup } from "./features/alerts/AlertPopup";
-import { AskPanel } from "./features/ask/AskPanel";
-import { DecisionBoard } from "./features/board/DecisionBoard";
-import { HedgeChart } from "./features/hedge/HedgeChart";
+import { ChatDock } from "./features/chat/ChatDock";
+import { Drawer } from "./features/fieldradar/Drawer";
+import { LayerPanel } from "./features/fieldradar/LayerPanel";
+import { ParcelCard } from "./features/fieldradar/ParcelCard";
+import { Sidebar } from "./features/fieldradar/Sidebar";
+import { StatsBar } from "./features/fieldradar/StatsBar";
 import { MapView } from "./features/map/MapView";
-import { Meters } from "./features/meters/Meters";
-import { PathwaysGantt } from "./features/pathways/PathwaysGantt";
-import { LeverEditor } from "./features/simulate/LeverEditor";
-import { ScenarioPicker } from "./features/simulate/ScenarioPicker";
-import { SpecChips } from "./features/simulate/SpecChips";
-import { Timeline } from "./features/timeline/Timeline";
-import { CommandBar } from "./features/voice/CommandBar";
 import { useStore } from "./state/store";
 
 export default function App() {
-  const door = useStore((s) => s.door);
-  const setDoor = useStore((s) => s.setDoor);
+  const chatMode = useStore((s) => s.chatMode);
   return (
-    <div className="app">
-      <header>
-        <strong>Navigator</strong>
-        <ScenarioPicker />
-        <CommandBar />
-      </header>
-      <SyntheticBanner />
-      <main className="map">
+    <div className={`fr chat-${chatMode}`}>
+      <Sidebar />
+      <main className="stage">
         <MapView />
-        <AlertPopup />
-      </main>
-      <aside className="side">
-        <div className="tabs row" role="tablist">
-          <button role="tab" aria-selected={door === "simulate"} onClick={() => setDoor("simulate")}>Simulate</button>
-          <button role="tab" aria-selected={door === "ask"} onClick={() => setDoor("ask")}>Ask</button>
+        <div className="brand">FIELD RADAR</div>
+        <SyntheticBanner />
+        <LayerPanel />
+        <Drawer />
+        <div className="right-stack">
+          <ParcelCard />
+          <AlertPopup />
         </div>
-        {door === "ask" ? <AskPanel /> : (
-          <>
-            <SpecChips />
-            <LeverEditor />
-            <Meters />
-            <AlertList />
-          </>
-        )}
-        <HedgeChart />
-        <PathwaysGantt />
-      </aside>
-      <footer className="bottom">
-        <Timeline />
-        <DecisionBoard />
-      </footer>
+        <StatsBar />
+      </main>
+      <ChatDock />
     </div>
   );
 }

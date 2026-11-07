@@ -95,6 +95,10 @@ export const useAsk = (question: string | null, history: string[] = []) =>
     ...forever,
   });
 
+/** One chat line → its intent (door ask or simulate). Cached per text + the spec it would extend. */
+export const useIntentQuery = (text: string, base: ScenarioSpec | null) =>
+  useQuery({ queryKey: ["intent", text, base], queryFn: () => post<IntentOut>("/api/intent", { text, base }), ...forever });
+
 export const useIntent = () =>
   useMutation({ mutationFn: ({ text, base }: { text: string; base: ScenarioSpec | null }) => post<IntentOut>("/api/intent", { text, base }) });
 
