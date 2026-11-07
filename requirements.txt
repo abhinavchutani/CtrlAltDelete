@@ -20,3 +20,4 @@ openai>=1.40
 
 # Tests
 pytest>=8
+openpyxl>=3.1
