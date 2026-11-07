@@ -1,0 +1,50 @@
+[
+ {
+  "crop": "pea",
+  "region": "SE_SKANE",
+  "climate": "ssp585",
+  "threshold": "bad-year odds > 1 in 4",
+  "tipping_year": 2039,
+  "option_id": "A04",
+  "option": "Heat/drought-tolerant pea varieties (breeding partnership)",
+  "decide_by": 2027,
+  "signpost": "3 seasons in a row with > 5 hot days at pea flowering in SE_SKANE",
+  "simulated": "assumption"
+ },
+ {
+  "crop": "pea",
+  "region": "SE_SKANE",
+  "climate": "ssp585",
+  "threshold": "bad-year odds > 1 in 4",
+  "tipping_year": 2039,
+  "option_id": "A07",
+  "option": "Diversify sourcing regions (FI/SE portfolio)",
+  "decide_by": 2038,
+  "signpost": "pooled pea shortfall > 15 % in 2 of 5 years",
+  "simulated": "simulated"
+ },
+ {
+  "crop": "pea",
+  "region": "SE_SKANE",
+  "climate": "ssp245",
+  "threshold": "bad-year odds > 1 in 4",
+  "tipping_year": 2047,
+  "option_id": "A01",
+  "option": "Efficient irrigation systems",
+  "decide_by": 2044,
+  "signpost": "flowering drought index > 0.6 in 3 of 5 seasons in SE_SKANE",
+  "simulated": "simulated"
+ },
+ {
+  "crop": "potato",
+  "region": "FI_SW",
+  "climate": "ssp585",
+  "threshold": "bad-year odds > 1 in 4",
+  "tipping_year": null,
+  "option_id": "A12",
+  "option": "Blight-resistant varieties + forecast-based spraying",
+  "decide_by": null,
+  "signpost": "more than 10 blight-risk days in July–August, 3 seasons running",
+  "simulated": "simulated_with_caveat"
+ }
+]

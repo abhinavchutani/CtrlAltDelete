@@ -1,0 +1,36 @@
+{
+ "simulate": {
+  "door": "simulate",
+  "text": "What if we irrigate the driest pea fields and move to a 70/30 Finland–Sweden split?",
+  "spec": {
+   "climate": "ssp245",
+   "horizon_end": 2040,
+   "levers": [
+    {
+     "type": "irrigate",
+     "crop": "pea",
+     "target": "drought_exposed"
+    },
+    {
+     "type": "region_split",
+     "crop": "pea",
+     "fi_share": 0.7
+    }
+   ],
+   "label": "Irrigate + 70/30 split"
+  },
+  "heard": [
+   "climate: middle path",
+   "irrigate dry pea fields",
+   "pea split 70 % Finland"
+  ],
+  "problems": []
+ },
+ "ask": {
+  "door": "ask",
+  "text": "How did pea deliveries from Swedish farms in 2026 compare with 2021?",
+  "spec": null,
+  "heard": [],
+  "problems": []
+ }
+}

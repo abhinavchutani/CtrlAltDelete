@@ -1,0 +1,143 @@
+[
+ {
+  "row_id": "current_plan_ssp245-1",
+  "scenario_id": "current_plan_ssp245",
+  "risk": "Heat at flowering",
+  "crop": "pea",
+  "region": "SE_SKANE",
+  "hazard": "H2",
+  "eur_at_risk": "€250k–1M",
+  "eur_tail": "€250k–1M",
+  "action": "Start heat-tolerant pea trials with a breeder",
+  "option_ids": [
+   "A04",
+   "A06"
+  ],
+  "owner": "R&D, Sourcing, CFO",
+  "decide_by": 2027,
+  "trigger": "signpost for H2 in SE_SKANE",
+  "evidence": [
+   {
+    "kind": "result",
+    "ref": "C3:ssp245:SE_SKANE:pea:eur_at_risk",
+    "label": "v1 C3 € at risk"
+   },
+   {
+    "kind": "doc",
+    "ref": "docs/RISK_MITIGATION_AND_ADAPTATION.md#7",
+    "label": "adaptation options KB"
+   }
+  ],
+  "robustness": "no_regret",
+  "simulated": "assumption",
+  "status": "pending",
+  "decided_by": null,
+  "decided_at": null,
+  "reason": null
+ },
+ {
+  "row_id": "current_plan_ssp245-2",
+  "scenario_id": "current_plan_ssp245",
+  "risk": "Drought at flowering",
+  "crop": "pea",
+  "region": "SE_SKANE",
+  "hazard": "H1",
+  "eur_at_risk": "€100–250k",
+  "eur_tail": "€250k–1M",
+  "action": "Irrigate the most drought-exposed pea parcels",
+  "option_ids": [
+   "A01"
+  ],
+  "owner": "R&D, Sourcing, CFO",
+  "decide_by": 2044,
+  "trigger": "signpost for H1 in SE_SKANE",
+  "evidence": [
+   {
+    "kind": "result",
+    "ref": "C3:ssp245:SE_SKANE:pea:eur_at_risk",
+    "label": "v1 C3 € at risk"
+   },
+   {
+    "kind": "doc",
+    "ref": "docs/RISK_MITIGATION_AND_ADAPTATION.md#7",
+    "label": "adaptation options KB"
+   }
+  ],
+  "robustness": "no_regret",
+  "simulated": "simulated",
+  "status": "pending",
+  "decided_by": null,
+  "decided_at": null,
+  "reason": null
+ },
+ {
+  "row_id": "current_plan_ssp245-3",
+  "scenario_id": "current_plan_ssp245",
+  "risk": "Supply concentration",
+  "crop": "pea",
+  "region": "SE_SKANE",
+  "hazard": "H2",
+  "eur_at_risk": "€250k–1M",
+  "eur_tail": "€250k–1M",
+  "action": "Move 15 pp of contracted pea volume to FI_SW",
+  "option_ids": [
+   "A07"
+  ],
+  "owner": "R&D, Sourcing, CFO",
+  "decide_by": 2038,
+  "trigger": "signpost for H2 in SE_SKANE",
+  "evidence": [
+   {
+    "kind": "result",
+    "ref": "C3:ssp245:SE_SKANE:pea:eur_at_risk",
+    "label": "v1 C3 € at risk"
+   },
+   {
+    "kind": "doc",
+    "ref": "docs/RISK_MITIGATION_AND_ADAPTATION.md#7",
+    "label": "adaptation options KB"
+   }
+  ],
+  "robustness": "no_regret",
+  "simulated": "simulated",
+  "status": "pending",
+  "decided_by": null,
+  "decided_at": null,
+  "reason": null
+ },
+ {
+  "row_id": "current_plan_ssp245-4",
+  "scenario_id": "current_plan_ssp245",
+  "risk": "Late-blight weather",
+  "crop": "potato",
+  "region": "FI_SW",
+  "hazard": "H6",
+  "eur_at_risk": "€100–250k",
+  "eur_tail": null,
+  "action": "Forecast-based spraying + resistant varieties",
+  "option_ids": [
+   "A12"
+  ],
+  "owner": "Agronomy, Procurement",
+  "decide_by": null,
+  "trigger": "signpost for H6 in FI_SW",
+  "evidence": [
+   {
+    "kind": "result",
+    "ref": "C3:ssp245:FI_SW:potato:eur_at_risk",
+    "label": "v1 C3 € at risk"
+   },
+   {
+    "kind": "doc",
+    "ref": "docs/RISK_MITIGATION_AND_ADAPTATION.md#7",
+    "label": "adaptation options KB"
+   }
+  ],
+  "robustness": "scenario_dependent",
+  "simulated": "simulated_with_caveat",
+  "status": "pending",
+  "decided_by": null,
+  "decided_at": null,
+  "reason": null
+ }
+]
