@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 
 import duckdb
 
-from src import e_check, e_llm, e_tools
+from src import e_check, e_llm, e_resolve, e_tools
 from src.db import connect, db_path
 
 NOT_IN_DATA = "Not in the data."
@@ -80,6 +80,8 @@ def evidence_from(results: list[dict]) -> tuple[list[str], bool]:
             ev.append(f"`{row['result_id']}` ({row['status']}) ← {refs}")
         for p in r.get("passages", []):
             ev.append(f"`{p['file']}` § {p['section']}")
+        if "derived" in r:
+            ev.append(f"derived in code: {r['derived']['formula']}")
     return list(dict.fromkeys(ev)), pending
 
 
@@ -126,11 +128,14 @@ def parse_plain_numeric(question: str) -> dict | None:
 
 def stub_answer(con: duckdb.DuckDBPyConnection, question: str, kind: str | None) -> Answer:
     if kind != "rubric":
-        f = parse_plain_numeric(question)
+        r = e_resolve.resolve(con, question)
+        if r is not None:
+            return finish(question, r.prose, r.tool_results, "stub", r.value, r.unit)
+        f = parse_plain_numeric(e_resolve.strip_method_clause(question))
         if f is None:
             if kind == "numeric":
-                return Answer(question, f"{NOT_IN_DATA} (The offline stub only resolves '<scope> emissions in "
-                                        "<year>' questions; this one needs the LLM mode.)")
+                return Answer(question, f"{NOT_IN_DATA} (The offline stub resolves plain scope totals, site lines, sea legs, "
+                                        "the peat share and linear targets; this one needs the LLM mode.)")
         else:
             res = e_tools.query_results(con, **f, aggregate="sum")
             if not res["rows"] or "sum" not in res:

@@ -28,7 +28,8 @@ def _prose(markdown: str) -> str:
     """The answer text without the code-appended evidence block or badge, flattened to one line."""
     body = markdown.split(e_check.EVIDENCE_MARK)[0]
     body = re.sub(r"\n+🟠 \*.*?\*", "", body)
-    return re.sub(r"\s+", " ", body.replace("> ", "")).strip()
+    body = re.sub(r"(^|\n)> ", r"\1", body)          # blockquote markers only, not '<scope> '
+    return re.sub(r"\s+", " ", body).strip()
 
 
 def answer_row(con: duckdb.DuckDBPyConnection, q: pd.Series) -> dict:
