@@ -48,6 +48,27 @@ Each line passes its bar, **or** has plateaued (see the plateau rule below):
 ### G5 · Frozen
 **Code freeze: Sun 8 Nov 06:00 EET.** After that, only bug fixes and the human steps (approvals, video, submission by 10:00).
 
+## v2 finish line (G6–G8), added 7 Nov after the Apetit Q&A
+
+G1–G4 are done and v1 is frozen. v2 builds the product on top of it: a **Prediction layer**, a **Retrieval layer** and a **React app** over one API. The design is [V2_ARCHITECTURE.md](V2_ARCHITECTURE.md) (adaptation ideas from [RISK_MITIGATION_AND_ADAPTATION.md](RISK_MITIGATION_AND_ADAPTATION.md)); tasks, checkpoints and prompts are in [V2_AGENT_WORKFLOW.md](V2_AGENT_WORKFLOW.md). v1's CSVs must stay byte-identical (`tests/test_v2_guard.py`).
+
+### G6 · Walking skeleton (CP1)
+- [ ] `api/schemas.py` + fixtures; `API_MOCK=1 make api` serves every endpoint.
+- [ ] `make web` renders the map, timeline, alerts, meters and ask panel from fixtures; `npm run build` passes.
+
+### G7 · Real layers (CP2)
+- [ ] `make v2` builds the 6 presets and the weather frames; the app runs on them with `API_MOCK=0`.
+- [ ] `/api/ask` answers the 5 demo questions offline with evidence; one .xlsx report downloads.
+- [ ] Alerts: critical and notable only, ≤ 12 per scenario, € as bands, each with a suggested lever.
+- [ ] `kb/adaptation_options.csv` loaded; `/api/options` answers by hazard and crop.
+
+### G8 · Live ideas (CP3)
+- [ ] Voice or text → intent → spec chips → live `/api/simulate` in < 15 s.
+- [ ] The "better option" card and rule-based confidence work.
+- [ ] Hedge frontier (expected + tail loss) and adaptation pathways (tipping and decide-by years) are served and shown.
+- [ ] The decision board lists the critical risks with action, owner, decide-by and evidence; one human approval is logged.
+- [ ] The 6-step demo in V2_AGENT_WORKFLOW.md runs end to end; the README has a v2 section.
+
 ## Keep moving: create the next step yourself
 
 **If your lane has no claimable task and the end state is not reached:**
@@ -59,7 +80,7 @@ Each line passes its bar, **or** has plateaued (see the plateau rule below):
    - the G-box it closes, e.g. "closes G2·A1".
 3. **Claim one and start.** Announce it in the chat with `CLAIM`.
 
-**Don't invent new scope.** If a task doesn't close a G-box, don't create it. No new tracks (B and D stay a slide), and no features nobody can demo.
+**Don't invent new scope.** If a task doesn't close a G-box (G1–G8), don't create it. No new tracks (B and D stay a slide), no v2 features beyond V2_ARCHITECTURE.md, and no features nobody can demo.
 
 **Time-box every task to about 90 minutes of agent work.** If a task will take longer, split it.
 
@@ -72,7 +93,7 @@ A G2 metric counts as **plateaued** when the last **2 attempts in a row** each i
 
 ## Stop for good (the DONE state)
 
-When G1–G4 are all checked, or every unchecked box is labelled `needs-human`, **or** it's past the G5 freeze and your lane has nothing left but human steps:
+When G1–G4 and G6–G8 are all checked, or every unchecked box is labelled `needs-human`, **or** it's past the G5 freeze and your lane has nothing left but human steps:
 1. Finish or `release` your claimed task, and post a `HANDOFF` saying where things stand.
 2. Update `docs/SCOREBOARD.md` with the final numbers, in a PR.
 3. Post **one** final message: `DONE: <lane> reached the end goal | final scores … | human steps left …`.
