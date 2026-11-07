@@ -415,3 +415,114 @@ class Gap(BaseModel):  # GET /api/gaps: a record the inventory needs that nobody
     estimate: float | None
     explanation: str | None
     evidence: list[EvidenceRef]
+
+
+# ── SBTi targets + pathway (#130, src/b_sbti.py) ───────────────────
+SbtiBucket = Literal["s12", "s3", "flag"]
+SbtiScenario = Literal["current_policies", "net_zero_2050", "below_2c", "delayed_transition", "ndcs", "low_demand",
+                       "fragmented_world"]
+
+
+class SbtiPathwayIn(BaseModel):  # POST /api/sbti/pathway
+    scenario: SbtiScenario = "current_policies"
+    levers: list[str] = []
+    target_year: Literal[2030, 2031, 2032, 2033, 2034, 2035] = 2030
+
+
+class SbtiBase(BaseModel):
+    year: int
+    by_bucket: dict[SbtiBucket, float]
+    total: float
+    scope1: float
+    scope2_market: float
+    scope3: float
+    flag_share_pct: float
+    sources: list[EvidenceRef]
+
+
+class SbtiTarget(BaseModel):
+    label: str
+    rate_pct_per_yr: float
+    ambition: str
+    base_t: float
+    target_t: float
+    cut_pct: float
+
+
+class SbtiTargets(BaseModel):
+    base_year: int
+    target_year: int
+    by_bucket: dict[SbtiBucket, SbtiTarget]
+    flag_target_required: bool
+    sources: list[EvidenceRef]
+
+
+class SbtiCell(BaseModel):
+    bau_t: float
+    abated_t: float
+    with_levers_t: float
+    target_t: float | None
+
+
+class SbtiYear(BaseModel):
+    year: int
+    demand_index: float
+    s12: SbtiCell
+    s3: SbtiCell
+    flag: SbtiCell
+    bau_t: float
+    abated_t: float
+    with_levers_t: float
+    target_t: float | None
+
+
+class SbtiGap(BaseModel):
+    gap_t: float  # with levers − target at the target year; ≤ 0 means on track
+    needed_t: float  # BAU − target
+    closed_pct: float
+
+
+class SbtiLever(BaseModel):
+    id: str
+    name: str
+    lever_class: Literal["reduction", "measurement", "structural", "removal"] = Field(alias="class")
+    bucket: SbtiBucket | None
+    abatement_t_design: float
+    eur_per_t: float | None
+    start: int
+    ramp_years: int
+    confidence: str
+    note: str | None
+    selected: bool
+    source: EvidenceRef
+    model_config = {"populate_by_name": True, "serialize_by_alias": True}
+
+
+class SbtiHistory(BaseModel):
+    year: int
+    total_t: float
+    scope3_restated: bool
+    note: str
+
+
+class SbtiWarning(BaseModel):
+    id: str
+    title: str
+    body: str
+    sources: list[EvidenceRef]
+
+
+class SbtiPathway(BaseModel):
+    scenario: SbtiScenario
+    base: SbtiBase
+    targets: SbtiTargets
+    years: list[SbtiYear]
+    gap: dict[Literal["s12", "s3", "flag", "total"], SbtiGap]
+    levers: list[SbtiLever]
+    counted_lever_ids: list[str]
+    ignored_lever_ids: list[str]
+    lever_cost_eur_per_yr: float
+    history: list[SbtiHistory]
+    warnings: list[SbtiWarning]
+    sources: list[EvidenceRef]
+    synthetic: bool
