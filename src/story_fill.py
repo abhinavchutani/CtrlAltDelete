@@ -55,7 +55,7 @@ def compute_values(con: duckdb.DuckDBPyConnection) -> dict[str, dict]:
         s = (a2 or {}).get("scores", {}).get(y)
         put(f"A2_DEV_{y}", fmt(s["score"], 1) if s else None, "out/scores/A2_dev.json", "run python -m src.a_inventory")
 
-    c1 = _json("C1_backtest_monthly.json")
+    c1 = _json("C1_backtest.json") or _json("C1_backtest_monthly.json")
     mape = None
     if c1:
         m = c1.get("production_mape_pct") or c1.get("backtest", {}).get("production_mape_pct")

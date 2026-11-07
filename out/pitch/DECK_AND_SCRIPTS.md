@@ -62,7 +62,7 @@
 |---|---|
 | `96.0` | `out/scores/` (A1 dev F1 score) |
 | `91.3`, `74.9` | `out/scores/` (A2 dev) |
-| `{{C1_BACKTEST_MAPE}}` | C backtest result |
+| `5.1 %` | C backtest result |
 | `790`, `204` | `issues` counts by status |
 | `10,951 t CO2e`, `25,308 t CO2e`, `14,356`, `57`, `8` | A peat results (#12) |
 | `67.6 %`, `69.6 %` | A inventory FLAG split |

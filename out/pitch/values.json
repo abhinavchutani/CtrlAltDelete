@@ -25,9 +25,9 @@
   "pending": ""
  },
  "C1_BACKTEST_MAPE": {
-  "value": null,
+  "value": "5.1 %",
   "source": "out/scores/C1_backtest_*.json",
-  "pending": "C backtest not found"
+  "pending": ""
  },
  "PEAT_BEFORE": {
   "value": "10,951 t CO2e",

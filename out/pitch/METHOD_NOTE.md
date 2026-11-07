@@ -51,6 +51,6 @@
 |---|---|---|
 | A1 | 52.17 | 96.0 |
 | A2 (2023 / 2024) | 25.5 / 23.2 | 91.3 / 74.9 |
-| C1 backtest | — | MAPE {{C1_BACKTEST_MAPE}} |
+| C1 backtest | — | MAPE 5.1 % |
 
 **Reproduce:** `make all` from the unzipped pack (see README).
