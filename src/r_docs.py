@@ -22,6 +22,25 @@ from src import e_tools as T
 from src.db import REPO_ROOT
 
 REPO_DOCS = ("METHOD_NOTE.md", "REASONING_LOG.md")
+# Abbreviation ↔ full-term pairs from the pack's glossary, so "GoO" and "guarantee of origin" find the same passages.
+EXPANSIONS = (
+    (r"guarantees? of origin|\bgoos?\b", "goo guarantee origin vintage registry"),
+    (r"\bpeat\b|organic soils?", "peat organic soil"),
+    (r"ammonia|\br717\b", "ammonia r717 gwp"),
+    (r"\bl27\b|better measurement", "l27 measurement lever reduction"),
+    (r"credit notes?|movement 122", "credit note movement 122"),
+    (r"\bpcfs?\b|product carbon footprint", "pcf supplier reference period"),
+    (r"foodhills|grain trade|divest", "foodhills grain trade divested boundary base year recalculation"),
+)
+# Where our stated rules live: preferred when the question asks for a rule.
+RULE_FILES = ("REASONING_LOG.md", "METHODOLOGY.md", "ASSUMPTIONS_AND_LIMITATIONS.md", "METHOD_NOTE.md")
+
+
+def expand(query: str) -> str:
+    """The query plus the glossary terms its abbreviations stand for (deterministic)."""
+    import re
+    extra = [terms for pat, terms in EXPANSIONS if re.search(pat, query, re.I)]
+    return " ".join([query, *extra])
 
 
 def _table_rows(file: str, text: str) -> list[T.Passage]:
@@ -75,17 +94,20 @@ def _index(key: str, extra: tuple[T.Passage, ...]) -> tuple[list[T.Passage], lis
 
 
 def search_docs(query: str, k: int = 4, con: duckdb.DuckDBPyConnection | None = None,
-                root: Path | None = None) -> dict:
-    """Top-k passages by BM25 over the pack docs + our method note, reasoning log and detector rules."""
+                root: Path | None = None, prefer_rules: bool = False) -> dict:
+    """Top-k passages by BM25 over the pack docs + our method note, reasoning log and detector rules.
+    `prefer_rules` boosts the files where our stated rules live (REASONING_LOG, METHODOLOGY, ASSUMPTIONS)."""
     extra = tuple(repo_passages() + rule_passages(con))
     passages, toks, idf, avg = _index(str(root or T.pack_dir()), extra)
-    q = set(T._tokens(query))
+    q = set(T._tokens(expand(query)))
     scored = []
     for p, c in zip(passages, toks):
         length = sum(c.values()) or 1
         s = sum(idf.get(t, 0) * c[t] * 2.2 / (c[t] + 1.2 * (0.25 + 0.75 * length / avg)) for t in q if t in c)
         if "framework_digest" in p.file:
             s *= 1.3
+        if prefer_rules and any(p.file.endswith(f) for f in RULE_FILES):
+            s *= 1.6
         if s > 0:
             scored.append((s, p))
     scored.sort(key=lambda x: (-x[0], x[1].file, x[1].section))

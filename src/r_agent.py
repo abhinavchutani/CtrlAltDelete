@@ -178,7 +178,7 @@ def route_rule(con, q: str) -> dict | None:
     if not re.search(r"\brule\b|how (do|does|should) we (count|treat|handle)|what does .* (say|require)", q):
         return None
     topic = re.sub(r"\b(what|is|the|rule|for|about|our|on|do|does|we|how|count|treat|handle)\b", " ", q)
-    docs = r_docs.search_docs(topic + " rule", k=3, con=con)
+    docs = r_docs.search_docs(topic + " rule", k=3, con=con, prefer_rules=True)
     if not docs["passages"]:
         return not_in_data("No passage in the pack docs or our method note covers it.")
     md = "From the sources:\n\n" + "\n\n".join(f"> {p['text']}\n> — *{p['file']} § {p['section']}*" for p in docs["passages"])
@@ -228,7 +228,13 @@ def hints(q: str) -> list[str]:
 
 
 def ask(question: str, history: list[dict] | None = None, con: duckdb.DuckDBPyConnection | None = None) -> dict:
-    """AskOut for one question. Offline: deterministic routes. (LLM tool loop: task #93.)"""
+    """AskOut for one question, validated against api.schemas.AskOut (the v2 contract)."""
+    from api.schemas import AskOut
+    return AskOut.model_validate(_ask(question, history, con)).model_dump()
+
+
+def _ask(question: str, history: list[dict] | None = None, con: duckdb.DuckDBPyConnection | None = None) -> dict:
+    """Offline: deterministic routes. (LLM tool loop: task #93.)"""
     own = con is None
     if own:
         if not S.serve_db_path().exists():
