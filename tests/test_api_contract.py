@@ -102,6 +102,23 @@ def test_mock_decision_round_trip(client):
     assert r.status_code == 200 and r.json()["status"] == "approved" and r.json()["decided_by"] == "A. Expert"
 
 
+@pytest.mark.parametrize("name", ["   ", "\t\n"])
+def test_whitespace_name_is_422_not_500(client, name):
+    row = client.get("/api/board/current_plan_ssp245").json()[0]["row_id"]
+    r = client.post(f"/api/board/{row}/decision", json={"status": "approved", "decided_by": name, "reason": "x"})
+    assert r.status_code == 422 and "decided_by" in r.json()["detail"]
+
+
+def test_layer_refusal_is_422(client, monkeypatch):
+    from api import layers
+
+    def refuse(row_id, d):
+        raise ValueError("four-eyes rule: ask someone else")
+    monkeypatch.setattr(layers, "get", lambda name: refuse if name == "decide" else layers.get(name))
+    r = client.post("/api/board/x-1/decision", json={"status": "approved", "decided_by": "Anna", "reason": "x"})
+    assert r.status_code == 422 and "four-eyes" in r.json()["detail"]
+
+
 def test_real_mode_reports_unbuilt_layers(monkeypatch):
     monkeypatch.setenv("API_MOCK", "0")
     from api import layers

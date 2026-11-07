@@ -139,4 +139,11 @@ def board(scenario_id: str) -> list[S.BoardRow]:
 
 @app.post("/api/board/{row_id}/decision", response_model=S.BoardRow)
 def decide(row_id: str, d: S.Decision) -> S.BoardRow:
-    return _found(L.get("decide")(row_id, d), f"board row {row_id}")
+    """A person's decision. A whitespace-only name passes the schema's min_length, so it's refused here (422) in both
+    modes, and a refusal raised by the layer (ValueError) is a 422 too, never a 500."""
+    if not d.decided_by.strip():
+        raise HTTPException(422, "decided_by is required: a person types their name")
+    try:
+        return _found(L.get("decide")(row_id, d), f"board row {row_id}")
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
