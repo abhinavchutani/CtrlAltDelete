@@ -55,12 +55,13 @@ def compute_values(con: duckdb.DuckDBPyConnection) -> dict[str, dict]:
         s = (a2 or {}).get("scores", {}).get(y)
         put(f"A2_DEV_{y}", fmt(s["score"], 1) if s else None, "out/scores/A2_dev.json", "run python -m src.a_inventory")
 
-    c1 = _json("C1_backtest.json") or _json("C1_backtest_monthly.json")
-    mape = None
-    if c1:
-        m = c1.get("production_mape_pct") or c1.get("backtest", {}).get("production_mape_pct")
-        mape = m.get("model") if isinstance(m, dict) else m
-    put("C1_BACKTEST_MAPE", f"{mape:.1f} %" if mape is not None else None, "out/scores/C1_backtest_*.json", "C backtest not found")
+    r = con.execute("SELECT value FROM results WHERE result_id = 'C1:backtest:production_mape_pct'").fetchall()
+    mape, c1_src = (r[0][0], "results C1:backtest:production_mape_pct") if r else (None, "")
+    if mape is None:  # fallback: the scores file written by make c
+        c1 = _json("C1_backtest.json") or _json("C1_backtest_monthly.json")
+        m = (c1 or {}).get("production_mape_pct")
+        mape, c1_src = (m.get("model") if isinstance(m, dict) else m), "out/scores/C1_backtest.json"
+    put("C1_BACKTEST_MAPE", f"{mape:.1f} %" if mape is not None else None, c1_src or "C1 backtest", "run make c")
 
     peat = _json("peat_reveal_2025.json")
     if peat:
@@ -85,7 +86,7 @@ def compute_values(con: duckdb.DuckDBPyConnection) -> dict[str, dict]:
 
     # Track C: read whatever the climate pipeline has published to `results`
     c2 = _results(con, "metric IN ('yield_change_pct','p_bad_year') AND scenario='ssp585' AND category LIKE 'SE_SKANE:pea%'")
-    base = _results(con, "metric='p_bad_year' AND category LIKE 'SE_SKANE:pea%' AND scenario IN ('ssp126','historical','baseline')")
+    base = _results(con, "metric='p_bad_year' AND category LIKE 'SE_SKANE:pea%' AND scenario = 'baseline'")
     yc = c2[c2.metric == "yield_change_pct"].value
     put("C2_PEA_SE_585_PCT", f"{yc.iloc[0]:+.1f}" if len(yc) else None, "results yield_change_pct ssp585 SE_SKANE:pea", "C2 (#18) not published yet")
     pb = c2[c2.metric == "p_bad_year"].value
