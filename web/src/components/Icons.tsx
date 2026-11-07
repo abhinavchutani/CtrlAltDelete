@@ -25,3 +25,5 @@ export const Close = (p: P) => svg(<path d="M6 6l12 12M18 6 6 18" />, p);
 export const Send = (p: P) => svg(<><path d="m22 2-7 20-4-9-9-4z" /><path d="M22 2 11 13" /></>, p);
 export const Mic = (p: P) => svg(<><rect x={9} y={2} width={6} height={12} rx={3} /><path d="M5 10a7 7 0 0 0 14 0M12 19v3" /></>, p);
 export const Pin = (p: P) => svg(<><path d="M12 22s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z" /><circle cx={12} cy={10} r={2.5} /></>, p);
+export const Help = (p: P) => svg(<><circle cx={12} cy={12} r={9} /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.6v.4" /><path d="M12 17h.01" /></>, p);
+export const Reset = (p: P) => svg(<><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></>, p);

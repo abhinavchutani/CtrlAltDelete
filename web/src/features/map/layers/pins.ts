@@ -10,10 +10,10 @@ const pinSvg = (fill: string) =>
     `<circle cx="32" cy="28" r="8" fill="#fff"/></svg>`,
   )}`;
 const ICON = {
-  critical: { url: pinSvg("#ff6b4a"), id: "pin-critical", width: W, height: H, anchorY: H - 4 },
-  notable: { url: pinSvg("#f5b82e"), id: "pin-notable", width: W, height: H, anchorY: H - 4 },
+  critical: { url: pinSvg("#de6846"), id: "pin-critical", width: W, height: H, anchorY: H - 4 },
+  notable: { url: pinSvg("#e2a842"), id: "pin-notable", width: W, height: H, anchorY: H - 4 },
 };
-const HALO: Record<string, [number, number, number]> = { critical: [255, 107, 74], notable: [245, 184, 46] };
+const HALO: Record<string, [number, number, number]> = { critical: [222, 104, 70], notable: [226, 168, 66] };
 const sev = (p: AlertPin) => (p.alerts[0].severity === "critical" ? "critical" : "notable");
 
 /** The year's alerts as pins on their worst-hit parcel, with a soft halo; click → the alert card. */

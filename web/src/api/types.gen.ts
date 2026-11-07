@@ -191,6 +191,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/provenance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Provenance */
+        get: operations["provenance_api_provenance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/weather/months": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Weather Months */
+        get: operations["weather_months_api_weather_months_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search
+         * @description The plan finder: every change the engine can run, then their combinations, ranked; streamed as SSE.
+         */
+        post: operations["search_api_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ask": {
         parameters: {
             query?: never;
@@ -416,6 +470,17 @@ export interface components {
              * @default false
              */
             pending_approval: boolean;
+        };
+        /** Backtest */
+        Backtest: {
+            /** Train Until */
+            train_until: number;
+            /** Test Years */
+            test_years: number[];
+            /** Model Error Pct */
+            model_error_pct: number;
+            /** Baseline Error Pct */
+            baseline_error_pct: number;
         };
         /** BetterOption */
         BetterOption: {
@@ -717,6 +782,35 @@ export interface components {
             /** Confidence Why */
             confidence_why: string[];
         };
+        /** MonthWeather */
+        MonthWeather: {
+            /** Month */
+            month: number;
+            /** Precip Mm */
+            precip_mm: number;
+            /** Precip Anom Pct */
+            precip_anom_pct: number;
+            /** Tmean C */
+            tmean_c: number;
+            /** Tmean Anom C */
+            tmean_anom_c: number;
+            /** Hot Days */
+            hot_days: number;
+        };
+        /** MonthsFrame */
+        MonthsFrame: {
+            /** Climate */
+            climate: ("ssp126" | "ssp245" | "ssp585") | "historical";
+            /** Year */
+            year: number;
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /** Months */
+            months: components["schemas"]["MonthWeather"][];
+        };
         /** PathwayItem */
         PathwayItem: {
             /**
@@ -751,6 +845,54 @@ export interface components {
              * @enum {string}
              */
             simulated: "simulated" | "simulated_with_caveat" | "assumption";
+        };
+        /** Provenance */
+        Provenance: {
+            /** Farms */
+            farms: number;
+            /** Parcels */
+            parcels: number;
+            /** Crop History Years */
+            crop_history_years: [
+                number,
+                number
+            ];
+            /** Fi Yield Records */
+            fi_yield_records: number;
+            /** Fi Yield Years */
+            fi_yield_years: [
+                number,
+                number
+            ];
+            /** Se Delivery Records */
+            se_delivery_records: number;
+            /** Se Delivery Years */
+            se_delivery_years: [
+                number,
+                number
+            ];
+            /** Weather Cells */
+            weather_cells: number;
+            /** Weather Years */
+            weather_years: [
+                number,
+                number
+            ];
+            /** Weather Days */
+            weather_days: number;
+            /** Climate Paths */
+            climate_paths: string[];
+            /** Climate Years */
+            climate_years: [
+                number,
+                number
+            ];
+            backtest?: components["schemas"]["Backtest"] | null;
+            /**
+             * Synthetic
+             * @default true
+             */
+            synthetic: boolean;
         };
         /** RegionSplit */
         RegionSplit: {
@@ -821,6 +963,21 @@ export interface components {
             levers: (components["schemas"]["Irrigate"] | components["schemas"]["EarlierSowing"] | components["schemas"]["RegionSplit"] | components["schemas"]["HeatTolerant"] | components["schemas"]["CropArea"])[];
             /** Label */
             label?: string | null;
+        };
+        /** SearchIn */
+        SearchIn: {
+            /**
+             * Climate
+             * @default ssp245
+             * @enum {string}
+             */
+            climate: "ssp126" | "ssp245" | "ssp585";
+            /**
+             * Horizon End
+             * @default 2040
+             * @enum {integer}
+             */
+            horizon_end: 2031 | 2040 | 2050 | 2060;
         };
         /** SimResult */
         SimResult: {
@@ -1191,6 +1348,92 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PathwayItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    provenance_api_provenance_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Provenance"];
+                };
+            };
+        };
+    };
+    weather_months_api_weather_months_get: {
+        parameters: {
+            query: {
+                region: "FI_SW" | "SE_SKANE";
+                year?: number;
+                climate?: "ssp126" | "ssp245" | "ssp585";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthsFrame"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_api_search_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SearchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

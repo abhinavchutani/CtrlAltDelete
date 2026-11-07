@@ -26,6 +26,7 @@ V2 = REPO_ROOT / "out" / "v2"
 _state: dict = {"ctx": None, "warming": False, "error": None, "seconds": None}
 _custom_farms: dict[str, pd.DataFrame] = {}
 _lock = threading.Lock()
+ENGINE_LOCK = threading.Lock()  # one engine run at a time (simulate, plan finder): the context's DuckDB is shared
 
 
 # ── context (lifespan) ─────────────────────────────────────────────
@@ -95,7 +96,8 @@ def simulate(spec: S.ScenarioSpec) -> S.SimResult:
     clean, _ = p_spec.validate(spec.model_dump(mode="json"))
     c, h = clean["climate"], clean["horizon_end"]
     # run_sim (not p_engine.simulate) so the farm cube comes back too; plan + grid give meters, alerts, better
-    sim, cube = p_engine.run_sim(ctx, clean, plan=p_engine.plan_for(ctx, c, h), grid=p_engine.grid_for(ctx, c, h))
+    with ENGINE_LOCK:
+        sim, cube = p_engine.run_sim(ctx, clean, plan=p_engine.plan_for(ctx, c, h), grid=p_engine.grid_for(ctx, c, h))
     _custom_farms[sim["scenario_id"]] = cube["farms"]
     return S.SimResult(**sim)
 
@@ -141,6 +143,15 @@ def _ready(what: str) -> None:
     if _state["ctx"] is None:
         why = _state["error"] or ("the model is warming up, try again in a few seconds" if warming() else "not loaded")
         raise HTTPException(503, f"{what} unavailable: {why}")
+
+
+def ready(what: str) -> None:
+    """503 unless the engine context is loaded (public form of _ready, for api/insight.py)."""
+    _ready(what)
+
+
+def context():
+    return _state["ctx"]
 
 
 def hedge(climate: str) -> S.Hedge:

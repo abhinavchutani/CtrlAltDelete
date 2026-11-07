@@ -1,24 +1,26 @@
 // UI state only (what is selected / shown). Server data lives in react-query (api/hooks.ts).
+// The map camera is NOT here: MapLibre owns it, so panning never re-renders React. To move the map, call
+// flyTo(); MapView watches `camera.seq` and animates there.
 import { create } from "zustand";
-import type { Alert, ScenarioSpec } from "../api/types";
+import type { Alert, Region, ScenarioSpec } from "../api/types";
 
 export type MapLayer = "parcels" | "farms" | "weather";
-export type ColorBy = "health" | "risk" | "drought" | "heat";
-export type Drawer = "none" | "insights" | "decisions";
-export type ChatMode = "collapsed" | "docked" | "max";
-export type ChatMsg = { id: number; text: string; history: string[] };
+export type ColorBy = "health" | "drought" | "heat";
+export type Tab = "overview" | "map";
+export type ChatMsg = { id: number; text: string; history: string[]; kind?: "search" };
 export type ParcelPick = { parcel_id: string; farm_id: string; area_ha: number; crop?: string | null; ring: [number, number][] };
 export type Door = "ask" | "simulate";
-export type View = { longitude: number; latitude: number; zoom: number; pitch: number; bearing: number };
+export type View = { longitude: number; latitude: number; zoom: number };
 
 export const START_YEAR = 2026;
-export const VIEW_ALL: View = { longitude: 17.8, latitude: 58.2, zoom: 4.6, pitch: 35, bearing: 0 };
+export const HOME_VIEW: View = { longitude: 13.33, latitude: 55.85, zoom: 11.6 }; // the densest Skåne cluster
 export const REGION_VIEW: Record<Alert["region"], View> = {
-  FI_SW: { longitude: 22.4, latitude: 60.6, zoom: 7.2, pitch: 0, bearing: 0 },
-  SE_SKANE: { longitude: 13.5, latitude: 55.9, zoom: 7.6, pitch: 0, bearing: 0 },
+  FI_SW: { longitude: 22.2, latitude: 61.11, zoom: 11.6 },
+  SE_SKANE: HOME_VIEW,
 };
 
 type State = {
+  tab: Tab;
   scenarioId: string; // a preset id
   customSpec: ScenarioSpec | null; // set → the active scenario is POST /api/simulate(customSpec)
   pendingSpec: ScenarioSpec | null; // heard from voice/text, waiting for the user's confirm
@@ -27,7 +29,7 @@ type State = {
   year: number;
   playing: boolean;
   layer: MapLayer;
-  view: View;
+  camera: { target: View; seq: number }; // a fly-to request, not the live camera
   selectedAlert: Alert | null;
   door: Door;
   question: string | null;
@@ -36,33 +38,39 @@ type State = {
   colorBy: ColorBy;
   selectedParcel: ParcelPick | null;
   watched: string[];
-  drawer: Drawer;
-  chatMode: ChatMode;
   chat: ChatMsg[];
+  tourOpen: boolean;
+  assistantOpen: boolean; // the assistant floats over whatever tab is open
+  viewRegion: Region; // the region the map is looking at (updated when a move ends)
+  weatherFx: boolean; // rain / heat / drought effects on the map
 };
 
 type Actions = {
+  setTab: (t: Tab) => void;
   pickPreset: (id: string) => void;
   runSpec: (spec: ScenarioSpec) => void;
+  resetSpec: () => void;
   setPending: (spec: ScenarioSpec | null, heard?: string[], problems?: string[]) => void;
   setYear: (y: number) => void;
   setPlaying: (p: boolean) => void;
   setLayer: (l: MapLayer) => void;
-  setView: (v: View) => void;
-  /** keepView: open the alert without moving the map (a pin click: the map is already there). */
-  selectAlert: (a: Alert | null, opts?: { keepView?: boolean }) => void;
+  flyTo: (v: View) => void;
+  selectAlert: (a: Alert | null) => void;
   ask: (q: string) => void;
   setDoor: (d: Door) => void;
   openDecision: (rowId: string | null) => void;
   setColorBy: (c: ColorBy) => void;
   selectParcel: (p: ParcelPick | null) => void;
   toggleWatch: (parcelId: string) => void;
-  setDrawer: (d: Drawer) => void;
-  setChatMode: (m: ChatMode) => void;
-  sendChat: (text: string) => void;
+  sendChat: (text: string, kind?: "search") => void;
+  setTourOpen: (open: boolean) => void;
+  setAssistantOpen: (open: boolean) => void;
+  setViewRegion: (r: Region) => void;
+  setWeatherFx: (on: boolean) => void;
 };
 
 export const useStore = create<State & Actions>((set) => ({
+  tab: "overview",
   scenarioId: "current_plan_ssp245",
   customSpec: null,
   pendingSpec: null,
@@ -71,22 +79,31 @@ export const useStore = create<State & Actions>((set) => ({
   year: START_YEAR,
   playing: false,
   layer: "parcels",
-  view: { longitude: 13.33, latitude: 55.85, zoom: 12.3, pitch: 0, bearing: 0 }, // the densest Skåne cluster
+  camera: { target: HOME_VIEW, seq: 0 },
   selectedAlert: null,
   door: "simulate",
   question: null,
   askHistory: [],
   boardDialogRow: null,
-  pickPreset: (id) => set({ scenarioId: id, customSpec: null, selectedAlert: null, year: START_YEAR, playing: false }),
-  runSpec: (spec) => set({ customSpec: spec, pendingSpec: null, selectedAlert: null, door: "simulate" }),
+  colorBy: "health",
+  selectedParcel: null,
+  watched: [],
+  chat: [],
+  tourOpen: false,
+  assistantOpen: false,
+  viewRegion: "SE_SKANE",
+  weatherFx: true,
+  setTab: (tab) => set({ tab }),
+  pickPreset: (id) => set({ scenarioId: id, customSpec: null, selectedAlert: null, playing: false }),
+  runSpec: (spec) => set({ customSpec: spec, pendingSpec: null, selectedAlert: null, door: "simulate", tab: "map", assistantOpen: false }),
+  resetSpec: () => set({ customSpec: null, selectedAlert: null }),
   setPending: (spec, heard = [], problems = []) => set({ pendingSpec: spec, heard, problems, door: "simulate" }),
   setYear: (year) => set({ year }),
   setPlaying: (playing) => set({ playing }),
   setLayer: (layer) => set({ layer }),
-  setView: (view) => set({ view }),
-  selectAlert: (a, opts) => set((s) => (a
-    ? { selectedAlert: a, year: a.year, view: opts?.keepView ? s.view : REGION_VIEW[a.region], playing: false }
-    : { selectedAlert: null })),
+  flyTo: (target) => set((s) => ({ camera: { target, seq: s.camera.seq + 1 } })),
+  // MapView centres on the alert's pin once that year's farms are loaded
+  selectAlert: (a) => set(a ? { selectedAlert: a, year: a.year, playing: false, selectedParcel: null } : { selectedAlert: null }),
   ask: (question) =>
     set((s) => ({
       question, door: "ask",
@@ -94,20 +111,16 @@ export const useStore = create<State & Actions>((set) => ({
     })),
   setDoor: (door) => set({ door }),
   openDecision: (boardDialogRow) => set({ boardDialogRow }),
-  colorBy: "health",
-  selectedParcel: null,
-  watched: [],
-  drawer: "none",
-  chatMode: "docked",
-  chat: [],
   setColorBy: (colorBy) => set({ colorBy }),
-  selectParcel: (selectedParcel) => set({ selectedParcel }),
+  selectParcel: (selectedParcel) => set(selectedParcel ? { selectedParcel, selectedAlert: null } : { selectedParcel }),
   toggleWatch: (id) => set((s) => ({ watched: s.watched.includes(id) ? s.watched.filter((w) => w !== id) : [...s.watched, id] })),
-  setDrawer: (drawer) => set((s) => ({ drawer: s.drawer === drawer ? "none" : drawer })),
-  setChatMode: (chatMode) => set({ chatMode }),
   // each chat question remembers the questions before it, so follow-ups ("make that a report") resolve
-  sendChat: (text) => set((s) => ({
-    chat: [...s.chat, { id: Date.now(), text, history: s.chat.map((m) => m.text).slice(-5) }],
-    chatMode: s.chatMode === "collapsed" ? "docked" : s.chatMode,
+  sendChat: (text, kind) => set((s) => ({
+    chat: [...s.chat, { id: Date.now(), text, history: s.chat.map((m) => m.text).slice(-5), kind }],
+    assistantOpen: true,
   })),
+  setTourOpen: (tourOpen) => set({ tourOpen }),
+  setAssistantOpen: (assistantOpen) => set({ assistantOpen }),
+  setViewRegion: (viewRegion) => set({ viewRegion }),
+  setWeatherFx: (weatherFx) => set({ weatherFx }),
 }));

@@ -38,3 +38,25 @@ export type GeoParcel = {
   properties: { parcel_id: string; farm_id: string; area_ha: number; crop?: string | null };
 };
 export type FeatureCollection<F> = { type: "FeatureCollection"; features: F[] };
+
+// UI v3
+export type Provenance = S["Provenance"];
+export type MonthsFrame = S["MonthsFrame"];
+export type MonthWeather = S["MonthWeather"];
+export type CostLevel = AdaptationOption["cost_level"];
+/** One simulated plan in the /api/search stream (api/schemas.py PlanCandidate; streamed, so not in the OpenAPI). */
+export type PlanFuture = { vs_current_plan: "better" | "same" | "worse"; eur_at_risk_per_year: EurBand; saves: EurBand | null };
+export type PlanCandidate = {
+  id: string; label: string; levers: Lever[]; phase: "single" | "combo" | "stress";
+  eur_at_risk_per_year: EurBand; saves: EurBand | null; vs_current_plan: "better" | "same" | "worse";
+  costly_years: number; worst_year: EurBand; plan_costly_years: number;
+  co2e_direction: "lower" | "same" | "higher"; assumption: boolean; futures?: Record<string, PlanFuture>;
+};
+export type PlanBaseline = { eur_at_risk_per_year: EurBand; costly_years: number; worst_year: EurBand };
+export type SearchEvent =
+  | { type: "start"; climate: Climate; horizon_end: number; total: number; years: number; plan: PlanBaseline }
+  | { type: "candidate"; done: number; total: number; candidate: PlanCandidate }
+  | { type: "phase"; phase: "combo"; total: number; helped: string[] }
+  | { type: "stress"; id: string; futures: Record<string, PlanFuture> }
+  | { type: "done"; ranking: string[]; best: string | null; tested: number; seconds: number }
+  | { type: "error"; detail: string };

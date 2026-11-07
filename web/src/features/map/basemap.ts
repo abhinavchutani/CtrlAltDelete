@@ -17,7 +17,7 @@ export const SATELLITE: StyleSpecification = {
     { id: "bg", type: "background", paint: { "background-color": "#0b120d" } },
     {
       id: "imagery", type: "raster", source: "imagery",
-      paint: { "raster-brightness-max": 0.62, "raster-saturation": -0.25, "raster-contrast": 0.08 },
+      paint: { "raster-brightness-max": 0.55, "raster-saturation": -0.4, "raster-contrast": 0.05, "raster-fade-duration": 200 },
     },
   ],
 };

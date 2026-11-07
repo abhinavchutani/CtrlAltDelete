@@ -12,9 +12,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
 from api import geo
+from api import insight
 from api import layers as L
 from api import prediction as P
 from api import schemas as S
@@ -25,6 +26,7 @@ from src.db import env
 async def lifespan(_: FastAPI):
     if not L.mock_mode() and env("API_WARM", "1") != "0":
         P.warm_in_background()  # fits the v1 models once; /api/health shows warming meanwhile
+        insight.prewarm_in_background()  # then runs the default plan search once (cached, replayed on request)
     yield
 
 
@@ -102,6 +104,35 @@ def hedge(climate: S.Climate = "ssp245") -> S.Hedge:
 @app.get("/api/pathways/{scenario_id}", response_model=list[S.PathwayItem])
 def pathways(scenario_id: str) -> list[S.PathwayItem]:
     return L.get("pathways")(scenario_id)
+
+
+# ── UI v3: provenance, monthly weather, plan finder ────────────────
+def _need_data() -> None:
+    if L.mock_mode() and not serve_db.exists():
+        raise HTTPException(503, "needs out/serve.duckdb (run `make snapshot`)")
+
+
+@app.get("/api/provenance", response_model=S.Provenance)
+def provenance() -> S.Provenance:
+    _need_data()
+    return S.Provenance(**insight.provenance())
+
+
+@app.get("/api/weather/months", response_model=S.MonthsFrame)
+def weather_months(region: S.Region, year: int = Query(2026, ge=1991, le=2060),
+                   climate: S.Climate = "ssp245") -> S.MonthsFrame:
+    _need_data()
+    return S.MonthsFrame(**insight.months(climate, year, region))
+
+
+@app.post("/api/search")
+def search(body: S.SearchIn) -> StreamingResponse:
+    """The plan finder: every change the engine can run, then their combinations, ranked; streamed as SSE."""
+    if L.mock_mode():
+        raise HTTPException(503, "the plan finder runs the live model (API_MOCK=0)")
+    P.ready("plan finder")
+    return StreamingResponse(insight.search_events(body.climate, body.horizon_end), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 # ── retrieval (fixtures while on hold) ─────────────────────────────

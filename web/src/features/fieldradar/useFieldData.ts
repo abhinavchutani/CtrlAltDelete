@@ -1,20 +1,23 @@
 // Everything Field Radar draws, derived from the API (no numbers are made up here):
 //   health  = the farm's ok / watch / bad class for the chosen year (the API's own thresholds)  (/api/cube/{id}/farms)
-//   risk    = € at risk band for the parcel's 2025 crop in its region (contract crops only)    (SimResult.regions)
-//   drought = flowering-stage drought index of the parcel's weather cell                       (/api/weather)
+//   drought = flowering-stage drought index of the farm's nearest weather cell                 (/api/weather)
 //   heat    = hot days (Tmax ≥ 27 °C) at pea flowering in that cell                             (/api/weather)
+//   € band  = € at risk for a parcel's 2025 crop in its region (contract crops only)          (SimResult.regions)
 //   pins    = the year's alerts, each on the worst-hit parcel of its crop in its region
+// Colours are worked out per farm; a farm's soft glow and its fields always share one colour.
 import { useMemo } from "react";
-import { useActiveScenario, useFarms, useGeoFarms, useGeoParcels, useWeather } from "../../api/hooks";
+import { climateFor, useActiveScenario, useFarms, useGeoFarms, useGeoParcels, usePrefetchYears, useWeather } from "../../api/hooks";
 import type { Alert, EurBand, FarmYear, GeoParcel, Region, WeatherCell } from "../../api/types";
 import { START_YEAR, useStore, type ColorBy } from "../../state/store";
 import { mix, type RGB } from "../../theme/palette";
 
-export const RISK: Record<"low" | "medium" | "high", RGB> = { low: [61, 220, 99], medium: [245, 184, 46], high: [255, 107, 74] };
+// muted, earthy: reads on dark satellite imagery without shouting
+export const RISK: Record<"low" | "medium" | "high", RGB> = { low: [138, 190, 96], medium: [226, 168, 66], high: [222, 104, 70] };
 export const BANDS: EurBand[] = ["< €50k", "€50–100k", "€100–250k", "€250k–1M", "> €1M"];
 export type Level = "low" | "medium" | "high";
 export type FarmRisk = FarmYear["risk"];
 export type AlertPin = { alerts: Alert[]; parcel: GeoParcel; position: [number, number] };
+export type FarmZone = { farm_id: string; position: [number, number]; size_m: number };
 
 /** Three-stop scale (low → medium → high) for t in 0..1. */
 export const scale = (t: number): RGB => (t < 0.5 ? mix(RISK.low, RISK.medium, t * 2) : mix(RISK.medium, RISK.high, (t - 0.5) * 2));
@@ -33,14 +36,33 @@ export const centroid = (ring: [number, number][]): [number, number] => {
   return [x / n, y / n];
 };
 
+/** Each farm's glow: the middle of its parcels, sized to cover them (metres). Geometry only, computed once. */
+function farmZones(parcels: GeoParcel[]): FarmZone[] {
+  const acc = new Map<string, { xs: number[]; ys: number[] }>();
+  for (const p of parcels) {
+    const [x, y] = centroid(p.geometry.coordinates[0]);
+    const a = acc.get(p.properties.farm_id) ?? { xs: [], ys: [] };
+    a.xs.push(x); a.ys.push(y);
+    acc.set(p.properties.farm_id, a);
+  }
+  return [...acc.entries()].map(([farm_id, { xs, ys }]) => {
+    const cx = xs.reduce((s, v) => s + v, 0) / xs.length, cy = ys.reduce((s, v) => s + v, 0) / ys.length;
+    const kx = 111_320 * Math.cos((cy * Math.PI) / 180), ky = 110_540;
+    const spread = Math.max(...xs.map((x, i) => Math.hypot((x - cx) * kx, (ys[i] - cy) * ky)));
+    return { farm_id, position: [cx, cy] as [number, number], size_m: Math.min(3000, Math.max(1200, 2 * spread + 1000)) };
+  });
+}
+
 export function useFieldData() {
-  const { year, colorBy } = useStore();
+  const year = useStore((s) => s.year);
+  const colorBy = useStore((s) => s.colorBy);
   const sim = useActiveScenario();
   const farms = useFarms(sim.data?.scenario_id, year);
   const geoParcels = useGeoParcels();
   const geoFarms = useGeoFarms();
-  const climate = year <= START_YEAR ? "historical" : (sim.data?.spec.climate ?? "ssp245");
-  const weather = useWeather(climate, year);
+  const climate = sim.data?.spec.climate;
+  const weather = useWeather(climateFor(year, climate, START_YEAR), year);
+  usePrefetchYears(sim.data?.scenario_id, sim.data?.years ?? [], climate, START_YEAR);
 
   const farmRegion = useMemo(
     () => new Map((geoFarms.data?.features ?? []).map((f) => [f.properties.farm_id, f.properties.region as Region])),
@@ -51,20 +73,22 @@ export function useFieldData() {
   const cells = weather.data?.cells ?? [];
   const cellById = useMemo(() => new Map(cells.map((c) => [c.cell_id, c])), [cells]);
 
-  // parcel → nearest weather cell, computed once from the cell grid (cell positions don't change between frames)
   const parcels = geoParcels.data?.features ?? [];
-  const cellOfParcel = useMemo(() => {
+  const zones = useMemo(() => farmZones(parcels), [parcels]);
+  // farm → nearest weather cell (cell positions don't change between years, so only the grid's size matters)
+  const cellOfFarm = useMemo(() => {
     const out = new Map<string, string>();
     if (!cells.length) return out;
-    for (const p of parcels) {
-      const [x, y] = centroid(p.geometry.coordinates[0]);
+    for (const z of zones) {
+      const [x, y] = z.position;
       let best = cells[0], bd = Infinity;
       for (const c of cells) { const d = (c.lon - x) ** 2 + (c.lat - y) ** 2; if (d < bd) { bd = d; best = c; } }
-      out.set(p.properties.parcel_id, best.cell_id);
+      out.set(z.farm_id, best.cell_id);
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [parcels, cells.length]);
+  }, [zones, cells.length]);
+  const cellOf = (farmId: string): WeatherCell | undefined => cellById.get(cellOfFarm.get(farmId) ?? "");
 
   // € band per region × crop for the year. Only contract crops have one; barley, wheat, ley … don't.
   const cropBand = useMemo(() => {
@@ -76,21 +100,15 @@ export function useFieldData() {
   const bandOf = (farmId: string, crop: string | null | undefined): EurBand | undefined =>
     cropBand.get(`${farmRegion.get(farmId)}:${crop === undefined ? "pea" : crop}`);
 
-  const cellOf = (p: GeoParcel): WeatherCell | undefined => cellById.get(cellOfParcel.get(p.properties.parcel_id) ?? "");
-
-  const colorOf = useMemo(() => {
-    const by: Record<ColorBy, (p: GeoParcel) => RGB | null> = {
-      health: (p) => { const r = farmRisk.get(p.properties.farm_id); return r ? RISK[FARM_LEVEL[r]] : null; },
-      risk: (p) => {
-        const b = bandOf(p.properties.farm_id, p.properties.crop);
-        return b ? scale(BANDS.indexOf(b) / (BANDS.length - 1)) : null;
-      },
-      drought: (p) => { const c = cellOf(p); return c ? scale((c.drought_index - 0.2) / 0.6) : null; },
-      heat: (p) => { const c = cellOf(p); return c ? scale(c.hot_days_flowering / 8) : null; },
+  const farmColor = useMemo(() => {
+    const by: Record<ColorBy, (farmId: string) => RGB | null> = {
+      health: (f) => { const r = farmRisk.get(f); return r ? RISK[FARM_LEVEL[r]] : null; },
+      drought: (f) => { const c = cellOf(f); return c ? scale((c.drought_index - 0.2) / 0.6) : null; },
+      heat: (f) => { const c = cellOf(f); return c ? scale(c.hot_days_flowering / 8) : null; },
     };
     return by[colorBy];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [colorBy, farmRisk, cropBand, farmRegion, cellById, cellOfParcel]);
+  }, [colorBy, farmRisk, cellById, cellOfFarm]);
 
   // One pin per alerted parcel this year: the parcel of the alert's crop, in its region, on the farm with the
   // lowest yield change (ties → the larger parcel). Alerts landing on the same parcel share a pin, worst first.
@@ -114,9 +132,9 @@ export function useFieldData() {
       pin.alerts.push(a);
       byParcel.set(id, pin);
     }
-    const pinsOut = [...byParcel.values()];
-    for (const pin of pinsOut) pin.alerts.sort((x, y) => (SEVERITY_RANK[x.severity] ?? 9) - (SEVERITY_RANK[y.severity] ?? 9));
-    return pinsOut;
+    const out = [...byParcel.values()];
+    for (const pin of out) pin.alerts.sort((x, y) => (SEVERITY_RANK[x.severity] ?? 9) - (SEVERITY_RANK[y.severity] ?? 9));
+    return out;
   }, [sim.data, year, parcels, farmRegion, farmChange]);
 
   const stats = useMemo(() => {
@@ -140,7 +158,7 @@ export function useFieldData() {
 
   const active = [sim, farms, geoParcels, geoFarms, weather];
   return {
-    parcels, colorOf, trigger: [colorBy, farms.data, cropBand, weather.data], stats, sim, pins,
+    parcels, zones, farmColor, trigger: [colorBy, farms.data, weather.data], stats, sim, pins,
     farmChange, farmRisk, farmRegion, bandOf, cellOf,
     pending: active.some((q) => q.isLoading), error: active.find((q) => q.error)?.error ?? null,
   };
