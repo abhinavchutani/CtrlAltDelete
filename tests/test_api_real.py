@@ -27,6 +27,20 @@ def test_simplify_keeps_three_props_and_rounds():
     assert f["geometry"]["coordinates"][0][0] == [22.12346, 60.98765]
 
 
+def test_with_crops_adds_the_2025_crop_or_none():
+    g = {"features": [{"properties": {"parcel_id": "P1"}}, {"properties": {"parcel_id": "P2"}}]}
+    out = geo.with_crops(g, {"P1": "pea"})
+    assert [f["properties"]["crop"] for f in out["features"]] == ["pea", None]
+
+
+def test_real_parcels_carry_a_crop():
+    from src import serve_db
+    if not serve_db.exists() or not (geo.CACHE.exists() or geo.pack_parcels_path().exists()):
+        pytest.skip("needs out/serve.duckdb and the parcels")
+    feats = geo.parcels()["features"]
+    assert sum(f["properties"]["crop"] is not None for f in feats) == len(feats)
+
+
 def test_simulate_before_warm_is_503(monkeypatch):
     monkeypatch.setitem(P._state, "ctx", None)
     with pytest.raises(HTTPException) as e:

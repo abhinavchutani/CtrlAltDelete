@@ -1,21 +1,24 @@
 import type { Region } from "../../api/types";
 import { useStore } from "../../state/store";
 import { Bell, Close } from "../../components/Icons";
-import { bandLevel, healthLevel, RISK, useFieldData, type Level } from "./useFieldData";
+import { bandLevel, cropName, FARM_LEVEL, REGION_NAME, RISK, useFieldData, type Level } from "./useFieldData";
 
 const LEVEL_TEXT: Record<Level, string> = { low: "Low risk", medium: "Medium risk", high: "High risk" };
+const RANK: Record<Level, number> = { low: 0, medium: 1, high: 2 };
+const worse = (a: Level, b: Level): Level => (RANK[a] >= RANK[b] ? a : b);
 const rgb = (c: number[], a = 1) => `rgba(${c.join(",")},${a})`;
 
-/** The clicked field: its outline, € band, yield change and risk level, all from the API for the chosen year. */
+/** The clicked field: its outline, 2025 crop, € band for that crop, yield change and risk level, all from the API
+ *  for the chosen year. The level is the worse of the farm's yield class and the crop's € band. */
 export function ParcelCard() {
   const { selectedParcel: p, selectParcel, watched, toggleWatch, year } = useStore();
   const d = useFieldData();
   if (!p) return null;
   const change = d.farmChange.get(p.farm_id);
   const region = d.farmRegion.get(p.farm_id) as Region | undefined;
-  const band = region ? d.regionBand.get(region) : undefined;
-  const level: Level = healthLevel(change) === "high" || bandLevel(band) === "high" ? "high"
-    : healthLevel(change) === "medium" || bandLevel(band) === "medium" ? "medium" : "low";
+  const band = d.bandOf(p.farm_id, p.crop);
+  const risk = d.farmRisk.get(p.farm_id);
+  const level: Level = worse(risk ? FARM_LEVEL[risk] : "low", bandLevel(band));
   const color = RISK[level];
   // mini outline, normalised into a 100×100 box
   const xs = p.ring.map((q) => q[0]), ys = p.ring.map((q) => q[1]);
@@ -32,7 +35,8 @@ export function ParcelCard() {
         </svg>
         <div className="parcel-id">
           <div className="parcel-title">Parcel {p.parcel_id.split("-P")[1] ?? p.parcel_id}</div>
-          <div className="muted small">Farm {p.farm_id} · {p.area_ha.toFixed(1)} ha · {region ?? "…"}</div>
+          <div className="parcel-crop">{cropName(p.crop)}</div>
+          <div className="muted small">Farm {p.farm_id} · {p.area_ha.toFixed(1)} ha · {region ? REGION_NAME[region] : "…"}</div>
           <button className={`chip watch ${isWatched ? "on" : ""}`} onClick={() => toggleWatch(p.parcel_id)}>
             <Bell size={16} /> {isWatched ? "Watching" : "Watch"}
           </button>
@@ -41,7 +45,9 @@ export function ParcelCard() {
       <div className="parcel-bottom">
         <div>
           <div className="big">{band ?? "—"}</div>
-          <div className="muted small">€ at risk, {region === "SE_SKANE" ? "Skåne" : "SW Finland"} pea, {year}</div>
+          <div className="muted small">
+            {band ? `€ at risk, ${region ? REGION_NAME[region] : ""} ${cropName(p.crop)}, ${year}` : `No € band: ${cropName(p.crop)} isn't a contract crop here`}
+          </div>
         </div>
         <div className="divider" />
         <div>

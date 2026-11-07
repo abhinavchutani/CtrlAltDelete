@@ -7,15 +7,15 @@ export type ColorBy = "health" | "risk" | "drought" | "heat";
 export type Drawer = "none" | "insights" | "decisions";
 export type ChatMode = "collapsed" | "docked" | "max";
 export type ChatMsg = { id: number; text: string; history: string[] };
-export type ParcelPick = { parcel_id: string; farm_id: string; area_ha: number; ring: [number, number][] };
+export type ParcelPick = { parcel_id: string; farm_id: string; area_ha: number; crop?: string | null; ring: [number, number][] };
 export type Door = "ask" | "simulate";
 export type View = { longitude: number; latitude: number; zoom: number; pitch: number; bearing: number };
 
 export const START_YEAR = 2026;
 export const VIEW_ALL: View = { longitude: 17.8, latitude: 58.2, zoom: 4.6, pitch: 35, bearing: 0 };
 export const REGION_VIEW: Record<Alert["region"], View> = {
-  FI_SW: { longitude: 22.4, latitude: 60.6, zoom: 7.2, pitch: 40, bearing: 0 },
-  SE_SKANE: { longitude: 13.5, latitude: 55.9, zoom: 7.6, pitch: 40, bearing: 0 },
+  FI_SW: { longitude: 22.4, latitude: 60.6, zoom: 7.2, pitch: 0, bearing: 0 },
+  SE_SKANE: { longitude: 13.5, latitude: 55.9, zoom: 7.6, pitch: 0, bearing: 0 },
 };
 
 type State = {
@@ -49,7 +49,8 @@ type Actions = {
   setPlaying: (p: boolean) => void;
   setLayer: (l: MapLayer) => void;
   setView: (v: View) => void;
-  selectAlert: (a: Alert | null) => void;
+  /** keepView: open the alert without moving the map (a pin click: the map is already there). */
+  selectAlert: (a: Alert | null, opts?: { keepView?: boolean }) => void;
   ask: (q: string) => void;
   setDoor: (d: Door) => void;
   openDecision: (rowId: string | null) => void;
@@ -70,7 +71,7 @@ export const useStore = create<State & Actions>((set) => ({
   year: START_YEAR,
   playing: false,
   layer: "parcels",
-  view: { longitude: 13.45, latitude: 55.95, zoom: 11.5, pitch: 0, bearing: 0 },
+  view: { longitude: 13.33, latitude: 55.85, zoom: 12.3, pitch: 0, bearing: 0 }, // the densest Skåne cluster
   selectedAlert: null,
   door: "simulate",
   question: null,
@@ -83,7 +84,9 @@ export const useStore = create<State & Actions>((set) => ({
   setPlaying: (playing) => set({ playing }),
   setLayer: (layer) => set({ layer }),
   setView: (view) => set({ view }),
-  selectAlert: (a) => set(a ? { selectedAlert: a, year: a.year, view: REGION_VIEW[a.region], playing: false } : { selectedAlert: null }),
+  selectAlert: (a, opts) => set((s) => (a
+    ? { selectedAlert: a, year: a.year, view: opts?.keepView ? s.view : REGION_VIEW[a.region], playing: false }
+    : { selectedAlert: null })),
   ask: (question) =>
     set((s) => ({
       question, door: "ask",

@@ -86,7 +86,8 @@ export function ChatDock() {
   const [text, setText] = useState("");
   const speech = useSpeech((t) => { setText(t); if (t.trim()) sendChat(t.trim()); });
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [chat.length]);
+  // Braces matter: newer Chromium returns a Promise from scrollIntoView, and React treats a returned value as cleanup.
+  useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth" }); }, [chat.length]);
   if (chatMode === "collapsed") {
     return (
       <button className="glass chat-pill" onClick={() => setChatMode("docked")}>

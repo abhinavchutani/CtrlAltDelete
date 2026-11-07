@@ -35,6 +35,6 @@ export type GeoPoint = { type: "Feature"; geometry: { type: "Point"; coordinates
 export type GeoParcel = {
   type: "Feature";
   geometry: { type: "Polygon"; coordinates: [number, number][][] };
-  properties: { parcel_id: string; farm_id: string; area_ha: number };
+  properties: { parcel_id: string; farm_id: string; area_ha: number; crop?: string | null };
 };
 export type FeatureCollection<F> = { type: "FeatureCollection"; features: F[] };
