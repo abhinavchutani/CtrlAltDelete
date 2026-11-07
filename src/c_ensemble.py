@@ -24,6 +24,8 @@ Assumptions: no CO2 fertilisation, no technology trend, no adaptation. Determini
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
+from typing import Callable
 
 import duckdb
 import numpy as np
@@ -71,14 +73,18 @@ def parcel_mix(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
 
 
 def scenario_features(con, mix: pd.DataFrame, wx: pd.DataFrame, stage: pd.DataFrame, years: range,
-                      static: pd.DataFrame, lab: pd.DataFrame, organic: pd.DataFrame, med: pd.DataFrame) -> pd.DataFrame:
-    """Parcel × weather-year features for one scenario (weather and stage tables already filtered)."""
+                      static: pd.DataFrame, lab: pd.DataFrame, organic: pd.DataFrame, med: pd.DataFrame,
+                      pre_finish: Callable[[pd.DataFrame], pd.DataFrame] | None = None) -> pd.DataFrame:
+    """Parcel × weather-year features for one scenario (weather and stage tables already filtered).
+    `pre_finish` can change management (e.g. irrigation) before interactions are built."""
     X = mix.assign(_k=1).merge(pd.DataFrame({"year": list(years), "_k": 1}), on="_k").drop(columns="_k")
     X = X.merge(static.drop(columns=["farm_id", "region", "area_ha"]), on="parcel_id", how="left")
     X = X.merge(wx.drop(columns="scenario"), on=["cell_id", "year"], how="left")
     X = X.merge(stage, on=["cell_id", "year", "crop", "soil"], how="left")
     X = X.merge(M.management_latest(lab, MIX_YEAR), on=["farm_id", "crop"], how="left")
     X = X.merge(organic, on="farm_id", how="left")
+    if pre_finish is not None:
+        X = pre_finish(M.finish_features(X, med))   # fill management first, then override
     return M.finish_features(X, med)
 
 
@@ -99,37 +105,65 @@ def risk(base: pd.DataFrame, fut: pd.DataFrame) -> pd.DataFrame:
     return out.reset_index()
 
 
-def run(con: duckdb.DuckDBPyConnection) -> dict:
+@dataclass
+class Context:
+    """Everything the C2/C3 runs share: fitted models, the 2025 mix and the delta-method weather."""
+    con: duckdb.DuckDBPyConnection
+    static: pd.DataFrame
+    lab: pd.DataFrame
+    organic: pd.DataFrame
+    med: pd.DataFrame
+    models: dict
+    mix: pd.DataFrame
+    wx_hist: pd.DataFrame
+    wx_d: pd.DataFrame
+    st_d: pd.DataFrame
+
+
+def stage_delta(con: duckdb.DuckDBPyConnection, crops: dict | None = None) -> pd.DataFrame:
+    """Stage features on `c_weather_delta`, columns prefixed `st_` (optionally with other crop parameters)."""
+    st = c_features.build(con, "c_weather_delta", crops=crops)
+    return st.rename(columns={c: f"st_{c}" for c in st.columns if c not in ("cell_id", "scenario", "year", "crop", "soil")})
+
+
+def context(con: duckdb.DuckDBPyConnection) -> Context:
     static, lab, organic = M.parcel_static(con), M.labels(con), M.organic_farms(con)
     med = lab.groupby(["crop", "region"])[["irrigated", "n_kg_ha", "sprays"]].median().reset_index()
     wx_hist = M.cell_year_weather(con)
     models = M.fit_all(M.build_training(con, lab, static, wx_hist, organic, med))
-    mix = parcel_mix(con)
-
     make_delta_weather(con)
-    wx_d = M.cell_year_weather(con, "c_weather_delta")
-    st_d = c_features.build(con, "c_weather_delta")
-    st_d = st_d.rename(columns={c: f"st_{c}" for c in st_d.columns if c not in ("cell_id", "scenario", "year", "crop", "soil")})
+    return Context(con, static, lab, organic, med, models, parcel_mix(con), wx_hist,
+                   M.cell_year_weather(con, "c_weather_delta"), stage_delta(con))
 
-    def prod(scen: str, wx: pd.DataFrame, st: pd.DataFrame, years: range) -> pd.DataFrame:
-        X = scenario_features(con, mix, wx[wx.scenario == scen], st[st.scenario == scen].drop(columns="scenario"),
-                              years, static, lab, organic, med)
-        return production_by_year(models, X)
 
-    base_years = range(BASE_YEARS[0], BASE_YEARS[1] + 1)
-    base = prod("baseline", wx_d, st_d, base_years)
-    rows, cross = [], {}
+BASE_RANGE = range(BASE_YEARS[0], BASE_YEARS[1] + 1)
+
+
+def production(ctx: Context, scen: str, st: pd.DataFrame | None = None, wx: pd.DataFrame | None = None,
+               years: range = BASE_RANGE, pre_finish=None) -> pd.DataFrame:
+    """Region × crop × year production for one scenario of the delta weather (or given wx/st tables)."""
+    wx = ctx.wx_d if wx is None else wx
+    st = ctx.st_d if st is None else st
+    X = scenario_features(ctx.con, ctx.mix, wx[wx.scenario == scen], st[st.scenario == scen].drop(columns="scenario"),
+                          years, ctx.static, ctx.lab, ctx.organic, ctx.med, pre_finish)
+    return production_by_year(ctx.models, X)
+
+
+def run(con: duckdb.DuckDBPyConnection, ctx: Context | None = None) -> dict:
+    ctx = ctx or context(con)
+    base = production(ctx, "baseline")
+    rows, cross, prods = [], {}, {"baseline": base}
     base_bad = risk(base, base)[["region", "crop", "p_bad_year"]]
     for ssp in SSPS:
-        r = risk(base, prod(f"delta_{ssp}", wx_d, st_d, base_years)).assign(scenario=ssp)
-        rows.append(r)
+        prods[ssp] = production(ctx, f"delta_{ssp}")
+        rows.append(risk(base, prods[ssp]).assign(scenario=ssp))
         # cross-check on the pack's single 2041–60 realisation (historical-weather baseline, same model)
-        st_p = M.stage_features(con, ssp)
-        fut_p = prod(ssp, wx_hist, st_p.assign(scenario=ssp), range(FUTURE[0], FUTURE[1] + 1))
+        fut_p = production(ctx, ssp, st=M.stage_features(con, ssp).assign(scenario=ssp), wx=ctx.wx_hist,
+                           years=range(FUTURE[0], FUTURE[1] + 1))
         cross[ssp] = risk(base, fut_p)[["region", "crop", "mean_yield_change_pct", "p_bad_year"]].round(3).to_dict("records")
     res = pd.concat(rows, ignore_index=True)
-    return {"risk": res, "base_bad": base_bad, "cross_check_pack_realisation": cross, "n_parcels": len(mix),
-            "mix_area_ha": float(mix.area_ha.sum())}
+    return {"risk": res, "base_bad": base_bad, "cross_check_pack_realisation": cross, "n_parcels": len(ctx.mix),
+            "mix_area_ha": float(ctx.mix.area_ha.sum()), "production": prods}
 
 
 def write_csv(con, res: pd.DataFrame) -> pd.DataFrame:

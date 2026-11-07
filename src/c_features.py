@@ -125,12 +125,13 @@ def crop_features(arr: dict[str, np.ndarray], crop: Crop, aet: np.ndarray) -> di
     return out
 
 
-def build(con: duckdb.DuckDBPyConnection, source: str = "raw_weather_daily") -> pd.DataFrame:
+def build(con: duckdb.DuckDBPyConnection, source: str = "raw_weather_daily", crops: dict | None = None) -> pd.DataFrame:
     keys, arr, _ = season_arrays(con, source)
+    crops = CROPS if crops is None else crops
     parts = []
     for soil, cap in BUCKET_MM.items():
         aet = soil_water(arr["precip_mm"], arr["pet_mm"], cap)
-        for name, crop in CROPS.items():
+        for name, crop in crops.items():
             f = pd.DataFrame(crop_features(arr, crop, aet))
             parts.append(pd.concat([keys, f], axis=1).assign(crop=name, soil=soil))
     df = pd.concat(parts, ignore_index=True)
