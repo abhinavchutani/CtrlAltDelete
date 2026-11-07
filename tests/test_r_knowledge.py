@@ -63,6 +63,14 @@ def test_state_survives_a_restart(store):
     assert [(x.knowledge_id, x.status) for x in K.items(path=store)] == [("K-0001", "approved")]   # replayed from disk
 
 
+def test_four_eyes_contributor_cannot_review_own_item(store):
+    k = K.add(_item(contributed_by="Matti"))
+    with pytest.raises(ValueError, match="four-eyes"):
+        K.decide(k.knowledge_id, K.KnowledgeDecision(decision="approve", reviewer="  matti "))
+    assert K.items()[0].status == "pending_review"
+    assert K.decide(k.knowledge_id, K.KnowledgeDecision(decision="approve", reviewer="Anna")).status == "approved"
+
+
 def test_unknown_id_is_none(store):
     assert K.decide("K-9999", K.KnowledgeDecision(decision="approve", reviewer="Anna")) is None
 

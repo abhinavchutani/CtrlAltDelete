@@ -10,7 +10,8 @@ Run:  python -m src.r_knowledge            (lists items and their status)
 
 Rules (doc §7.3–7.4):
 * every item starts `pending_review`; nothing is saved without a person's name in `contributed_by`;
-* only a person approves, rejects or supersedes it, and `reviewer` is required (code never fills it);
+* only a person approves, rejects or supersedes it, `reviewer` is required (code never fills it), and it
+  must be someone other than the contributor (four-eyes rule);
 * pending items may be shown only with a label ("unreviewed"); approved items are cited as evidence with who said
   it and who approved it;
 * knowledge annotates, never overwrites: measured values change only through v1's correction log, which this
@@ -132,13 +133,22 @@ def add(k: KnowledgeIn, con=None, path: Path | None = None) -> KnowledgeItem:
     return item
 
 
+def _same_person(a: str, b: str) -> bool:
+    """Case- and space-insensitive name match (the four-eyes check compares typed names, nothing more)."""
+    norm = lambda x: " ".join(x.lower().split())  # noqa: E731
+    return norm(a) == norm(b)
+
+
 def decide(knowledge_id: str, d: KnowledgeDecision, path: Path | None = None) -> KnowledgeItem | None:
     """Approve, reject or supersede (POST /api/knowledge/{id}/decision). A blank reviewer is refused; unknown id → None."""
     if not d.reviewer.strip():
         raise ValueError("reviewer is required: a person approves; code never fills it")
     p = path or STORE
-    if not any(k.knowledge_id == knowledge_id for k in items(path=p)):
+    item = next((k for k in items(path=p) if k.knowledge_id == knowledge_id), None)
+    if item is None:
         return None
+    if _same_person(d.reviewer, item.contributed_by):
+        raise ValueError("four-eyes rule: the person who stated it cannot review it; ask someone else")
     _append(p, {"event": "decision", "at": _now(), "knowledge_id": knowledge_id, "decision": d.decision,
                 "reviewer": d.reviewer.strip(), "note": d.note})
     return next(k for k in items(path=p) if k.knowledge_id == knowledge_id)
