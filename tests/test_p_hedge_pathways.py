@@ -31,9 +31,23 @@ def test_pathway_threshold_window_and_decide_by():
                          "eur_loss": [300_000.0 if y in bad else 0.0 for y in years],
                          "driver": ["st_hot_sens" if y in bad else None for y in years]})
     items = {i["option_id"]: i for i in W.items(cube, "ssp585", levels={"SE_SKANE": {"drought": 0.7, "hot": 2.2}})}
-    assert set(items) == {"A04", "A06", "A07"}                                # H2 options for pea
+    assert {"A04", "A06"} <= set(items)                                        # H2 options for pea
+    assert {o[0] for o in W.kb_options(["H2"], "pea")[:2]} == {"A04", "A06"}   # KB rank: A04/A06 first
     assert items["A04"]["tipping_year"] == 2038 and items["A04"]["decide_by"] == 2038 - 12
     assert items["A04"]["simulated"] == "assumption" and "more than 3 hot days" in items["A04"]["signpost"]
+
+
+def test_fallback_constants_when_kb_missing(monkeypatch):
+    import builtins
+    real = builtins.__import__
+
+    def no_kb(name, *a, **k):
+        if name == "src" and a and a[2] and "r_options" in a[2]:
+            raise ImportError("no KB")
+        return real(name, *a, **k)
+    monkeypatch.setattr(builtins, "__import__", no_kb)
+    ids = [o[0] for o in W.kb_options(["H2"], "pea")]
+    assert ids == ["A04", "A06", "A07"]
 
 
 def test_no_tipping_means_no_decide_by_and_indicative_flag():

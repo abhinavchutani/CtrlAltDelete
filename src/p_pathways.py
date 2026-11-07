@@ -10,8 +10,10 @@ Per contract crop (pea, potato) × region of the scenario cube:
 3. decide-by = tipping year − the option's longest lead time; None when the threshold is not crossed before the horizon;
 4. signpost: a template filled with the 1-in-10 level (90th percentile, 1991–2020) of the driving hazard's indicator
    in that region, from the weather frames (p_weather).
-Options: until the adaptation KB (#87) lands, the 5 engine-backed options with indicative lead times from
-RISK_MITIGATION §7 (assumptions, not reviewed by an agronomist). The hazard that cost the most € on the path picks them.
+Options: from the adaptation KB (kb/adaptation_options.csv via r_options.options(hazard, crop)), the top
+KB_PER_HAZARD per driving hazard in KB rank order; lead times are the KB's indicative values (not yet reviewed by an
+agronomist). If the KB is missing, the 5 engine-backed options below are used. The hazards that cost the most € on
+the path pick them.
 """
 from __future__ import annotations
 
@@ -33,6 +35,26 @@ OPTIONS: dict[str, tuple[str, tuple[str, ...], tuple[str, ...], tuple[int, int],
     "A08": ("Parcel selection: avoid poorly drained clay for sensitive crops", ("H3",), ("pea", "potato"), (1, 1), "simulated"),
 }
 PATHWAY_CROPS = ("pea", "potato")
+KB_PER_HAZARD = 3
+
+
+def kb_options(hazards: list[str], crop: str) -> list[tuple[str, str, tuple[str, ...], tuple[int, int], str, str]]:
+    """(option_id, text, hazards, (lead min, max), simulated, matched hazard) from the KB, else from OPTIONS."""
+    out: dict[str, tuple] = {}
+    try:
+        from src import r_options
+        for h in hazards:
+            for o in r_options.options(h, crop)[:KB_PER_HAZARD]:
+                out.setdefault(o.option_id, (o.option_id, o.option, tuple(o.hazards), tuple(o.lead_time_yrs), o.simulated, h))
+        if out:
+            return list(out.values())
+    except (ImportError, FileNotFoundError):
+        pass
+    for oid, (text, o_hz, o_crops, lead, sim) in OPTIONS.items():
+        hit = next((h for h in hazards if h in o_hz), None)
+        if crop in o_crops and hit:
+            out[oid] = (oid, text, o_hz, lead, sim, hit)
+    return list(out.values())
 SIGNPOST_YEARS = (1991, 2020)
 
 
@@ -84,12 +106,10 @@ def items(cube: pd.DataFrame, climate: str, ensemble_odds: dict | None = None, l
         odds = (ensemble_odds or {}).get((region, crop))
         if odds is not None and (odds > A.TIP_ODDS) != (tip is not None):
             thr += f" (indicative: ensemble 2041–60 odds {odds:.0%})"
-        for oid, (text, o_hz, o_crops, (lo, hi), sim) in OPTIONS.items():
-            if crop not in o_crops or not set(o_hz) & set(hz[:2]):
-                continue
+        for oid, text, _, (lo, hi), sim, hit in kb_options(hz[:2], crop):
             out.append({"crop": crop, "region": region, "climate": climate, "threshold": thr, "tipping_year": tip,
                         "option_id": oid, "option": text, "decide_by": (tip - hi) if tip is not None else None,
-                        "signpost": signpost(next(h for h in hz if h in o_hz), region, levels, crop), "simulated": sim})
+                        "signpost": signpost(hit, region, levels, crop), "simulated": sim})
     return sorted(out, key=lambda i: (i["crop"] != "pea", i["region"], i["decide_by"] or 9999, i["option_id"]))
 
 
