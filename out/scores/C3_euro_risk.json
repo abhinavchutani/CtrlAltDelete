@@ -1,0 +1,351 @@
+{
+  "method": "c_euro:shortfall_premium_v1",
+  "price_year": 2025,
+  "n_irrigated_parcels": 255,
+  "observed_2026": {
+    "FI_SW_2026_vs_mean_pct": 24.2,
+    "SE_SKANE_2026_vs_mean_pct": -8.5,
+    "pooled_FI_SE_2026_vs_mean_pct": 0.8,
+    "contracted_share_FI_pct": 28.4
+  },
+  "risk": [
+    {
+      "region": "FI_SW",
+      "crop": "carrot",
+      "eur_at_risk": 25983.0,
+      "eur_at_risk_p90": 72435.2,
+      "shortfall_t": 224.0,
+      "contracted_t": 11390.1,
+      "net_tco2e_per_t": 1.0,
+      "import_tco2e": 221.1,
+      "scenario": "baseline"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "pea",
+      "eur_at_risk": 95147.1,
+      "eur_at_risk_p90": 267987.4,
+      "shortfall_t": 411.9,
+      "contracted_t": 6725.5,
+      "net_tco2e_per_t": 0.8,
+      "import_tco2e": 320.0,
+      "scenario": "baseline"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "potato",
+      "eur_at_risk": 28542.2,
+      "eur_at_risk_p90": 70912.0,
+      "shortfall_t": 275.8,
+      "contracted_t": 9467.5,
+      "net_tco2e_per_t": 1.0,
+      "import_tco2e": 266.7,
+      "scenario": "baseline"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "spinach",
+      "eur_at_risk": 25054.9,
+      "eur_at_risk_p90": 77026.2,
+      "shortfall_t": 109.9,
+      "contracted_t": 8186.7,
+      "net_tco2e_per_t": 0.9,
+      "import_tco2e": 103.0,
+      "scenario": "baseline"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "turnip_rape",
+      "eur_at_risk": 14261.4,
+      "eur_at_risk_p90": 45632.5,
+      "shortfall_t": 379.3,
+      "contracted_t": 7430.1,
+      "net_tco2e_per_t": 0.4,
+      "import_tco2e": 158.2,
+      "scenario": "baseline"
+    },
+    {
+      "region": "SE_SKANE",
+      "crop": "pea",
+      "eur_at_risk": 136146.6,
+      "eur_at_risk_p90": 542818.1,
+      "shortfall_t": 603.8,
+      "contracted_t": 16963.4,
+      "net_tco2e_per_t": 0.8,
+      "import_tco2e": 487.2,
+      "scenario": "baseline"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "carrot",
+      "eur_at_risk": 31641.0,
+      "eur_at_risk_p90": 92535.2,
+      "shortfall_t": 272.8,
+      "contracted_t": 11390.1,
+      "net_tco2e_per_t": 1.0,
+      "import_tco2e": 269.2,
+      "scenario": "ssp126"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "pea",
+      "eur_at_risk": 75780.8,
+      "eur_at_risk_p90": 227777.2,
+      "shortfall_t": 328.1,
+      "contracted_t": 6725.5,
+      "net_tco2e_per_t": 0.8,
+      "import_tco2e": 254.9,
+      "scenario": "ssp126"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "potato",
+      "eur_at_risk": 53727.7,
+      "eur_at_risk_p90": 121081.3,
+      "shortfall_t": 519.1,
+      "contracted_t": 9467.5,
+      "net_tco2e_per_t": 1.0,
+      "import_tco2e": 502.0,
+      "scenario": "ssp126"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "spinach",
+      "eur_at_risk": 25930.4,
+      "eur_at_risk_p90": 112077.0,
+      "shortfall_t": 113.7,
+      "contracted_t": 8186.7,
+      "net_tco2e_per_t": 0.9,
+      "import_tco2e": 106.6,
+      "scenario": "ssp126"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "turnip_rape",
+      "eur_at_risk": 16492.2,
+      "eur_at_risk_p90": 47766.6,
+      "shortfall_t": 438.6,
+      "contracted_t": 7430.1,
+      "net_tco2e_per_t": 0.4,
+      "import_tco2e": 182.9,
+      "scenario": "ssp126"
+    },
+    {
+      "region": "SE_SKANE",
+      "crop": "pea",
+      "eur_at_risk": 97280.0,
+      "eur_at_risk_p90": 208401.9,
+      "shortfall_t": 431.4,
+      "contracted_t": 16963.4,
+      "net_tco2e_per_t": 0.8,
+      "import_tco2e": 348.1,
+      "scenario": "ssp126"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "carrot",
+      "eur_at_risk": 39220.7,
+      "eur_at_risk_p90": 112688.6,
+      "shortfall_t": 338.1,
+      "contracted_t": 11390.1,
+      "net_tco2e_per_t": 1.0,
+      "import_tco2e": 333.7,
+      "scenario": "ssp245"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "pea",
+      "eur_at_risk": 68585.2,
+      "eur_at_risk_p90": 245048.0,
+      "shortfall_t": 296.9,
+      "contracted_t": 6725.5,
+      "net_tco2e_per_t": 0.8,
+      "import_tco2e": 230.7,
+      "scenario": "ssp245"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "potato",
+      "eur_at_risk": 61240.2,
+      "eur_at_risk_p90": 124562.2,
+      "shortfall_t": 591.7,
+      "contracted_t": 9467.5,
+      "net_tco2e_per_t": 1.0,
+      "import_tco2e": 572.2,
+      "scenario": "ssp245"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "spinach",
+      "eur_at_risk": 22263.5,
+      "eur_at_risk_p90": 101489.5,
+      "shortfall_t": 97.6,
+      "contracted_t": 8186.7,
+      "net_tco2e_per_t": 0.9,
+      "import_tco2e": 91.5,
+      "scenario": "ssp245"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "turnip_rape",
+      "eur_at_risk": 16610.1,
+      "eur_at_risk_p90": 49142.4,
+      "shortfall_t": 441.8,
+      "contracted_t": 7430.1,
+      "net_tco2e_per_t": 0.4,
+      "import_tco2e": 184.2,
+      "scenario": "ssp245"
+    },
+    {
+      "region": "SE_SKANE",
+      "crop": "pea",
+      "eur_at_risk": 81646.4,
+      "eur_at_risk_p90": 167233.8,
+      "shortfall_t": 362.1,
+      "contracted_t": 16963.4,
+      "net_tco2e_per_t": 0.8,
+      "import_tco2e": 292.2,
+      "scenario": "ssp245"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "carrot",
+      "eur_at_risk": 62025.5,
+      "eur_at_risk_p90": 150147.9,
+      "shortfall_t": 534.7,
+      "contracted_t": 11390.1,
+      "net_tco2e_per_t": 1.0,
+      "import_tco2e": 527.8,
+      "scenario": "ssp585"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "pea",
+      "eur_at_risk": 67068.4,
+      "eur_at_risk_p90": 269540.7,
+      "shortfall_t": 290.3,
+      "contracted_t": 6725.5,
+      "net_tco2e_per_t": 0.8,
+      "import_tco2e": 225.6,
+      "scenario": "ssp585"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "potato",
+      "eur_at_risk": 78928.9,
+      "eur_at_risk_p90": 149059.1,
+      "shortfall_t": 762.6,
+      "contracted_t": 9467.5,
+      "net_tco2e_per_t": 1.0,
+      "import_tco2e": 737.4,
+      "scenario": "ssp585"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "spinach",
+      "eur_at_risk": 21956.7,
+      "eur_at_risk_p90": 111983.8,
+      "shortfall_t": 96.3,
+      "contracted_t": 8186.7,
+      "net_tco2e_per_t": 0.9,
+      "import_tco2e": 90.2,
+      "scenario": "ssp585"
+    },
+    {
+      "region": "FI_SW",
+      "crop": "turnip_rape",
+      "eur_at_risk": 17565.9,
+      "eur_at_risk_p90": 46390.4,
+      "shortfall_t": 467.2,
+      "contracted_t": 7430.1,
+      "net_tco2e_per_t": 0.4,
+      "import_tco2e": 194.8,
+      "scenario": "ssp585"
+    },
+    {
+      "region": "SE_SKANE",
+      "crop": "pea",
+      "eur_at_risk": 93363.3,
+      "eur_at_risk_p90": 287354.6,
+      "shortfall_t": 414.0,
+      "contracted_t": 16963.4,
+      "net_tco2e_per_t": 0.8,
+      "import_tco2e": 334.1,
+      "scenario": "ssp585"
+    }
+  ],
+  "actions": [
+    {
+      "scenario": "baseline",
+      "action": "irrigation",
+      "eur_saved": 36020.4,
+      "tco2e_avoided": 180.8
+    },
+    {
+      "scenario": "baseline",
+      "action": "earlier_sowing",
+      "eur_saved": 2207.5,
+      "tco2e_avoided": 19.3
+    },
+    {
+      "scenario": "baseline",
+      "action": "two_region_pea",
+      "eur_saved": 66655.1,
+      "tco2e_avoided": 230.1
+    },
+    {
+      "scenario": "ssp126",
+      "action": "irrigation",
+      "eur_saved": 33718.6,
+      "tco2e_avoided": 186.4
+    },
+    {
+      "scenario": "ssp126",
+      "action": "earlier_sowing",
+      "eur_saved": 7676.9,
+      "tco2e_avoided": 72.9
+    },
+    {
+      "scenario": "ssp126",
+      "action": "two_region_pea",
+      "eur_saved": 41541.3,
+      "tco2e_avoided": 142.7
+    },
+    {
+      "scenario": "ssp245",
+      "action": "irrigation",
+      "eur_saved": 33230.4,
+      "tco2e_avoided": 186.0
+    },
+    {
+      "scenario": "ssp245",
+      "action": "earlier_sowing",
+      "eur_saved": 6348.7,
+      "tco2e_avoided": 56.6
+    },
+    {
+      "scenario": "ssp245",
+      "action": "two_region_pea",
+      "eur_saved": 37242.7,
+      "tco2e_avoided": 127.8
+    },
+    {
+      "scenario": "ssp585",
+      "action": "irrigation",
+      "eur_saved": 37371.9,
+      "tco2e_avoided": 215.8
+    },
+    {
+      "scenario": "ssp585",
+      "action": "earlier_sowing",
+      "eur_saved": 7900.2,
+      "tco2e_avoided": 55.3
+    },
+    {
+      "scenario": "ssp585",
+      "action": "two_region_pea",
+      "eur_saved": 46549.9,
+      "tco2e_avoided": 160.6
+    }
+  ]
+}

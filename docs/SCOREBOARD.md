@@ -37,3 +37,4 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 | 2026-11-07 02:45 | #54 | E dev E90–E92 (offline stub, real 2024 inventory) | 2/3 → 3/3 | E91 66.7 vs 62.9 (6.0 %, tolerance 10 %) after A's meter-estimate fix; no copilot change |
 | 2026-11-07 02:45 | #18 PR | C2 | — → 18 rows | delta-method ensemble (no public truth); pack-realisation cross-check agrees in sign |
 | 2026-11-07 06:30 | #13 PR | A1 all; A2 dev 2023 / 2024 | 96.04 → 96.69; 91.32 / 74.89 → 84.96 / 87.17 | soil_misreport needs crop+farm map agreement or the farm's own peat reports (8 of 11 false flags gone); peat only on reviewed-organic areas; stale issues retired on re-run |
+| 2026-11-07 03:30 | #19 PR | C3 (G3) | — → € at risk per region × crop × scenario, 3 actions with €/t/owner | baseline ≈ €325k/yr expected; two-region pea hedge €37–67k/yr; irrigation €33–37k/yr |
