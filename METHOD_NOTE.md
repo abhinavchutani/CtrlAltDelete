@@ -28,6 +28,17 @@
   - **€:** shortfall × contract price × replacement premium, plus the emissions of replacement imports.
 - **E:** two tools, SQL over approved `results` and retrieval over the frameworks. A code check makes sure every number in an answer came from a tool.
 
+## v2: from results to decisions
+v2 turns the frozen v1 results into a planning tool, without changing a v1 number:
+- **Prediction:** it re-runs the Track C yield model on 6 preset scenarios, or on a scenario typed or spoken in plain words, from 2026 to 2060.
+- **Alerts:** only critical and notable risks, at most 12, each with a € band and a suggested lever.
+- **Hedge frontier:** expected and 1-in-10-year loss for every Finland–Sweden pea split.
+- **Adaptation pathways:** tipping year when bad-year odds pass 1 in 4, minus each option's lead time.
+- **Retrieval:** answers questions with read-only SQL over the same tables, with evidence, and builds Excel reports with a Sources sheet.
+- **Decision board:** joins the critical risks with options from a 20-row adaptation knowledge base (not yet reviewed by an agronomist). A named human approves each row, in an append-only log.
+
+The LLM only maps words to a scenario spec or a tool. Deterministic code computes every number, and an answer containing a number no tool returned is blocked. On this weather path the 1-in-4 threshold isn't crossed before 2060, so the pathways show signposts to watch rather than a decide-by year.
+
 ## Key assumptions
 - Organic-soil emissions are included (the pack's methodology). The soil map is about 88 % accurate, so soil misreports are routed to an expert, not auto-corrected.
 - Foodhills is in scope from Dec 2025 only, and its Swedish farms are excluded from 2025.

@@ -126,6 +126,35 @@ Apetit's real data.**
 
 **Stop the app before `make all`**: while it runs it holds the DuckDB file lock.
 
+## v2: the product (React app over one API)
+
+v2 adds a **prediction layer** (scenarios, alerts, hedge, adaptation pathways), a **retrieval layer** (ask the data in
+plain words, Excel reports, the decision board) and a **React app** on top of v1. It reads a frozen copy of v1's
+database and never changes v1's CSVs. Design: [docs/V2_ARCHITECTURE.md](docs/V2_ARCHITECTURE.md). Demo script:
+[docs/pitch/V2_DEMO.md](docs/pitch/V2_DEMO.md).
+
+Needs the Python setup above, the unzipped pack, and **Node 18+** for the app. From a clean checkout:
+
+```bash
+make all            # v1: builds out/navigator.duckdb (~1 min; skip if you have it)
+make snapshot       # out/navigator.duckdb → out/serve.duckdb (the frozen copy v2 reads)
+make v2             # 6 scenario presets, weather frames, data catalog → out/v2/ (~20 s)
+make api            # terminal 1: FastAPI on http://127.0.0.1:8000 (model warm-up ~10 s; /api/health shows `warming`)
+make web            # terminal 2: React app on http://localhost:5173 (proxies /api to :8000)
+```
+
+| Command | What it checks or does |
+|---|---|
+| `make demo-check` | walks the demo through the real API, one `ok`/`FAIL` line per beat (needs `snapshot` + `v2`) |
+| `make v2-check` | v2 tests, the v1-unchanged guard, `npm run build` and the TypeScript check |
+| `API_MOCK=1 make api` | serves the committed fixtures instead of the real layers (no pack needed) |
+
+- **No LLM key needed.** Text → scenario and the demo questions have offline rules. Every number in an answer must
+  come from a tool result, or the answer is blocked (v1's post-check). The LLM tool loop for open questions is #93.
+- **Human decisions are files.** Decision-board approvals append to `out/v2/decisions.jsonl` (git-ignored). Code never
+  fills `decided_by`; a person types their name.
+- **Same data rule as v1:** the twin is synthetic, so the app shows a banner saying so. € values are shown as bands.
+
 ## Working with AI agents
 
 Each of us can run an AI agent overnight. The agents coordinate through GitHub: one pinned **Agent chat** issue, task issues with claim labels, and PRs reviewed by another agent. Rules: [AGENTS.md](AGENTS.md). Human setup guide: [docs/AGENT_COLLAB.md](docs/AGENT_COLLAB.md).
