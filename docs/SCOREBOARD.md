@@ -6,18 +6,18 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 
 | G-box | Metric | Bar | Current | Status |
 |---|---|---|---|---|
-| G1 | A1 CSV | exists + valid | 133 issues, 18 types | ✅ (#12) |
+| G1 | A1 CSV | exists + valid | 130 issues (after #13's tighter soil rule), template columns | ✅ (#12, #13) |
 | G1 | A2 CSV | exists + valid | all 19 template rows | ✅ (#12) |
 | G1 | C1 CSV | exists + valid | 12,064 rows = template, final model (#17) | ✅ done |
 | G1 | C2 CSV | exists + valid | 18 rows = template (#18) | ✅ done |
-| G1 | E CSV | exists + valid | — | open (#23) |
+| G1 | E CSV | exists + valid | 34 rows = template; **22/34 answered offline** (3 dev + 10 rubric with sources + 9 test numerics via deterministic resolvers); 12 left 'not in the data' with a reason | ✅ (#23, #59, #73) |
 | G2 | A1 dev score, overall | ≥ 80 | **96.69** (all 200 dev labels; P 0.98, R 0.95) | ✅ met |
 | G2 | A2 dev score, 2023 / 2024 | ≥ 70 / ≥ 70 | **84.96 / 87.17** | ✅ met (cat01 −1.9 % / −0.1 %; 2024 Scope 2 market −5.9 % is the next lever) |
 | G2 | C1 backtest MAPE / nRMSE | ≤ 8 % / ≤ 0.25 | **5.12 % / 0.115** (FI pea 2026 7.4 %, SE pea 2026 4.4 %) | ✅ met (#17) |
 | G2 | C2 | ensemble built and documented | delta-method ensemble: 30 perturbed 1991–2020 years × 3 SSPs, 2025 parcel mix; cross-checked vs the pack realisation | ✅ done (#18) |
-| G2 | E dev E90–E92 | 3/3 within tolerance | **3/3** (E90 0.0 %, E91 6.0 %, E92 1.7 %) | ✅ met (copilot #47 + A's interpolated meter months in #50) |
-| G3 | App on real results; peat; C3 actions; click-through | done | — | open |
-| G4 | Placeholders filled; `make all` from clean clone; CI green | done | — | open |
+| G2 | E dev E90–E92 | 3/3 within tolerance | **3/3** (E90 0.0 %, E91 6.0 %, E92 0.1 %) | ✅ met (copilot #47; A's meter months #50 and soil rule #60) |
+| G3 | App on real results; peat; C3 actions; click-through | done | 5 pages + copilot on real draft results; peat 10,951 → 22,705 t (+11,754, 52 %); C3 € risk + 3 actions with €, t CO2e, owner; inventory click-through to record keys; review & publish flow | ✅ (#47, #51, #54, #68) |
+| G4 | Placeholders filled; `make all` from clean clone; CI green | done | all pitch/method-note numbers filled by `make pitch`; clean checkout of main → `make all` in ~46 s, outputs byte-identical (only the SHA in A2_dev.json differs); CI green; REASONING_LOG R01–R34 | ✅ (#50, #71, #72) |
 
 ## Attempt log
 
@@ -38,3 +38,4 @@ Goal bars and the plateau rule are in [END_GOAL.md](END_GOAL.md). Add a row to t
 | 2026-11-07 02:45 | #18 PR | C2 | — → 18 rows | delta-method ensemble (no public truth); pack-realisation cross-check agrees in sign |
 | 2026-11-07 06:30 | #13 PR | A1 all; A2 dev 2023 / 2024 | 96.04 → 96.69; 91.32 / 74.89 → 84.96 / 87.17 | soil_misreport needs crop+farm map agreement or the farm's own peat reports (8 of 11 false flags gone); peat only on reviewed-organic areas; stale issues retired on re-run |
 | 2026-11-07 03:30 | #19 PR | C3 (G3) | — → € at risk per region × crop × scenario, 3 actions with €/t/owner | baseline ≈ €325k/yr expected; two-region pea hedge €37–67k/yr; irrigation €33–37k/yr |
+| 2026-11-07 03:15 | #74 | E offline answered | 20 → 22/34 | E18 +26.1 % / E19 −13.0 % from C delivery rows; final check on a clean checkout of main |
