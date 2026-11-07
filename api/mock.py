@@ -129,6 +129,12 @@ def intent(text: str, base: dict | None = None) -> S.IntentOut:
     return base.model_copy(update={"text": text})
 
 
+def sbti_pathway(scenario: str = "current_policies", levers: list[str] | None = None,
+                 target_year: int = 2030) -> S.SbtiPathway:
+    """One fixture (current policies, 2030, no levers); the mock ignores the inputs and says so."""
+    return S.SbtiPathway(**load("sbti_pathway"))
+
+
 def geo_farms() -> dict:
     return load("geo_farms")
 

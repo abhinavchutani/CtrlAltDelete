@@ -523,6 +523,45 @@
     }
    }
   },
+  "/api/sbti/pathway": {
+   "post": {
+    "summary": "Sbti Pathway",
+    "description": "Base year 2025 → SBTi near-term targets, BAU under a transition scenario, and the chosen levers' effect.",
+    "operationId": "sbti_pathway_api_sbti_pathway_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SbtiPathwayIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SbtiPathway"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/ask": {
    "post": {
     "summary": "Ask",
@@ -2401,6 +2440,577 @@
      "bad_year"
     ],
     "title": "RegionYear"
+   },
+   "SbtiBase": {
+    "properties": {
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "by_bucket": {
+      "additionalProperties": {
+       "type": "number"
+      },
+      "propertyNames": {
+       "enum": [
+        "s12",
+        "s3",
+        "flag"
+       ]
+      },
+      "type": "object",
+      "title": "By Bucket"
+     },
+     "total": {
+      "type": "number",
+      "title": "Total"
+     },
+     "scope1": {
+      "type": "number",
+      "title": "Scope1"
+     },
+     "scope2_market": {
+      "type": "number",
+      "title": "Scope2 Market"
+     },
+     "scope3": {
+      "type": "number",
+      "title": "Scope3"
+     },
+     "flag_share_pct": {
+      "type": "number",
+      "title": "Flag Share Pct"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Sources"
+     }
+    },
+    "type": "object",
+    "required": [
+     "year",
+     "by_bucket",
+     "total",
+     "scope1",
+     "scope2_market",
+     "scope3",
+     "flag_share_pct",
+     "sources"
+    ],
+    "title": "SbtiBase"
+   },
+   "SbtiCell": {
+    "properties": {
+     "bau_t": {
+      "type": "number",
+      "title": "Bau T"
+     },
+     "abated_t": {
+      "type": "number",
+      "title": "Abated T"
+     },
+     "with_levers_t": {
+      "type": "number",
+      "title": "With Levers T"
+     },
+     "target_t": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Target T"
+     }
+    },
+    "type": "object",
+    "required": [
+     "bau_t",
+     "abated_t",
+     "with_levers_t",
+     "target_t"
+    ],
+    "title": "SbtiCell"
+   },
+   "SbtiGap": {
+    "properties": {
+     "gap_t": {
+      "type": "number",
+      "title": "Gap T"
+     },
+     "needed_t": {
+      "type": "number",
+      "title": "Needed T"
+     },
+     "closed_pct": {
+      "type": "number",
+      "title": "Closed Pct"
+     }
+    },
+    "type": "object",
+    "required": [
+     "gap_t",
+     "needed_t",
+     "closed_pct"
+    ],
+    "title": "SbtiGap"
+   },
+   "SbtiHistory": {
+    "properties": {
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "total_t": {
+      "type": "number",
+      "title": "Total T"
+     },
+     "scope3_restated": {
+      "type": "boolean",
+      "title": "Scope3 Restated"
+     },
+     "note": {
+      "type": "string",
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "year",
+     "total_t",
+     "scope3_restated",
+     "note"
+    ],
+    "title": "SbtiHistory"
+   },
+   "SbtiLever": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "class": {
+      "type": "string",
+      "enum": [
+       "reduction",
+       "measurement",
+       "structural",
+       "removal"
+      ],
+      "title": "Class"
+     },
+     "bucket": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "s12",
+         "s3",
+         "flag"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bucket"
+     },
+     "abatement_t_design": {
+      "type": "number",
+      "title": "Abatement T Design"
+     },
+     "eur_per_t": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Eur Per T"
+     },
+     "start": {
+      "type": "integer",
+      "title": "Start"
+     },
+     "ramp_years": {
+      "type": "integer",
+      "title": "Ramp Years"
+     },
+     "confidence": {
+      "type": "string",
+      "title": "Confidence"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "selected": {
+      "type": "boolean",
+      "title": "Selected"
+     },
+     "source": {
+      "$ref": "#/components/schemas/EvidenceRef"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "class",
+     "bucket",
+     "abatement_t_design",
+     "eur_per_t",
+     "start",
+     "ramp_years",
+     "confidence",
+     "note",
+     "selected",
+     "source"
+    ],
+    "title": "SbtiLever"
+   },
+   "SbtiPathway": {
+    "properties": {
+     "scenario": {
+      "type": "string",
+      "enum": [
+       "current_policies",
+       "net_zero_2050",
+       "below_2c",
+       "delayed_transition",
+       "ndcs",
+       "low_demand",
+       "fragmented_world"
+      ],
+      "title": "Scenario"
+     },
+     "base": {
+      "$ref": "#/components/schemas/SbtiBase"
+     },
+     "targets": {
+      "$ref": "#/components/schemas/SbtiTargets"
+     },
+     "years": {
+      "items": {
+       "$ref": "#/components/schemas/SbtiYear"
+      },
+      "type": "array",
+      "title": "Years"
+     },
+     "gap": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/SbtiGap"
+      },
+      "propertyNames": {
+       "enum": [
+        "s12",
+        "s3",
+        "flag",
+        "total"
+       ]
+      },
+      "type": "object",
+      "title": "Gap"
+     },
+     "levers": {
+      "items": {
+       "$ref": "#/components/schemas/SbtiLever"
+      },
+      "type": "array",
+      "title": "Levers"
+     },
+     "counted_lever_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Counted Lever Ids"
+     },
+     "ignored_lever_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Ignored Lever Ids"
+     },
+     "lever_cost_eur_per_yr": {
+      "type": "number",
+      "title": "Lever Cost Eur Per Yr"
+     },
+     "history": {
+      "items": {
+       "$ref": "#/components/schemas/SbtiHistory"
+      },
+      "type": "array",
+      "title": "History"
+     },
+     "warnings": {
+      "items": {
+       "$ref": "#/components/schemas/SbtiWarning"
+      },
+      "type": "array",
+      "title": "Warnings"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Sources"
+     },
+     "synthetic": {
+      "type": "boolean",
+      "title": "Synthetic"
+     }
+    },
+    "type": "object",
+    "required": [
+     "scenario",
+     "base",
+     "targets",
+     "years",
+     "gap",
+     "levers",
+     "counted_lever_ids",
+     "ignored_lever_ids",
+     "lever_cost_eur_per_yr",
+     "history",
+     "warnings",
+     "sources",
+     "synthetic"
+    ],
+    "title": "SbtiPathway"
+   },
+   "SbtiPathwayIn": {
+    "properties": {
+     "scenario": {
+      "type": "string",
+      "enum": [
+       "current_policies",
+       "net_zero_2050",
+       "below_2c",
+       "delayed_transition",
+       "ndcs",
+       "low_demand",
+       "fragmented_world"
+      ],
+      "title": "Scenario",
+      "default": "current_policies"
+     },
+     "levers": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Levers",
+      "default": []
+     },
+     "target_year": {
+      "type": "integer",
+      "enum": [
+       2030,
+       2031,
+       2032,
+       2033,
+       2034,
+       2035
+      ],
+      "title": "Target Year",
+      "default": 2030
+     }
+    },
+    "type": "object",
+    "title": "SbtiPathwayIn"
+   },
+   "SbtiTarget": {
+    "properties": {
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "rate_pct_per_yr": {
+      "type": "number",
+      "title": "Rate Pct Per Yr"
+     },
+     "ambition": {
+      "type": "string",
+      "title": "Ambition"
+     },
+     "base_t": {
+      "type": "number",
+      "title": "Base T"
+     },
+     "target_t": {
+      "type": "number",
+      "title": "Target T"
+     },
+     "cut_pct": {
+      "type": "number",
+      "title": "Cut Pct"
+     }
+    },
+    "type": "object",
+    "required": [
+     "label",
+     "rate_pct_per_yr",
+     "ambition",
+     "base_t",
+     "target_t",
+     "cut_pct"
+    ],
+    "title": "SbtiTarget"
+   },
+   "SbtiTargets": {
+    "properties": {
+     "base_year": {
+      "type": "integer",
+      "title": "Base Year"
+     },
+     "target_year": {
+      "type": "integer",
+      "title": "Target Year"
+     },
+     "by_bucket": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/SbtiTarget"
+      },
+      "propertyNames": {
+       "enum": [
+        "s12",
+        "s3",
+        "flag"
+       ]
+      },
+      "type": "object",
+      "title": "By Bucket"
+     },
+     "flag_target_required": {
+      "type": "boolean",
+      "title": "Flag Target Required"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Sources"
+     }
+    },
+    "type": "object",
+    "required": [
+     "base_year",
+     "target_year",
+     "by_bucket",
+     "flag_target_required",
+     "sources"
+    ],
+    "title": "SbtiTargets"
+   },
+   "SbtiWarning": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "body": {
+      "type": "string",
+      "title": "Body"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Sources"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "title",
+     "body",
+     "sources"
+    ],
+    "title": "SbtiWarning"
+   },
+   "SbtiYear": {
+    "properties": {
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "demand_index": {
+      "type": "number",
+      "title": "Demand Index"
+     },
+     "s12": {
+      "$ref": "#/components/schemas/SbtiCell"
+     },
+     "s3": {
+      "$ref": "#/components/schemas/SbtiCell"
+     },
+     "flag": {
+      "$ref": "#/components/schemas/SbtiCell"
+     },
+     "bau_t": {
+      "type": "number",
+      "title": "Bau T"
+     },
+     "abated_t": {
+      "type": "number",
+      "title": "Abated T"
+     },
+     "with_levers_t": {
+      "type": "number",
+      "title": "With Levers T"
+     },
+     "target_t": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Target T"
+     }
+    },
+    "type": "object",
+    "required": [
+     "year",
+     "demand_index",
+     "s12",
+     "s3",
+     "flag",
+     "bau_t",
+     "abated_t",
+     "with_levers_t",
+     "target_t"
+    ],
+    "title": "SbtiYear"
    },
    "ScenarioPreset": {
     "properties": {
