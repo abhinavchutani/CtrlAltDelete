@@ -284,7 +284,38 @@ def route_entity(con, q: str) -> dict | None:
     derived = {"n_records": n_rec, "n_tables": len(rows), "n_issues": n_iss, "n_corrections": n_corr}
     evidence = [ev("table_row", r[0], f"{r[0]} · {r[2]} rows with {r[1]} = {out['id']}") for r in rows]
     evidence += [ev("table_row", r[6], r[6]) for r in rows if r[6]][:8]
-    return finish(q, md, [*out["results"], derived, table], evidence, table, pending=n_corr > 0)
+    from src import r_knowledge as K   # what people told us about this ID (#112): approved, or labelled unreviewed
+    known = K.for_entities([out["id"]])
+    if known:
+        cites = [K.cite(k) for k in known]
+        md += "\n\n**What people told us:**\n" + "\n".join(f"- {line}" for line, _ in cites)
+        evidence += [e.model_dump() for _, e in cites]
+    return finish(q, md, [*out["results"], derived, table, *[k.model_dump() for k in known]], evidence, table,
+                  pending=n_corr > 0 or any(k.status != "approved" for k in known))
+
+
+GAPS_ASK = re.compile(r"\bmissing\b|\bgaps?\b|not (been )?delivered|chase|who (do|should) (i|we) ask")
+
+
+def route_gaps(con, q: str) -> dict | None:
+    """'What data is missing for 2025?': open missing-record gaps, owner and a drafted message each (#112)."""
+    if not GAPS_ASK.search(q) or re.search(r"peat|mineral", q):
+        return None
+    from src import r_gaps as G
+    yrs = years_in(q)
+    out = G.gaps(con, yrs[-1] if yrs else None)
+    gs = out["gaps"]
+    if not gs:
+        return not_in_data(f"No open data gaps{' for ' + str(yrs[-1]) if yrs else ''}: every expected record is in.")
+    owners = sorted({g["owner"] for g in gs})
+    md = (f"{len(gs)} expected record{'s are' if len(gs) > 1 else ' is'} missing{' in ' + str(yrs[-1]) if yrs else ''}. "
+          f"Each is estimated from the neighbouring months for now (a proposed correction, pending expert approval). "
+          f"Who to ask: {'; '.join(owners)}. A drafted message for each is in the table; nothing is sent automatically."
+          f"\n\n*{G.SYNTHETIC}*")
+    table = {"columns": ["record_key", "owner", "estimate_mwh", "draft_message"],
+             "rows": [[g["record_key"], g["owner"], g["estimate"], g["draft_message"]] for g in gs[:TABLE_ROWS]]}
+    evidence = [e for g in gs[:10] for e in g["evidence"]]
+    return finish(q, md, [out["result"], {"n_gaps": len(gs)}, table], evidence, table, pending=True)
 
 
 SCOPE_WORDS = (("scope2_location", r"scope 2.*location|location.based"), ("scope2_market", r"scope 2|market.based"),
@@ -330,7 +361,7 @@ def route_lineage(con, q: str) -> dict | None:
 
 
 ROUTES: list[Route] = [route_se_pea_deliveries, route_peat_as_mineral, route_energy_by_site_month,
-                       route_farm_yield_history, route_lineage, route_entity, route_options, route_rule,
+                       route_farm_yield_history, route_lineage, route_entity, route_gaps, route_options, route_rule,
                        route_v1_totals]
 
 
