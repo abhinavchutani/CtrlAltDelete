@@ -13,7 +13,7 @@
 
    Sources: Apetit Annual Report 2025, Financial Review 2025, profit warning 12 Aug 2026.
 3. **Approach:** one system, three layers: clean data → inventory, weather → yield → €, and a copilot with receipts. One rule: code computes every number; the LLM only classifies and explains. The architecture diagram goes here.
-4. **Evidence, data quality:** issues found by type; dev scores A1 96.0 vs 52.17, A2 85.9 vs 23.2; the allow-list protecting precision; one approved correction.
+4. **Evidence, data quality:** issues found by type; dev scores A1 96.0 vs 52.17, A2 74.9 vs 23.2; the allow-list protecting precision; one approved correction.
 5. **Evidence, the peat reveal:** the farm footprint with vs without organic soils: 14,356 t CO2e (57 %), and the FLAG share moves from 67.6 % to 69.6 %. Fix it before the SBTi base year.
 6. **Evidence, harvest risk:** the 2026 backtest (FI strong, SE drought); the 2041–60 risk by SSP; € at risk {{C3_EUR_AT_RISK}}/yr; the hedges {{C3_HEDGE_EUR}} and {{C3_IRRIGATION_EUR}}.
 7. **Traceability + expert review:** the click-through from a number to its invoice line, the corrections log, and the publish flow. The Microsoft mapping table (below).
@@ -61,8 +61,8 @@
 | Placeholder | Source |
 |---|---|
 | `96.0` | `out/scores/` (A1 dev F1 score) |
-| `91.3`, `85.9` | `out/scores/` (A2 dev) |
-| `8.2 %` | C backtest result |
+| `91.3`, `74.9` | `out/scores/` (A2 dev) |
+| `{{C1_BACKTEST_MAPE}}` | C backtest result |
 | `790`, `204` | `issues` counts by status |
 | `10,951 t CO2e`, `25,308 t CO2e`, `14,356`, `57`, `8` | A peat results (#12) |
 | `67.6 %`, `69.6 %` | A inventory FLAG split |

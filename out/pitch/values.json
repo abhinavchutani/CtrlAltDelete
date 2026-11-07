@@ -20,14 +20,14 @@
   "pending": ""
  },
  "A2_DEV_2024": {
-  "value": "85.9",
+  "value": "74.9",
   "source": "out/scores/A2_dev.json",
   "pending": ""
  },
  "C1_BACKTEST_MAPE": {
-  "value": "8.2 %",
+  "value": null,
   "source": "out/scores/C1_backtest_*.json",
-  "pending": ""
+  "pending": "C backtest not found"
  },
  "PEAT_BEFORE": {
   "value": "10,951 t CO2e",
