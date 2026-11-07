@@ -61,7 +61,8 @@ def geo_parcels() -> dict:
 # ── intent ─────────────────────────────────────────────────────────
 @app.post("/api/intent", response_model=S.IntentOut)
 def intent(body: S.IntentIn) -> S.IntentOut:
-    return L.get("intent")(body.text)
+    base = body.base.model_dump(mode="json") if body.base else None
+    return L.get("intent")(body.text, base)
 
 
 # ── prediction ─────────────────────────────────────────────────────

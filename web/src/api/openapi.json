@@ -1684,6 +1684,16 @@
      "text": {
       "type": "string",
       "title": "Text"
+     },
+     "base": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ScenarioSpec"
+       },
+       {
+        "type": "null"
+       }
+      ]
      }
     },
     "type": "object",

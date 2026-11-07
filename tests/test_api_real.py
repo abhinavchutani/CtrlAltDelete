@@ -77,3 +77,14 @@ def test_retrieval_live_per_module(monkeypatch):
     live = layers.live()
     assert live["live:ask"] == layers._imports("src.r_agent")
     assert live["live:board"] == layers._imports("src.r_board")
+
+
+def test_intent_follow_up_builds_on_base(real):
+    from api import layers
+    if not layers._imports("src.p_parse"):
+        pytest.skip("p_parse not built")
+    base = {"climate": "ssp585", "horizon_end": 2060, "levers": [{"type": "irrigate", "crop": "pea"}]}
+    r = real.post("/api/intent", json={"text": "What if we add a heat-tolerant pea from 2030?", "base": base}).json()
+    assert r["door"] == "simulate" and r["spec"]["climate"] == "ssp585" and r["spec"]["horizon_end"] == 2060
+    assert {lv["type"] for lv in r["spec"]["levers"]} == {"irrigate", "heat_tolerant_variety"}
+    assert real.post("/api/intent", json={"text": "How did pea deliveries change since 2021?"}).json()["door"] == "ask"

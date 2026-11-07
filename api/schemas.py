@@ -92,6 +92,7 @@ class ScenarioPreset(BaseModel):  # one item of GET /api/scenarios
 # ── /api/intent ────────────────────────────────────────────────────
 class IntentIn(BaseModel):
     text: str
+    base: ScenarioSpec | None = None  # the spec on screen; follow-ups ("add a heat-tolerant pea") build on it
 
 
 class IntentOut(BaseModel):

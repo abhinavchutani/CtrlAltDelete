@@ -95,7 +95,8 @@ export const useAsk = (question: string | null) =>
     ...forever,
   });
 
-export const useIntent = () => useMutation({ mutationFn: (text: string) => post<IntentOut>("/api/intent", { text }) });
+export const useIntent = () =>
+  useMutation({ mutationFn: ({ text, base }: { text: string; base: ScenarioSpec | null }) => post<IntentOut>("/api/intent", { text, base }) });
 
 export const useGeoFarms = () =>
   useQuery({ queryKey: ["geo", "farms"], queryFn: () => get<FeatureCollection<GeoPoint>>("/api/geo/farms"), ...forever });
@@ -105,11 +106,12 @@ export const useGeoParcels = () =>
 /** Text or speech → intent → either an ask question or a pending spec (confirmed by the user before it runs). */
 export function useSubmitText() {
   const intent = useIntent();
+  const sim = useActiveScenario();
   const { ask, setPending } = useStore();
   return {
     ...intent,
     submit: (text: string) =>
-      intent.mutate(text, {
+      intent.mutate({ text, base: sim.data?.spec ?? null }, {
         onSuccess: (r) => (r.door === "ask" || !r.spec ? ask(r.text) : setPending(r.spec as ScenarioSpec, r.heard ?? [], r.problems ?? [])),
       }),
   };
