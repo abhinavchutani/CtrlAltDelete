@@ -76,13 +76,40 @@ def seed(path=MOCK_DB) -> None:
                    unit="t CO2e", scope="memo", category="biogenic_co2_scope1", year=2025, method=METHOD,
                    produced_by=BY, lineage=[L.src("doc", "METHODOLOGY.md#3")])
 
+    farm_tot = {"mineral_only": 0.0, "with_organic_soils": 0.0}   # same shape as Track A's peat reveal (#48)
     for farm in [f"F{n:04d}" for n in range(1, 13)]:
         mineral = round(float(rng.uniform(100, 400)))
         peat = round(float(rng.choice([0, 0, 0, rng.uniform(50, 600)])))
         for variant, val in [("mineral_only", mineral), ("with_organic_soils", mineral + peat)]:
-            L.write_result(con, f"MOCK:farm:{farm}:{variant}", metric="farm_tco2e", value=val, unit="t CO2e",
+            farm_tot[variant] += val
+            L.write_result(con, f"MOCK:PEAT:2025:{variant}:{farm}:pea", metric="farm_tco2e", value=val, unit="t CO2e",
                            category=farm, year=2025, scenario=variant, method=METHOD, produced_by=BY,
                            lineage=[L.src("record", f"farm_survey:MOCK-{farm}"), L.src("doc", "METHODOLOGY.md#5")])
+    for variant, val in farm_tot.items():
+        L.write_result(con, f"MOCK:PEAT:2025:{variant}:all_farms", metric="farm_tco2e", value=val, unit="t CO2e",
+                       category="all_farms", year=2025, scenario=variant, method=METHOD, produced_by=BY,
+                       lineage=[L.src("doc", "sum over mock farms")])
+
+    c1 = [L.src("model", "mock_yield_model")]               # same shape as Track C's C1 results (#52)
+    for metric, v in [("production_mape_pct", 5.0), ("farm_nrmse", 0.12)]:
+        L.write_result(con, f"MOCK:C1:backtest:{metric}", metric=metric, value=v, unit="pct" if "pct" in metric else "ratio",
+                       category="all", year=2026, scenario="backtest", method=METHOD, produced_by=BY, lineage=c1)
+    for region in REGIONS:
+        for year in (2024, 2025, 2026):
+            act = round(float(rng.uniform(4000, 9000)))
+            pred = round(act * float(rng.uniform(0.92, 1.08)))
+            for metric, v in [("production_t_actual", act), ("production_t", pred),
+                              ("ape_pct", round(100 * abs(pred - act) / act, 2))]:
+                L.write_result(con, f"MOCK:C1:backtest:{year}:{region}:pea:{metric}", metric=metric, value=v,
+                               unit="pct" if metric == "ape_pct" else "t", category=f"{region}:pea", year=year,
+                               scenario="backtest", method=METHOD, produced_by=BY, lineage=c1)
+        for year in range(2027, 2032):
+            L.write_result(con, f"MOCK:C1:{year}:{region}:pea:production", metric="production_t",
+                           value=round(float(rng.uniform(4000, 9000))), unit="t", category=f"{region}:pea", year=year,
+                           scenario="ssp245", method=METHOD, produced_by=BY, lineage=c1)
+    for feat, v in [("st_drought_sens", -28.0), ("st_hot_sens", -2.9), ("st_irr_x_drought_sens", 11.9), ("soil_sand", -11.4)]:
+        L.write_result(con, f"MOCK:C1:effect:pea:{feat}", metric="feature_effect_pct", value=v, unit="% yield per unit",
+                       category=f"pea:{feat}", scenario="model", method=METHOD, produced_by=BY, lineage=c1)
 
     for ssp_i, ssp in enumerate(SSPS):
         for region in REGIONS:
