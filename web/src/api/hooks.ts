@@ -5,7 +5,8 @@ import { activeSpec, START_YEAR, useStore } from "../state/store";
 import { ApiError, get, post, qs } from "./client";
 import type {
   AdaptationOption, Climate, FarmYear, FeatureCollection, Filed, GeoParcel, GeoPoint, Graph, Health, Interview, IntentOut,
-  KnowledgeItem, Lever, MonthsFrame, Outlook, Provenance, RadarAskOut, Region, ScenarioSpec, SimResult, WeatherFrame,
+  KnowledgeItem, Lever, MonthsFrame, Outlook, Provenance, RadarAskOut, Region, ScenarioSpec, SimResult, Today, TodayCrop,
+  WeatherFrame,
 } from "./types";
 
 const forever = { staleTime: Infinity };
@@ -24,6 +25,16 @@ export const useOutlook = (climate: Climate, levers: Lever[] | null) =>
     queryKey: ["outlook", climate, levers ?? []],
     queryFn: () => post<Outlook>("/api/radar/outlook", { climate, levers: levers ?? [] }),
     placeholderData: keepPreviousData,
+    ...warmRetry,
+    ...forever,
+  });
+
+/** The season so far on one day (api/radar.py today). `date` null = the server's demo day. */
+export const useToday = (date: string | null, climate: Climate, crop: TodayCrop = "pea") =>
+  useQuery({
+    queryKey: ["today", date, climate, crop],
+    queryFn: () => get<Today>(`/api/radar/today${qs({ date: date ?? undefined, climate, crop })}`),
+    placeholderData: keepPreviousData, // stepping days never flashes empty widgets
     ...warmRetry,
     ...forever,
   });
