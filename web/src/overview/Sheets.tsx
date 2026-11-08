@@ -214,7 +214,8 @@ export function OverviewSheets({ o }: { o: Outlook }) {
   if (sheet.kind === "issues") return <IssuesSheet key={sheet.issueId ?? "issues"} o={o} onClose={close} />;
   if (sheet.kind === "money") return <MoneySheet o={o} onClose={close} />;
   if (sheet.kind === "farms-near" || sheet.kind === "farms-repeat") return <FarmsSheet o={o} near={sheet.kind === "farms-near"} onClose={close} />;
-  return <PlansSheet onClose={close} />;
+  if (sheet.kind === "plans") return <PlansSheet onClose={close} />;
+  return null; // "data" / "report": Problems.tsx; "changes" / "unusual": today/TodaySheets.tsx
 }
 
 export { PlansSheet };

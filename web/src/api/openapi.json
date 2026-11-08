@@ -561,6 +561,86 @@
     }
    }
   },
+  "/api/radar/today": {
+   "get": {
+    "summary": "Radar Today",
+    "operationId": "radar_today_api_radar_today_get",
+    "parameters": [
+     {
+      "name": "date",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "YYYY-MM-DD, 1 Apr–31 Oct of 2026–2040; default: the demo day",
+       "title": "Date"
+      },
+      "description": "YYYY-MM-DD, 1 Apr–31 Oct of 2026–2040; default: the demo day"
+     },
+     {
+      "name": "climate",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "ssp126",
+        "ssp245",
+        "ssp585"
+       ],
+       "type": "string",
+       "default": "ssp245",
+       "title": "Climate"
+      }
+     },
+     {
+      "name": "crop",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "pea",
+        "potato",
+        "spinach",
+        "carrot",
+        "turnip_rape"
+       ],
+       "type": "string",
+       "default": "pea",
+       "title": "Crop"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Today"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/graph": {
    "get": {
     "summary": "Graph",
@@ -1120,6 +1200,45 @@
     }
    }
   },
+  "/api/sbti/pathway": {
+   "post": {
+    "summary": "Sbti Pathway",
+    "description": "Base year 2025 → SBTi near-term targets, BAU under a transition scenario, and the chosen levers' effect.",
+    "operationId": "sbti_pathway_api_sbti_pathway_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SbtiPathwayIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SbtiPathway"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/ask": {
    "post": {
     "summary": "Ask",
@@ -1141,6 +1260,145 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/AskOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/brief": {
+   "get": {
+    "summary": "Get Brief",
+    "description": "The Overview's three problems (scattered data, hand-built reports, Sweden 2026), computed from the snapshot.",
+    "operationId": "get_brief_api_brief_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Get Brief Api Brief Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/issues": {
+   "get": {
+    "summary": "Get Issues",
+    "operationId": "get_issues_api_issues_get",
+    "parameters": [
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "pattern": "^(proposed|legitimate)$",
+       "default": "proposed",
+       "title": "Status"
+      }
+     },
+     {
+      "name": "source",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Source"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 500,
+       "minimum": 1,
+       "default": 40,
+       "title": "Limit"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "additionalProperties": true
+         },
+         "title": "Response Get Issues Api Issues Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/report/inventory": {
+   "post": {
+    "summary": "Make Inventory Report",
+    "operationId": "make_inventory_report_api_report_inventory_post",
+    "parameters": [
+     {
+      "name": "year",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 2025,
+       "minimum": 2023,
+       "default": 2025,
+       "title": "Year"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "additionalProperties": true,
+         "title": "Response Make Inventory Report Api Report Inventory Post"
         }
        }
       }
@@ -2075,6 +2333,71 @@
     ],
     "title": "BoardRow"
    },
+   "Change": {
+    "properties": {
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "crop": {
+      "type": "string",
+      "enum": [
+       "pea",
+       "potato",
+       "spinach",
+       "carrot",
+       "turnip_rape"
+      ],
+      "title": "Crop"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "escalated",
+       "eased",
+       "stage",
+       "jump"
+      ],
+      "title": "Kind"
+     },
+     "from_status": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "watch",
+       "risk"
+      ],
+      "title": "From Status"
+     },
+     "to_status": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "watch",
+       "risk"
+      ],
+      "title": "To Status"
+     },
+     "text": {
+      "type": "string",
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "region",
+     "crop",
+     "kind",
+     "from_status",
+     "to_status",
+     "text"
+    ],
+    "title": "Change"
+   },
    "Citation": {
     "properties": {
      "source": {
@@ -2559,6 +2882,70 @@
      "bad_years"
     ],
     "title": "FarmBadYears"
+   },
+   "FarmSpread": {
+    "properties": {
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "crop": {
+      "type": "string",
+      "enum": [
+       "pea",
+       "potato",
+       "spinach",
+       "carrot",
+       "turnip_rape"
+      ],
+      "title": "Crop"
+     },
+     "farms": {
+      "type": "integer",
+      "title": "Farms"
+     },
+     "fields": {
+      "type": "integer",
+      "title": "Fields"
+     },
+     "p10": {
+      "type": "integer",
+      "title": "P10"
+     },
+     "p50": {
+      "type": "integer",
+      "title": "P50"
+     },
+     "p90": {
+      "type": "integer",
+      "title": "P90"
+     },
+     "share_ge_90": {
+      "type": "number",
+      "title": "Share Ge 90"
+     },
+     "share_ge_75": {
+      "type": "number",
+      "title": "Share Ge 75"
+     }
+    },
+    "type": "object",
+    "required": [
+     "region",
+     "crop",
+     "farms",
+     "fields",
+     "p10",
+     "p50",
+     "p90",
+     "share_ge_90",
+     "share_ge_75"
+    ],
+    "title": "FarmSpread"
    },
    "FarmStatus": {
     "properties": {
@@ -4548,6 +4935,106 @@
     ],
     "title": "RefileIn"
    },
+   "RegionDay": {
+    "properties": {
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "crop": {
+      "type": "string",
+      "enum": [
+       "pea",
+       "potato",
+       "spinach",
+       "carrot",
+       "turnip_rape"
+      ],
+      "title": "Crop"
+     },
+     "stage": {
+      "type": "string",
+      "enum": [
+       "not_sown",
+       "sown",
+       "flowering",
+       "fill",
+       "harvest"
+      ],
+      "title": "Stage"
+     },
+     "stages": {
+      "items": {
+       "$ref": "#/components/schemas/Stage"
+      },
+      "type": "array",
+      "title": "Stages"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "watch",
+       "risk"
+      ],
+      "title": "Status"
+     },
+     "dryness": {
+      "type": "number",
+      "title": "Dryness"
+     },
+     "dryness_pct": {
+      "type": "integer",
+      "title": "Dryness Pct"
+     },
+     "dryness_normal": {
+      "items": {
+       "type": "number"
+      },
+      "type": "array",
+      "title": "Dryness Normal"
+     },
+     "hot_days": {
+      "type": "number",
+      "title": "Hot Days"
+     },
+     "heat_pct": {
+      "type": "integer",
+      "title": "Heat Pct"
+     },
+     "hot_normal": {
+      "items": {
+       "type": "number"
+      },
+      "type": "array",
+      "title": "Hot Normal"
+     },
+     "hot_days_p50": {
+      "type": "number",
+      "title": "Hot Days P50"
+     }
+    },
+    "type": "object",
+    "required": [
+     "region",
+     "crop",
+     "stage",
+     "stages",
+     "status",
+     "dryness",
+     "dryness_pct",
+     "dryness_normal",
+     "hot_days",
+     "heat_pct",
+     "hot_normal",
+     "hot_days_p50"
+    ],
+    "title": "RegionDay"
+   },
    "RegionSplit": {
     "properties": {
      "type": {
@@ -4633,6 +5120,577 @@
      "bad_year"
     ],
     "title": "RegionYear"
+   },
+   "SbtiBase": {
+    "properties": {
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "by_bucket": {
+      "additionalProperties": {
+       "type": "number"
+      },
+      "propertyNames": {
+       "enum": [
+        "s12",
+        "s3",
+        "flag"
+       ]
+      },
+      "type": "object",
+      "title": "By Bucket"
+     },
+     "total": {
+      "type": "number",
+      "title": "Total"
+     },
+     "scope1": {
+      "type": "number",
+      "title": "Scope1"
+     },
+     "scope2_market": {
+      "type": "number",
+      "title": "Scope2 Market"
+     },
+     "scope3": {
+      "type": "number",
+      "title": "Scope3"
+     },
+     "flag_share_pct": {
+      "type": "number",
+      "title": "Flag Share Pct"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Sources"
+     }
+    },
+    "type": "object",
+    "required": [
+     "year",
+     "by_bucket",
+     "total",
+     "scope1",
+     "scope2_market",
+     "scope3",
+     "flag_share_pct",
+     "sources"
+    ],
+    "title": "SbtiBase"
+   },
+   "SbtiCell": {
+    "properties": {
+     "bau_t": {
+      "type": "number",
+      "title": "Bau T"
+     },
+     "abated_t": {
+      "type": "number",
+      "title": "Abated T"
+     },
+     "with_levers_t": {
+      "type": "number",
+      "title": "With Levers T"
+     },
+     "target_t": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Target T"
+     }
+    },
+    "type": "object",
+    "required": [
+     "bau_t",
+     "abated_t",
+     "with_levers_t",
+     "target_t"
+    ],
+    "title": "SbtiCell"
+   },
+   "SbtiGap": {
+    "properties": {
+     "gap_t": {
+      "type": "number",
+      "title": "Gap T"
+     },
+     "needed_t": {
+      "type": "number",
+      "title": "Needed T"
+     },
+     "closed_pct": {
+      "type": "number",
+      "title": "Closed Pct"
+     }
+    },
+    "type": "object",
+    "required": [
+     "gap_t",
+     "needed_t",
+     "closed_pct"
+    ],
+    "title": "SbtiGap"
+   },
+   "SbtiHistory": {
+    "properties": {
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "total_t": {
+      "type": "number",
+      "title": "Total T"
+     },
+     "scope3_restated": {
+      "type": "boolean",
+      "title": "Scope3 Restated"
+     },
+     "note": {
+      "type": "string",
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "year",
+     "total_t",
+     "scope3_restated",
+     "note"
+    ],
+    "title": "SbtiHistory"
+   },
+   "SbtiLever": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "class": {
+      "type": "string",
+      "enum": [
+       "reduction",
+       "measurement",
+       "structural",
+       "removal"
+      ],
+      "title": "Class"
+     },
+     "bucket": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "s12",
+         "s3",
+         "flag"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bucket"
+     },
+     "abatement_t_design": {
+      "type": "number",
+      "title": "Abatement T Design"
+     },
+     "eur_per_t": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Eur Per T"
+     },
+     "start": {
+      "type": "integer",
+      "title": "Start"
+     },
+     "ramp_years": {
+      "type": "integer",
+      "title": "Ramp Years"
+     },
+     "confidence": {
+      "type": "string",
+      "title": "Confidence"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "selected": {
+      "type": "boolean",
+      "title": "Selected"
+     },
+     "source": {
+      "$ref": "#/components/schemas/EvidenceRef"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "class",
+     "bucket",
+     "abatement_t_design",
+     "eur_per_t",
+     "start",
+     "ramp_years",
+     "confidence",
+     "note",
+     "selected",
+     "source"
+    ],
+    "title": "SbtiLever"
+   },
+   "SbtiPathway": {
+    "properties": {
+     "scenario": {
+      "type": "string",
+      "enum": [
+       "current_policies",
+       "net_zero_2050",
+       "below_2c",
+       "delayed_transition",
+       "ndcs",
+       "low_demand",
+       "fragmented_world"
+      ],
+      "title": "Scenario"
+     },
+     "base": {
+      "$ref": "#/components/schemas/SbtiBase"
+     },
+     "targets": {
+      "$ref": "#/components/schemas/SbtiTargets"
+     },
+     "years": {
+      "items": {
+       "$ref": "#/components/schemas/SbtiYear"
+      },
+      "type": "array",
+      "title": "Years"
+     },
+     "gap": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/SbtiGap"
+      },
+      "propertyNames": {
+       "enum": [
+        "s12",
+        "s3",
+        "flag",
+        "total"
+       ]
+      },
+      "type": "object",
+      "title": "Gap"
+     },
+     "levers": {
+      "items": {
+       "$ref": "#/components/schemas/SbtiLever"
+      },
+      "type": "array",
+      "title": "Levers"
+     },
+     "counted_lever_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Counted Lever Ids"
+     },
+     "ignored_lever_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Ignored Lever Ids"
+     },
+     "lever_cost_eur_per_yr": {
+      "type": "number",
+      "title": "Lever Cost Eur Per Yr"
+     },
+     "history": {
+      "items": {
+       "$ref": "#/components/schemas/SbtiHistory"
+      },
+      "type": "array",
+      "title": "History"
+     },
+     "warnings": {
+      "items": {
+       "$ref": "#/components/schemas/SbtiWarning"
+      },
+      "type": "array",
+      "title": "Warnings"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Sources"
+     },
+     "synthetic": {
+      "type": "boolean",
+      "title": "Synthetic"
+     }
+    },
+    "type": "object",
+    "required": [
+     "scenario",
+     "base",
+     "targets",
+     "years",
+     "gap",
+     "levers",
+     "counted_lever_ids",
+     "ignored_lever_ids",
+     "lever_cost_eur_per_yr",
+     "history",
+     "warnings",
+     "sources",
+     "synthetic"
+    ],
+    "title": "SbtiPathway"
+   },
+   "SbtiPathwayIn": {
+    "properties": {
+     "scenario": {
+      "type": "string",
+      "enum": [
+       "current_policies",
+       "net_zero_2050",
+       "below_2c",
+       "delayed_transition",
+       "ndcs",
+       "low_demand",
+       "fragmented_world"
+      ],
+      "title": "Scenario",
+      "default": "current_policies"
+     },
+     "levers": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Levers",
+      "default": []
+     },
+     "target_year": {
+      "type": "integer",
+      "enum": [
+       2030,
+       2031,
+       2032,
+       2033,
+       2034,
+       2035
+      ],
+      "title": "Target Year",
+      "default": 2030
+     }
+    },
+    "type": "object",
+    "title": "SbtiPathwayIn"
+   },
+   "SbtiTarget": {
+    "properties": {
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "rate_pct_per_yr": {
+      "type": "number",
+      "title": "Rate Pct Per Yr"
+     },
+     "ambition": {
+      "type": "string",
+      "title": "Ambition"
+     },
+     "base_t": {
+      "type": "number",
+      "title": "Base T"
+     },
+     "target_t": {
+      "type": "number",
+      "title": "Target T"
+     },
+     "cut_pct": {
+      "type": "number",
+      "title": "Cut Pct"
+     }
+    },
+    "type": "object",
+    "required": [
+     "label",
+     "rate_pct_per_yr",
+     "ambition",
+     "base_t",
+     "target_t",
+     "cut_pct"
+    ],
+    "title": "SbtiTarget"
+   },
+   "SbtiTargets": {
+    "properties": {
+     "base_year": {
+      "type": "integer",
+      "title": "Base Year"
+     },
+     "target_year": {
+      "type": "integer",
+      "title": "Target Year"
+     },
+     "by_bucket": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/SbtiTarget"
+      },
+      "propertyNames": {
+       "enum": [
+        "s12",
+        "s3",
+        "flag"
+       ]
+      },
+      "type": "object",
+      "title": "By Bucket"
+     },
+     "flag_target_required": {
+      "type": "boolean",
+      "title": "Flag Target Required"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Sources"
+     }
+    },
+    "type": "object",
+    "required": [
+     "base_year",
+     "target_year",
+     "by_bucket",
+     "flag_target_required",
+     "sources"
+    ],
+    "title": "SbtiTargets"
+   },
+   "SbtiWarning": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "body": {
+      "type": "string",
+      "title": "Body"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/EvidenceRef"
+      },
+      "type": "array",
+      "title": "Sources"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "title",
+     "body",
+     "sources"
+    ],
+    "title": "SbtiWarning"
+   },
+   "SbtiYear": {
+    "properties": {
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "demand_index": {
+      "type": "number",
+      "title": "Demand Index"
+     },
+     "s12": {
+      "$ref": "#/components/schemas/SbtiCell"
+     },
+     "s3": {
+      "$ref": "#/components/schemas/SbtiCell"
+     },
+     "flag": {
+      "$ref": "#/components/schemas/SbtiCell"
+     },
+     "bau_t": {
+      "type": "number",
+      "title": "Bau T"
+     },
+     "abated_t": {
+      "type": "number",
+      "title": "Abated T"
+     },
+     "with_levers_t": {
+      "type": "number",
+      "title": "With Levers T"
+     },
+     "target_t": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Target T"
+     }
+    },
+    "type": "object",
+    "required": [
+     "year",
+     "demand_index",
+     "s12",
+     "s3",
+     "flag",
+     "bau_t",
+     "abated_t",
+     "with_levers_t",
+     "target_t"
+    ],
+    "title": "SbtiYear"
    },
    "ScenarioPreset": {
     "properties": {
@@ -5047,6 +6105,176 @@
      "kind"
     ],
     "title": "SourceRef"
+   },
+   "Stage": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "enum": [
+       "sown",
+       "flowering",
+       "fill",
+       "harvest"
+      ],
+      "title": "Name"
+     },
+     "date": {
+      "type": "string",
+      "title": "Date"
+     },
+     "expected": {
+      "type": "boolean",
+      "title": "Expected"
+     }
+    },
+    "type": "object",
+    "required": [
+     "name",
+     "date",
+     "expected"
+    ],
+    "title": "Stage"
+   },
+   "Today": {
+    "properties": {
+     "date": {
+      "type": "string",
+      "title": "Date"
+     },
+     "climate": {
+      "type": "string",
+      "enum": [
+       "ssp126",
+       "ssp245",
+       "ssp585"
+      ],
+      "title": "Climate"
+     },
+     "path": {
+      "type": "string",
+      "enum": [
+       "historical",
+       "ssp126",
+       "ssp245",
+       "ssp585"
+      ],
+      "title": "Path"
+     },
+     "crop": {
+      "type": "string",
+      "enum": [
+       "pea",
+       "potato",
+       "spinach",
+       "carrot",
+       "turnip_rape"
+      ],
+      "title": "Crop"
+     },
+     "season": {
+      "prefixItems": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       }
+      ],
+      "type": "array",
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Season"
+     },
+     "regions": {
+      "items": {
+       "$ref": "#/components/schemas/RegionDay"
+      },
+      "type": "array",
+      "title": "Regions"
+     },
+     "all": {
+      "items": {
+       "$ref": "#/components/schemas/RegionDay"
+      },
+      "type": "array",
+      "title": "All"
+     },
+     "counts": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "propertyNames": {
+       "enum": [
+        "ok",
+        "watch",
+        "risk"
+       ]
+      },
+      "type": "object",
+      "title": "Counts"
+     },
+     "changes": {
+      "items": {
+       "$ref": "#/components/schemas/Change"
+      },
+      "type": "array",
+      "title": "Changes"
+     },
+     "farms": {
+      "items": {
+       "$ref": "#/components/schemas/FarmSpread"
+      },
+      "type": "array",
+      "title": "Farms"
+     },
+     "normal_years": {
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       }
+      ],
+      "type": "array",
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Normal Years"
+     },
+     "default_date": {
+      "type": "string",
+      "title": "Default Date"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/SourceRef"
+      },
+      "type": "array",
+      "title": "Sources"
+     },
+     "synthetic": {
+      "type": "boolean",
+      "title": "Synthetic",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "date",
+     "climate",
+     "path",
+     "crop",
+     "season",
+     "regions",
+     "all",
+     "counts",
+     "changes",
+     "farms",
+     "normal_years",
+     "default_date",
+     "sources"
+    ],
+    "title": "Today"
    },
    "ValidationError": {
     "properties": {

@@ -110,14 +110,15 @@ export function Sheet({ label, from, onClose, children, side = false }: {
     if (!el) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!from || reduce) { el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: "ease-out" }); return; }
+    // Grow out of the opener: a uniform scale from its centre (non-uniform scale squashes the text).
     const to = el.getBoundingClientRect();
-    const sx = from.width / to.width, sy = from.height / to.height;
-    const dx = from.left - to.left, dy = from.top - to.top;
-    el.style.transformOrigin = "top left";
+    const ox = from.left + from.width / 2 - to.left, oy = from.top + from.height / 2 - to.top;
+    el.style.transformOrigin = `${ox}px ${Math.max(0, Math.min(to.height, oy))}px`;
+    el.style.willChange = "transform, opacity";
     el.animate([
-      { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, opacity: 0.6 },
+      { transform: "scale(.92)", opacity: 0 },
       { transform: "none", opacity: 1 },
-    ], { duration: 280, easing: "cubic-bezier(.2,.8,.2,1)" }).onfinish = () => { el.style.transformOrigin = ""; };
+    ], { duration: 340, easing: "cubic-bezier(.22,1,.36,1)" }).onfinish = () => { el.style.transformOrigin = ""; el.style.willChange = ""; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
@@ -179,10 +180,32 @@ export const CheckCircle = ({ size = 20 }: P) => ic(<><circle cx={12} cy={12} r=
 export const EuroIcon = ({ size = 20 }: P) => ic(<><path d="M17 6.5A7 7 0 1 0 17 17.5" /><path d="M4 10h9M4 14h9" /></>, size);
 export const SearchIcon = ({ size = 20 }: P) => ic(<><circle cx={11} cy={11} r={6} /><path d="m20 20-4.5-4.5" /></>, size);
 export const TrendIcon = ({ size = 20 }: P) => ic(<path d="m3 17 6-6 4 4 8-8" />, size);
+export const ChevronLeft = ({ size = 20 }: P) => ic(<path d="m15 5-7 7 7 7" />, size);
+export const ChevronRight = ({ size = 20 }: P) => ic(<path d="m9 5 7 7-7 7" />, size);
+export const CloseIcon = ({ size = 20 }: P) => ic(<path d="M6 6l12 12M18 6 6 18" />, size);
+export const PlayIcon = ({ size = 20 }: P) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" /></svg>
+);
+export const PauseIcon = ({ size = 20 }: P) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x={6.5} y={5} width={4} height={14} rx={1.2} /><rect x={13.5} y={5} width={4} height={14} rx={1.2} /></svg>
+);
+export const CheckIcon = ({ size = 20 }: P) => ic(<path d="m5 12.5 4.5 4.5L19 7.5" />, size);
 export const ArrowRight = ({ size = 20 }: P) => ic(<path d="M5 12h14M13 6l6 6-6 6" />, size);
 export const PodMark = ({ size = 28 }: P) => (
   <svg width={size} height={size * 0.6} viewBox="0 0 40 24" aria-hidden="true">
     <rect x={1} y={3} width={38} height={18} rx={9} fill="var(--apetit)" />
     {[11, 20, 29].map((x) => <circle key={x} cx={x} cy={12} r={4.2} fill="var(--leaf-soft)" />)}
   </svg>
+);
+
+/** The Field Radar mark: a sweep over furrows, in a lit green squircle. */
+export const BrandMark = ({ size = 30 }: P) => (
+  <span className="brand-mark" style={{ width: size, height: size, borderRadius: size * 0.3 }} aria-hidden="true">
+    <svg width={size * 0.66} height={size * 0.66} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round">
+      <path d="M3.5 18.5a10 10 0 0 1 17 0" strokeWidth={1.8} opacity={0.55} />
+      <path d="M7 18.5a6 6 0 0 1 10 0" strokeWidth={1.8} opacity={0.8} />
+      <path d="M12 18.5 18.5 7" strokeWidth={2.2} />
+      <circle cx={12} cy={18.5} r={1.9} fill="currentColor" stroke="none" />
+    </svg>
+  </span>
 );

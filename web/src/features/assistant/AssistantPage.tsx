@@ -83,8 +83,8 @@ function Empty() {
           <span className="gap-q" aria-hidden="true">?</span>
           <span><strong>{gaps.length} thing{gaps.length === 1 ? "" : "s"} nobody has told it yet</strong>, like {first.question ?? first.label.replace(/\?$/, "")}.
             <span className="muted"> The people who own that data know these.</span></span>
-          <button type="button" className="link tacit" style={{ marginLeft: "auto", textDecoration: "underline" }}
-            onClick={() => send(`Fill the gap: ${first.label}`, "teach", { gap: first.id })}>Ask them →</button>
+          <button type="button" className="link tacit cu-go" style={{ marginLeft: "auto", flex: "none" }}
+            onClick={() => send(`Fill the gap: ${first.label}`, "teach", { gap: first.id })}>Ask them ›</button>
         </div>
       ) : null}
     </div>

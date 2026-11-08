@@ -3,6 +3,7 @@
 // Farms and sites are their own nodes, so notes and gaps about the same place group around one point.
 // A freshly filed note plays its filing: tag chips one by one, then the node drops in and its edges draw.
 // Clicking a node opens a drawer with everything linked to it (for a farm or site: src.r_entity.entity_view).
+import { CloseIcon } from "../../components/ui";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useEntity, useGraph } from "../../api/hooks";
 import type { Filed, Graph, GraphNode } from "../../api/types";
@@ -175,7 +176,7 @@ export function KnowledgeGraph() {
           <div className="kg-filing" role="status" key={filing.f.note_id}>
             <div className="kg-filing-head">
               <span>{playing ? "Filing it itself…" : "Filed itself"}</span>
-              <button type="button" className="kg-x" onClick={() => playFiling(null)} aria-label="Hide the filing">×</button>
+              <button type="button" className="kg-x" onClick={() => playFiling(null)} aria-label="Hide the filing"><CloseIcon size={16} /></button>
             </div>
             <div className="kg-chips">
               {chips.map(([k, v], i) => (
@@ -220,11 +221,11 @@ export function KnowledgeGraph() {
                     {on || focus === n.id ? <circle r={r + 8} fill={FILL[n.kind] === "transparent" ? "var(--kg-tacit)" : FILL[n.kind]} opacity={0.18} /> : null}
                     {n.kind === "gap" ? (
                       <>
-                        <circle r={r} fill="rgba(255,255,255,.7)" stroke="var(--kg-tacit)" strokeWidth={1.5} strokeDasharray="3 3" />
+                        <circle r={r} fill="var(--surface-raised)" stroke="var(--kg-tacit)" strokeWidth={1.5} strokeDasharray="3 3" />
                         <text textAnchor="middle" dy={4} className="gapt">?</text>
                       </>
                     ) : n.kind === "entity" ? (
-                      <rect x={-r} y={-r} width={2 * r} height={2 * r} rx={6} fill="var(--surface)" stroke={FILL.entity} strokeWidth={2.5} />
+                      <rect x={-r} y={-r} width={2 * r} height={2 * r} rx={6} fill="var(--surface-solid)" stroke={FILL.entity} strokeWidth={2.5} />
                     ) : <circle r={r} fill={FILL[n.kind]} />}
                     {n.kind === "tacit" ? <circle r={r + 5} fill="none" stroke="var(--kg-tacit)" strokeWidth={2}
                       className={isFiling && !n.verified ? "kg-ants" : undefined} strokeDasharray={n.verified ? undefined : "3 3"} /> : null}
@@ -282,7 +283,7 @@ function NodeDrawer({ g, id, onClose, onPick }: { g: Graph; id: string; onClose:
           <div className={`kg-eyebrow ${n.kind}`}>{n.kind === "entity" ? (e ? (e.kind === "farm" ? "Contract farm" : "Site") : "Farm or site") : KIND_LABEL[n.kind]}</div>
           <h3>{title}</h3>
         </div>
-        <button ref={closeRef} type="button" className="kg-x" onClick={onClose} aria-label="Close">×</button>
+        <button ref={closeRef} type="button" className="kg-x" onClick={onClose} aria-label="Close"><CloseIcon size={16} /></button>
       </div>
 
       {n.kind === "tacit" ? (

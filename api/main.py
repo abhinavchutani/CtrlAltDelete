@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 
+from api import brief
 from api import geo
 from api import insight
 from api import kgraph
@@ -145,6 +146,14 @@ def radar_outlook(body: radar.OutlookIn) -> radar.Outlook:
     return radar.outlook(body)
 
 
+@app.get("/api/radar/today", response_model=radar.Today)
+def radar_today(date: str | None = Query(None, description="YYYY-MM-DD, 1 Apr–31 Oct of 2026–2040; default: the demo day"),
+                climate: S.Climate = "ssp245", crop: radar.TodayCrop = "pea") -> radar.Today:
+    if L.mock_mode():
+        raise HTTPException(503, "today runs on the daily weather (API_MOCK=0)")
+    return radar.today(date, climate, crop)
+
+
 @app.get("/api/graph", response_model=kgraph.Graph)
 def graph() -> kgraph.Graph:
     return kgraph.graph()
@@ -227,6 +236,18 @@ def gaps(year: int | None = None) -> list[S.Gap]:
         return [S.Gap(**g) for g in r_gaps.gaps(con, year)["gaps"]]
 
 
+# ── SBTi targets + pathway (#130) ──────────────────────────────────
+@app.post("/api/sbti/pathway", response_model=S.SbtiPathway)
+def sbti_pathway(body: S.SbtiPathwayIn) -> S.SbtiPathway:
+    """Base year 2025 → SBTi near-term targets, BAU under a transition scenario, and the chosen levers' effect."""
+    try:
+        return L.get("sbti_pathway")(body.scenario, body.levers, body.target_year)
+    except (ValueError, LookupError) as e:
+        raise HTTPException(422, str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(503, str(e)) from e
+
+
 # ── retrieval (fixtures while on hold) ─────────────────────────────
 @app.post("/api/ask", response_model=S.AskOut)
 def ask(body: S.AskIn) -> S.AskOut:
@@ -234,6 +255,27 @@ def ask(body: S.AskIn) -> S.AskOut:
 
 
 XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+@app.get("/api/brief")
+def get_brief() -> dict:
+    """The Overview's three problems (scattered data, hand-built reports, Sweden 2026), computed from the snapshot."""
+    _need_data()
+    return brief.brief()
+
+
+@app.get("/api/issues")
+def get_issues(status: str = Query("proposed", pattern="^(proposed|legitimate)$"), source: str | None = None,
+               limit: int = Query(40, ge=1, le=500)) -> list[dict]:
+    _need_data()
+    return brief.issues(status, source, limit)
+
+
+@app.post("/api/report/inventory")
+def make_inventory_report(year: int = Query(2025, ge=2023, le=2025)) -> dict:
+    if L.mock_mode():
+        raise HTTPException(503, "reports are made from the snapshot in real mode (API_MOCK=0)")
+    return brief.inventory_report(year)
 
 
 @app.get("/api/report/{report_id}")

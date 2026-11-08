@@ -1,62 +1,191 @@
+/* Field Radar design tokens: "Field Glass".
+   One brand language in two appearances. Theme is resolved in JS (theme.ts) and written to <html data-theme>.
+   Layers, top to bottom:
+     1. Primitives   (palette, type, space, radius, motion): never used directly by components
+     2. Semantic     (label, fill, separator, accent, status, knowledge-kind)
+     3. Materials    (liquid glass: thin / regular / thick / chrome + rim, sheen, shadow)
+   Legacy names (--ink, --apetit, --leaf, ...) are kept as aliases so feature code keeps working. */
+
 :root {
-  --canvas: #FAF7F0;
-  --surface: #FFFFFF;
-  --surface-sunk: #F1EBDD;
-  --apetit: #69B330;
-  --on-apetit: #1F2A1E;
-  --line: #D9D0BE;
-  --line-strong: #A79C86;
-  --ink: #1F2A1E;
-  --ink-muted: #596455;
-  --leaf: #3B7519;
-  --leaf-soft: #E4F1DA;
-  --on-leaf: #FFFFFF;
-  --harvest: #C98A22;
-  --harvest-ink: #8A5410;
-  --harvest-soft: #FBF0D6;
-  --status-ok: #A9D3A0;
-  --status-watch: #D4931F;
-  --status-risk: #A63A27;
-  --risk-ink: #9A3523;
-  --risk-soft: #F8E3DC;
-  --kg-data: #3B7519;
-  --kg-model: #2F6487;
-  --kg-model-soft: #E2ECF3;
-  --kg-doc: #C98A22;
-  --kg-tacit: #6B4A8A;
-  --kg-entity: #2E5E63;
-  --kg-tacit-soft: #EEE6F3;
-  --kg-tacit-line: #D6C7E2;
-  --focus: #2F6487;
-  --glass: rgba(255,255,255,0.66);
-  --glass-strong: rgba(255,255,255,0.82);
-  --glass-edge: rgba(255,255,255,0.85);
-  --backdrop-field: #B9DB8F;
-  --backdrop-wheat: #E9C77A;
-  --backdrop-oat: #F3E6C8;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-6: 24px;
-  --space-5: 20px;
-  --space-8: 32px;
-  --space-12: 48px;
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 28px;
-  --radius-xl: 36px;
-  --radius-pill: 999px;
-  --shadow-card: 0 1px 2px rgba(31,42,30,0.06), 0 4px 16px rgba(31,42,30,0.06);
-  --shadow-glass: 0 1px 1px rgba(31,42,30,0.04), 0 8px 32px rgba(31,42,30,0.10);
-  --font-display: "Fraunces Variable", "Fraunces", Georgia, serif;
-  --font-sans: "Figtree", system-ui, sans-serif;
+  color-scheme: light;
+
+  /* ── type: SF on Apple platforms, Figtree elsewhere ── */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-rounded: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Figtree", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ── spacing (4pt grid) ── */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px;
+  --space-6: 24px; --space-8: 32px; --space-12: 48px;
+
+  /* ── radius: concentric (outer = inner + padding) ── */
+  --radius-xs: 6px; --radius-sm: 10px; --radius-md: 16px; --radius-lg: 26px; --radius-xl: 34px; --radius-pill: 999px;
+
+  /* ── motion: Apple-like springs approximated as curves ── */
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-spring: cubic-bezier(.34, 1.36, .64, 1);
+  --dur-1: 120ms; --dur-2: 200ms; --dur-3: 320ms;
+
+  /* ── palette: light ── */
+  --bg: #EEF0EA;
+  --bg-ambient-1: #CFE7B8;   /* field */
+  --bg-ambient-2: #F3DDA6;   /* wheat */
+  --bg-ambient-3: #CFE2EE;   /* sky */
+
+  --label: #111611;
+  --label-2: rgba(17, 22, 17, .62);
+  --label-3: rgba(17, 22, 17, .52);
+  --label-4: rgba(17, 22, 17, .20);
+  --on-accent: #FFFFFF;
+
+  --fill-1: rgba(120, 128, 116, .20);
+  --fill-2: rgba(120, 128, 116, .14);
+  --fill-3: rgba(120, 128, 116, .09);
+  --separator: rgba(17, 22, 17, .10);
+  --separator-strong: rgba(17, 22, 17, .22);
+
+  --surface-solid: #FFFFFF;
+  --surface-raised: rgba(255, 255, 255, .78);
+  --surface-inset: rgba(255, 255, 255, .50);
+
+  --accent: #3D8B1F;          /* Field green: the brand */
+  --accent-hover: #357A1B;
+  --accent-tint: rgba(61, 139, 31, .12);
+  --accent-ink: #2E6E14;
+
+  --red: #D2382A;    --red-tint: rgba(210, 56, 42, .11);   --red-ink: #B02A1E;
+  --amber: #D98A00;  --amber-tint: rgba(217, 138, 0, .13); --amber-ink: #8F5A00;
+  --green: #5DB33A;  --green-tint: rgba(93, 179, 58, .14); --green-ink: #2E6E14;
+  --blue: #2F72C4;   --blue-tint: rgba(47, 114, 196, .11); --blue-ink: #245BA0;
+  --purple: #7A4FB0; --purple-tint: rgba(122, 79, 176, .11); --purple-ink: #643D99; --purple-line: rgba(122, 79, 176, .30);
+  --gold: #C98A22;
+
+  /* ── materials: liquid glass ── */
+  --mat-thin: rgba(255, 255, 255, .42);
+  --mat-regular: rgba(255, 255, 255, .58);
+  --mat-thick: rgba(255, 255, 255, .78);
+  --mat-chrome: rgba(250, 251, 248, .70);
+  --mat-blur: 20px;
+  --mat-saturate: 185%;
+  --rim-hi: rgba(255, 255, 255, .95);
+  --rim-lo: rgba(255, 255, 255, .25);
+  --rim-shade: rgba(17, 22, 17, .06);
+  --sheen: rgba(255, 255, 255, .55);
+  --hairline: rgba(17, 22, 17, .07);
+  --elev-1: 0 1px 2px rgba(17, 22, 17, .05), 0 2px 8px rgba(17, 22, 17, .04);
+  --elev-2: 0 1px 2px rgba(17, 22, 17, .04), 0 10px 30px -6px rgba(17, 22, 17, .12);
+  --elev-3: 0 2px 6px rgba(17, 22, 17, .06), 0 30px 60px -12px rgba(17, 22, 17, .22);
+  --scrim: rgba(238, 240, 234, .45);
+  --focus: #2F72C4;
+
+  /* map */
+  --map-land: #ECEEE6; --map-water: #CFE0E8; --map-woods: #DFE6D2; --map-town: #E6E5DC; --map-building: #DDDBD0;
+  --map-casing: #D4D4C8; --map-road: #FFFFFF; --map-label: #5D6659; --map-halo: #ECEEE6; --map-boundary: #A3A595;
+  --kg-halo: rgba(255, 255, 255, .9);
 }
-.t-headline { font: 600 40px/44px var(--font-display); letter-spacing: -0.01em; }
-.t-figure { font: 600 56px/56px var(--font-display); }
-.t-title { font: 600 24px/30px var(--font-display); }
-.t-body { font: 400 16px/24px var(--font-sans); }
-.t-body-strong { font: 600 16px/24px var(--font-sans); }
-.t-label { font: 500 14px/20px var(--font-sans); }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #07090A;
+  --bg-ambient-1: #173A1C;
+  --bg-ambient-2: #3A2D0E;
+  --bg-ambient-3: #0F2B3A;
+
+  --label: #F3F5F0;
+  --label-2: rgba(235, 240, 230, .64);
+  --label-3: rgba(235, 240, 230, .50);
+  --label-4: rgba(235, 240, 230, .18);
+  --on-accent: #0A1406;
+
+  --fill-1: rgba(150, 160, 145, .26);
+  --fill-2: rgba(150, 160, 145, .18);
+  --fill-3: rgba(150, 160, 145, .11);
+  --separator: rgba(235, 240, 230, .10);
+  --separator-strong: rgba(235, 240, 230, .22);
+
+  --surface-solid: #16191A;
+  --surface-raised: rgba(40, 44, 42, .72);
+  --surface-inset: rgba(255, 255, 255, .05);
+
+  --accent: #7DD154;
+  --accent-hover: #8EDC66;
+  --accent-tint: rgba(125, 209, 84, .16);
+  --accent-ink: #94DE6E;
+
+  --red: #FF5E4D;    --red-tint: rgba(255, 94, 77, .16);   --red-ink: #FF8576;
+  --amber: #FFB020;  --amber-tint: rgba(255, 176, 32, .16); --amber-ink: #FFC453;
+  --green: #5FC23B;  --green-tint: rgba(95, 194, 59, .18); --green-ink: #94DE6E;
+  --blue: #5AA2F0;   --blue-tint: rgba(90, 162, 240, .16); --blue-ink: #86BBF5;
+  --purple: #B48AF0; --purple-tint: rgba(180, 138, 240, .16); --purple-ink: #C7A6F5; --purple-line: rgba(180, 138, 240, .36);
+  --gold: #E5A93C;
+
+  --mat-thin: rgba(28, 32, 30, .38);
+  --mat-regular: rgba(30, 34, 32, .52);
+  --mat-thick: rgba(26, 29, 28, .78);
+  --mat-chrome: rgba(18, 21, 20, .66);
+  --mat-saturate: 170%;
+  --rim-hi: rgba(255, 255, 255, .30);
+  --rim-lo: rgba(255, 255, 255, .04);
+  --rim-shade: rgba(0, 0, 0, .35);
+  --sheen: rgba(255, 255, 255, .07);
+  --hairline: rgba(255, 255, 255, .08);
+  --elev-1: 0 1px 2px rgba(0, 0, 0, .40), 0 2px 8px rgba(0, 0, 0, .25);
+  --elev-2: 0 1px 2px rgba(0, 0, 0, .35), 0 14px 36px -8px rgba(0, 0, 0, .55);
+  --elev-3: 0 2px 6px rgba(0, 0, 0, .40), 0 36px 70px -14px rgba(0, 0, 0, .75);
+  --scrim: rgba(4, 6, 6, .55);
+  --focus: #5AA2F0;
+
+  --map-land: #121615; --map-water: #0D1D26; --map-woods: #142019; --map-town: #191D1B; --map-building: #1E2321;
+  --map-casing: #252A28; --map-road: #2B312E; --map-label: #8A948C; --map-halo: #121615; --map-boundary: #3C4440;
+  --kg-halo: rgba(10, 12, 12, .85);
+}
+
+/* ── legacy aliases (feature code uses these) ── */
+:root, :root[data-theme="dark"] {
+  --canvas: var(--bg);
+  --surface: var(--surface-solid);
+  --surface-sunk: var(--fill-3);
+  --apetit: var(--accent);
+  --on-apetit: var(--on-accent);
+  --line: var(--separator);
+  --line-strong: var(--separator-strong);
+  --ink: var(--label);
+  --ink-muted: var(--label-2);
+  --leaf: var(--accent-ink);
+  --leaf-soft: var(--accent-tint);
+  --on-leaf: var(--on-accent);
+  --harvest: var(--gold);
+  --harvest-ink: var(--amber-ink);
+  --harvest-soft: var(--amber-tint);
+  --status-ok: var(--green);
+  --status-watch: var(--amber);
+  --status-risk: var(--red);
+  --risk-ink: var(--red-ink);
+  --risk-soft: var(--red-tint);
+  --kg-data: var(--accent);
+  --kg-model: var(--blue);
+  --kg-model-soft: var(--blue-tint);
+  --kg-doc: var(--gold);
+  --kg-tacit: var(--purple);
+  --kg-entity: color-mix(in srgb, var(--blue) 45%, var(--green));
+  --kg-tacit-soft: var(--purple-tint);
+  --kg-tacit-line: var(--purple-line);
+  --glass: var(--mat-regular);
+  --glass-strong: var(--mat-thick);
+  --glass-edge: var(--rim-hi);
+  --shadow-card: var(--elev-1);
+  --shadow-glass: var(--elev-2);
+}
+
+/* ── type scale (Apple HIG, web-sized) ── */
+.t-large { font: 700 34px/41px var(--font-display); letter-spacing: -.022em; }
+.t-headline { font: 700 28px/34px var(--font-display); letter-spacing: -.02em; }
+.t-figure { font: 700 56px/58px var(--font-rounded); letter-spacing: -.03em; }
+.t-title { font: 600 22px/28px var(--font-display); letter-spacing: -.015em; }
+.t-body { font: 400 17px/24px var(--font-sans); letter-spacing: -.01em; }
+.t-body-strong { font: 600 17px/24px var(--font-sans); letter-spacing: -.01em; }
+.t-label { font: 500 15px/20px var(--font-sans); letter-spacing: -.005em; }
 .t-caption { font: 400 13px/18px var(--font-sans); }
-.t-eyebrow { font: 600 12px/16px var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; }
+.t-eyebrow { font: 600 12px/16px var(--font-sans); letter-spacing: .04em; text-transform: uppercase; }
