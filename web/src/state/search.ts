@@ -1,5 +1,5 @@
 // The plan finder's state: POST /api/search streams one event per simulated plan (Server-Sent Events over fetch,
-// since EventSource can't POST). Kept in its own store so the map panel, Overview and Assistant share one run.
+// since EventSource can't POST). Kept in its own store so the Overview and Assistant share one run.
 import { create } from "zustand";
 import type { Climate, PlanBaseline, PlanCandidate, SearchEvent } from "../api/types";
 

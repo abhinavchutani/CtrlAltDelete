@@ -2194,6 +2194,41 @@
     ],
     "title": "EvidenceRef"
    },
+   "FarmBadYears": {
+    "properties": {
+     "farm_id": {
+      "type": "string",
+      "title": "Farm Id"
+     },
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "pea_fields": {
+      "type": "integer",
+      "title": "Pea Fields"
+     },
+     "bad_years": {
+      "items": {
+       "type": "integer"
+      },
+      "type": "array",
+      "title": "Bad Years"
+     }
+    },
+    "type": "object",
+    "required": [
+     "farm_id",
+     "region",
+     "pea_fields",
+     "bad_years"
+    ],
+    "title": "FarmBadYears"
+   },
    "FarmStatus": {
     "properties": {
      "farm_id": {
@@ -3655,6 +3690,13 @@
       ],
       "title": "Repeat Region"
      },
+     "farms_hit": {
+      "items": {
+       "$ref": "#/components/schemas/FarmBadYears"
+      },
+      "type": "array",
+      "title": "Farms Hit"
+     },
      "near_region": {
       "anyOf": [
        {
@@ -3738,6 +3780,7 @@
      "repeat_years",
      "repeat_farm_ids",
      "repeat_region",
+     "farms_hit",
      "near_region",
      "worst_region",
      "contract_farms",

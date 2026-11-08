@@ -75,9 +75,6 @@ function AskTurn({ t, latest }: { t: Turn; latest: boolean }) {
 
 function SimTurn({ t, latest }: { t: Turn; latest: boolean }) {
   const climate = useStore((s) => s.climate);
-  const showPlan = useStore((s) => s.showPlan);
-  const setTab = useStore((s) => s.setTab);
-  const setPlanSheet = useStore((s) => s.setPlanSheet);
   const light = useStore((s) => s.light);
   const base: ScenarioSpec = { climate, horizon_end: 2040, levers: [], label: null };
   const intent = useIntentQuery(t.text, base);
@@ -119,10 +116,6 @@ function SimTurn({ t, latest }: { t: Turn; latest: boolean }) {
         <TableView t={{ columns: ["Year", "Region", "Pea vs normal", "€ at risk"],
           rows: pea.map((r) => [r.year, r.region === "FI_SW" ? "SW Finland" : "Skåne", `${r.change_vs_baseline_pct > 0 ? "+" : ""}${r.change_vs_baseline_pct} %`, r.eur_at_risk]) }} />
       </details>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <button type="button" className="btn btn-primary" onClick={() => { showPlan(spec.levers ?? [], spec.label ?? levers.join(" + ")); setPlanSheet(false); setTab("map"); }}>
-          Show it on the map</button>
-      </div>
       <Followups items={[{ mode: "ask", label: "Which farms are hit hardest today?", prompt: "Which pea farms had the lowest yields in 2025?" },
         { mode: "teach", label: "Ask the field team if it's realistic", prompt: "Field team view on this plan: " }]} />
     </article>
@@ -210,7 +203,7 @@ function TeachTurn({ t, latest }: { t: Turn; latest: boolean }) {
     if (latest && file.data) { markNew(`tacit:${file.data.note_id}`); light(file.data.linked_node_ids); }
   }, [latest, file.data, light, markNew]);
   const doFile = (text: string, name: string, role: string) =>
-    file.mutate({ text, contributed_by: name, role, farm_id: t.context?.farmId ?? null, gap_id: gapId });
+    file.mutate({ text, contributed_by: name, role, farm_id: null, gap_id: gapId });
 
   if (gapId) {
     return (

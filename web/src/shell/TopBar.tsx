@@ -3,7 +3,6 @@ import { useStore, type Tab } from "../state/store";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "Overview" },
-  { key: "map", label: "Map" },
   { key: "assistant", label: "Assistant" },
 ];
 

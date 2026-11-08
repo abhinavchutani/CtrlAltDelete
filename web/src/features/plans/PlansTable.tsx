@@ -10,13 +10,10 @@ const VS = { better: "Still better", same: "About the same", worse: "Worse" } as
 export function PlansTable({ limit }: { limit?: number }) {
   const s = useSearch();
   const options = useAllOptions();
-  const planLabel = useStore((x) => x.planLabel);
-  const showPlan = useStore((x) => x.showPlan);
-  const setPlanSheet = useStore((x) => x.setPlanSheet);
-  const setTab = useStore((x) => x.setTab);
+  const prefill = useStore((x) => x.prefill);
   const climate = s.key?.split(":")[0] ?? "ssp245";
   const rows = liveOrder(s).slice(0, limit);
-  const show = (c: PlanCandidate) => { showPlan(c.levers, c.label); setPlanSheet(true); setTab("map"); };
+  const ask = (c: PlanCandidate) => prefill("simulate", `What if we ${c.label.charAt(0).toLowerCase()}${c.label.slice(1).replace(/ \(assumption\)/g, "")}?`);
   if (!rows.length) return <p className="muted">No plans simulated yet.</p>;
   const others = Object.keys(FUTURE_LABEL).filter((k) => k !== climate);
   return (
@@ -34,7 +31,7 @@ export function PlansTable({ limit }: { limit?: number }) {
           {rows.map((c, i) => {
             const cost = planCost(c.levers, options.data);
             return (
-              <tr key={c.id} className={c.id === s.best ? "best" : ""} aria-current={planLabel === c.label || undefined}>
+              <tr key={c.id} className={c.id === s.best ? "best" : ""}>
                 <td className="muted">{i + 1}</td>
                 <td>{c.label}{c.assumption ? <span className="tag-assume">assumption</span> : null}</td>
                 <td>{c.eur_at_risk_per_year}</td>
@@ -43,7 +40,7 @@ export function PlansTable({ limit }: { limit?: number }) {
                 <td>{c.plan_costly_years} → <strong>{c.costly_years}</strong></td>
                 {others.map((k) => <td key={k}>{c.futures?.[k] ? VS[c.futures[k].vs_current_plan] : <span className="muted">not re-run</span>}</td>)}
                 <td className="muted">{cost ? COST_LABEL[cost] : "—"}</td>
-                <td><button type="button" className="link" onClick={() => show(c)}>Show on map</button></td>
+                <td><button type="button" className="link" onClick={() => ask(c)}>Simulate it</button></td>
               </tr>
             );
           })}

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useStore } from "../state/store";
 
-type Step = { target: string | null; title: string; body: string; tab: "overview" | "map" | "assistant" };
+type Step = { target: string | null; title: string; body: string; tab: "overview" | "assistant" };
 const STEPS: Step[] = [
   { tab: "overview", target: null, title: "Welcome to Apetit Radar",
     body: "What the weather could cost the farms that grow for Apetit, season by season to 2040, and the changes that cut it. It runs on the challenge's synthetic data pack." },
@@ -11,10 +11,6 @@ const STEPS: Step[] = [
     body: "Each card gives one answer. Tap it to see what drives it, and at the bottom, how we know." },
   { tab: "overview", target: "plan", title: "The best plan",
     body: "The model simulates every change it can, alone and combined, and re-checks the best in hotter and cooler futures." },
-  { tab: "map", target: "lens", title: "Read the map",
-    body: "Fields are coloured by how their season goes: ● on track, ▲ watch, ◆ bad year. Switch the lens to see drought, heat or rain." },
-  { tab: "map", target: "years", title: "Play the problem years",
-    body: "Press play to step through the seasons with a problem, or tap any year." },
   { tab: "assistant", target: "graph", title: "Ask, simulate, teach",
     body: "Ask the data, run a plan through the yield model, or tell it what your team knows. The graph lights up what each answer used." },
   { tab: "assistant", target: "help", title: "That's it", body: "Replay this tour any time from this button." },

@@ -1,11 +1,11 @@
 // Layer 1: the widget grid. A widget never lists; each one is a single button that opens its Layer 2.
 // Every number comes from /api/radar/outlook, /api/provenance or the plan finder stream.
 import { type MouseEvent } from "react";
-import type { Outlook, Region, Status } from "../api/types";
+import type { Outlook, Status } from "../api/types";
 import {
-  ArrowRight, EuroIcon, FieldsIcon, SearchIcon, PinIcon, REGION_NAME, Ring, Segmented, SproutIcon, StatusMark, WarnIcon, shortYear,
+  ArrowRight, EuroIcon, FieldsIcon, PinIcon, Ring, Segmented, SproutIcon, StatusMark, WarnIcon, shortYear,
 } from "../components/ui";
-import { CLIMATES, climatePath, REGION_VIEW, START_YEAR, useStore, type SheetKind } from "../state/store";
+import { CLIMATES, climatePath, useStore, type SheetKind } from "../state/store";
 import { BUCKET_LEVEL, cap, typeLabel, useBestPlan, useTodayOutlook } from "./data";
 import { OverviewSheets } from "./Sheets";
 import { SeasonHighlights } from "./SeasonHighlights";
@@ -14,36 +14,25 @@ const ASK_EXAMPLE = "How did Swedish pea deliveries in 2026 compare with 2021?";
 const BAR_H = { 1: 24, 2: 52, 3: 96 } as const;
 const rect = (e: MouseEvent) => (e.currentTarget as HTMLElement).getBoundingClientRect();
 
-function Widget({ size = "S", label, icon, right, cta, note, onOpen, children, tour }: {
-  size?: "S" | "M" | "L"; label: string; icon: React.ReactNode; right?: React.ReactNode; cta: string; note?: string;
+function Widget({ size = "S", label, icon, right, cta, onOpen, children, tour }: {
+  size?: "S" | "M" | "L"; label: string; icon: React.ReactNode; right?: React.ReactNode; cta: string;
   onOpen: (e: MouseEvent) => void; children: React.ReactNode; tour?: string;
 }) {
   return (
     <button type="button" className={`w glass ${size}`} onClick={onOpen} data-tour={tour}>
       <span className="w-label">{icon}{label}{right ? <span className="right">{right}</span> : null}</span>
       {children}
-      <span className="w-cta"><span style={{ whiteSpace: "nowrap" }}>{cta} ›</span>{note ? <span className="w-note" title="One plausible weather path on the chosen climate future, not a forecast">{note}</span> : null}</span>
+      <span className="w-cta">{cta} ›</span>
     </button>
   );
 }
 
-const CROP: Record<string, string> = { pea: "Pea", potato: "Potato", carrot: "Carrot", spinach: "Spinach", turnip_rape: "Turnip rape" };
-const REG: Record<string, string> = { FI_SW: "FI", SE_SKANE: "SE" };
-
-/** Next season's contracts as one mark each (shape + colour), then the 15 seasons as bars with next season ringed. */
+/** The 15 seasons as bars (height = € bucket, colour = status), next season ringed. */
 function SeasonBars({ o }: { o: Outlook }) {
   const risk = o.seasons.filter((s) => s.status === "risk").length;
   return (
     <>
-      <div className="contracts" role="list" aria-label={`Contracts in ${o.next_season}`}>
-        {o.next_contracts.map((c) => (
-          <span key={c.region + c.crop} role="listitem" className={`contract ${c.status}`}
-            title={`${CROP[c.crop] ?? c.crop}, ${REGION_NAME[c.region]}: ${c.band} at stake in ${o.next_season}`}>
-            <StatusMark status={c.status} size={12} /> {CROP[c.crop] ?? c.crop} {REG[c.region]}
-          </span>
-        ))}
-      </div>
-      <div className="bars" style={{ height: 130, marginTop: 18 }} role="img"
+      <div className="bars" style={{ height: 150, marginTop: 30 }} role="img"
         aria-label={`Seasons at risk, ${o.years[0]}–${o.years[o.years.length - 1]}: ${risk} over €250k`}>
         {o.seasons.map((s, i) => (
           <div key={s.year} className={`col ${s.year === o.next_season ? "now" : ""}`}>
@@ -108,25 +97,11 @@ export function Overview() {
   const setClimate = useStore((s) => s.setClimate);
   const sheet = useStore((s) => s.sheet);
   const openSheet = useStore((s) => s.openSheet);
-  const setTab = useStore((s) => s.setTab);
-  const setYear = useStore((s) => s.setYear);
-  const setLens = useStore((s) => s.setLens);
-  const flyTo = useStore((s) => s.flyTo);
-  const showPlan = useStore((s) => s.showPlan);
-  const setPlanSheet = useStore((s) => s.setPlanSheet);
-  const setFarmFilter = useStore((s) => s.setFarmFilter);
   const prefill = useStore((s) => s.prefill);
   const q = useTodayOutlook();
   const plan = useBestPlan();
   const o = q.data;
   const open = (k: SheetKind) => (e: MouseEvent) => openSheet(k, rect(e));
-  const toMap = (year?: number, region?: Region | null) => {
-    if (year) setYear(year);
-    setLens("overall");
-    setFarmFilter(null);
-    if (region) flyTo(REGION_VIEW[region]);
-    setTab("map");
-  };
   const risk = o?.issues.filter((i) => i.status === "risk").length ?? 0;
   const watch = o?.issues.filter((i) => i.status === "watch").length ?? 0;
   const byType = new Map<string, number>();
@@ -165,8 +140,7 @@ export function Overview() {
           <span className="w-sub">{[...byType.entries()].map(([t, n]) => `${n} ${typeLabel(t).toLowerCase().replace(" at flowering", "")}`).join(" · ")}{byType.size ? " at flowering" : ""}</span>
         </Widget>
 
-        <Widget label="Fields at risk soon" icon={<FieldsIcon />} cta="Show them on the map"
-          onOpen={() => { toMap(o?.next_season, o?.near_region); if (o) setFarmFilter({ ids: o.near_farm_ids, label: `with a bad year in ${o.near_years[0]}–${shortYear(o.near_years[1])}`, region: o.near_region }); }}>
+        <Widget label="Fields at risk soon" icon={<FieldsIcon />} cta="See the farms" onOpen={open("farms-near")}>
           {o ? (
             <span className="w-row" style={{ gap: 14 }}>
               <Waffle share={o.near_fields_hit / Math.max(1, o.pea_fields)} />
@@ -178,8 +152,7 @@ export function Overview() {
 
         <Widget size="M" label="Yield optimizer" icon={<SproutIcon />}
           right={plan.status === "done" ? `best of ${plan.tested} plans` : "testing plans…"}
-          cta="Open the plan" tour="plan"
-          onOpen={() => { if (best) { showPlan(best.levers, best.label); setPlanSheet(true); } else setPlanSheet(true); toMap(); }}>
+          cta={plan.status === "done" ? `See all ${plan.tested} plans` : "See the plans"} tour="plan" onOpen={open("plans")}>
           <div className="w-split">
             <div>
               {best ? <span className="w-fig fig-leaf">Saves {best.saves}</span>
@@ -204,22 +177,21 @@ export function Overview() {
           </div>
         </Widget>
 
-        <Widget label="Upcoming season" right={String(o?.next_season ?? START_YEAR + 1)} icon={<WarnIcon />} cta="See it on the map"
-          note="not a forecast"
-          onOpen={() => { toMap(o?.next_season); setLens("rain"); }}>
-          {o ? <SeasonHighlights year={o.next_season} climate={climate} contracts={o.next_contracts} /> : skel("90%", 80)}
-        </Widget>
+        <section className="w glass S season-tile" aria-label="Upcoming season">
+          <span className="w-label"><WarnIcon />Upcoming season<span className="right">{o?.next_season ?? "…"}</span></span>
+          {o ? <SeasonHighlights o={o} climate={climate} /> : skel("90%", 80)}
+          <span className="w-note" title="One plausible weather path on the chosen climate future, not a forecast">one weather path, not a forecast</span>
+        </section>
 
-        <button type="button" className="w glass S ask-tile" onClick={() => prefill("ask", ASK_EXAMPLE)} data-tour="ask">
-          <span className="w-label"><SearchIcon />Ask</span>
-          <span className="ask-arrow" aria-hidden="true"><ArrowRight size={56} /></span>
+        <button type="button" className="w glass S ask-tile" onClick={() => prefill("ask", ASK_EXAMPLE)} data-tour="ask"
+          aria-label={`Ask. For example: ${ASK_EXAMPLE}`}>
+          <span className="ask-head"><span className="w-fig">Ask</span><span className="ask-arrow" aria-hidden="true"><ArrowRight size={36} /></span></span>
           <span className="w-sub">“{ASK_EXAMPLE}”</span>
         </button>
 
         <Widget size="M" label="Hit again and again" icon={<PinIcon />}
           right={o ? `${o.repeat_bins.reduce((x, y) => x + y, 0)} farms, ${o.repeat_years[0]}–${o.repeat_years[1]}` : undefined}
-          cta="Show them on the map"
-          onOpen={() => { toMap(o?.focus_year, o?.repeat_region); if (o) setFarmFilter({ ids: o.repeat_farm_ids, label: "with 2+ bad years", region: o.repeat_region }); }}>
+          cta="See the farms" onOpen={open("farms-repeat")}>
           {o ? <RepeatFarms o={o} /> : <div className="minimap skeleton" />}
         </Widget>
       </div>

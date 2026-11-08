@@ -87,6 +87,13 @@ class Contract(BaseModel):  # one region × crop contract in one season
     change_pct: float  # harvest vs the 1991–2020 normal for this region × crop
 
 
+class FarmBadYears(BaseModel):  # one farm with at least one bad year after the last observed season
+    farm_id: str
+    region: S.Region
+    pea_fields: int
+    bad_years: list[int]
+
+
 class FarmStatus(BaseModel):
     farm_id: str
     status: Status
@@ -116,7 +123,8 @@ class Outlook(BaseModel):
     repeat_bins: list[int]  # farms by number of bad years after the last observed season: [0, 1, 2, 3+]
     repeat_years: tuple[int, int]
     repeat_farm_ids: list[str]  # farms with 2+ bad years (the map filter)
-    repeat_region: S.Region | None  # where most of them are (the map flies there)
+    repeat_region: S.Region | None  # where most of them are
+    farms_hit: list[FarmBadYears]  # every farm with a bad year from next season on, most-hit first
     near_region: S.Region | None
     worst_region: S.Region | None
     contract_farms: int
@@ -250,6 +258,11 @@ def outlook(body: OutlookIn) -> Outlook:
     repeat_bins = [sum(c == k for c in counts) for k in (0, 1, 2)] + [sum(c >= 3 for c in counts)]
     repeat_ids = sorted(per_farm[per_farm >= 2].index)
 
+    farms_hit = sorted(
+        (FarmBadYears(farm_id=f, region=region_of[f], pea_fields=int(pea[f]),  # type: ignore[arg-type]
+                      bad_years=sorted(int(y) for y in g.year)) for f, g in bad.groupby("farm_id") if f in region_of),
+        key=lambda x: (-len(x.bad_years), x.bad_years[0], x.farm_id))
+
     fy = farms[farms.year == worst_year]
     status_by_farm = {r.farm_id: FARM_STATUS[r.risk] for r in fy.itertuples(index=False)}
     fields_risk = sum(n for f, n in pea.items() if status_by_farm.get(f) == "risk")
@@ -263,7 +276,7 @@ def outlook(body: OutlookIn) -> Outlook:
         next_season=next_season, next_contracts=next_contracts,
         near_years=near, near_fields_hit=near_fields_hit, near_farm_ids=sorted(f for f in near_farms if pea[f]), repeat_bins=repeat_bins,
         repeat_years=(next_season, int(fut.year.max())), repeat_farm_ids=repeat_ids,
-        repeat_region=_majority(repeat_ids, region_of), near_region=_majority(list(near_farms), region_of),
+        repeat_region=_majority(repeat_ids, region_of), farms_hit=farms_hit, near_region=_majority(list(near_farms), region_of),
         focus_year=worst_year, fields_risk=fields_risk, fields_watch=fields_watch, pea_fields=sum(pea.values()),
         farms_focus=[FarmStatus(farm_id=r.farm_id, status=FARM_STATUS[r.risk], change_pct=round(float(r.change_pct), 1))
                      for r in fy.itertuples(index=False)],

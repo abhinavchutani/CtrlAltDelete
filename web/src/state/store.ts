@@ -1,28 +1,15 @@
 // UI state only (what is selected / shown). Server data lives in react-query (api/hooks.ts).
-// The map camera is NOT here: MapLibre owns it, so panning never re-renders React. To move the map, call
-// flyTo(); MapView watches `camera.seq` and animates there.
 import { create } from "zustand";
-import type { Climate, Lever, Region, ScenarioSpec } from "../api/types";
+import type { Climate } from "../api/types";
 
-export type Tab = "overview" | "map" | "assistant";
-export type Lens = "overall" | "drought" | "heat" | "rain";
+export type Tab = "overview" | "assistant";
 export type Mode = "ask" | "simulate" | "teach";
-export type SheetKind = "issues" | "money" | "plans";
-export type ParcelPick = { parcel_id: string; farm_id: string; area_ha: number; crop?: string | null; ring: [number, number][] };
-export type View = { longitude: number; latitude: number; zoom: number };
-/** One turn in the assistant. `context` carries what the user came from (a farm, a year, an issue). */
-export type Turn = {
-  id: number; mode: Mode; text: string; history: string[];
-  context?: { farmId?: string; year?: number; issueId?: string; gap?: string };
-};
+export type SheetKind = "issues" | "money" | "plans" | "farms-near" | "farms-repeat";
+/** One turn in the assistant. `context` carries what the user came from (a gap to fill). */
+export type Turn = { id: number; mode: Mode; text: string; history: string[]; context?: { gap?: string } };
 
-export const START_YEAR = 2026;
+export const START_YEAR = 2026; // the last season with observed weather
 export const HORIZON = 2040; // every view shows the same 15 seasons
-export const HOME_VIEW: View = { longitude: 13.33, latitude: 55.85, zoom: 11.6 }; // the densest Skåne cluster
-export const REGION_VIEW: Record<Region, View> = {
-  FI_SW: { longitude: 22.2, latitude: 61.11, zoom: 11.6 },
-  SE_SKANE: HOME_VIEW,
-};
 export const CLIMATES: { key: Climate; label: string; path: string }[] = [
   { key: "ssp126", label: "Low emissions", path: "low-emissions weather path" },
   { key: "ssp245", label: "Middle", path: "middle weather path" },
@@ -33,15 +20,6 @@ export const climatePath = (c: Climate) => CLIMATES.find((x) => x.key === c)?.pa
 type State = {
   tab: Tab;
   climate: Climate;
-  /** Set → the map shows this plan (simulated via /api/simulate); null → today's plan (the preset). */
-  planLevers: Lever[] | null;
-  planLabel: string | null;
-  year: number;
-  playing: boolean;
-  lens: Lens;
-  camera: { target: View; seq: number };
-  selectedParcel: ParcelPick | null;
-  planSheetOpen: boolean;
   sheet: { kind: SheetKind; from: DOMRect | null; issueId?: string } | null;
   mode: Mode;
   turns: Turn[];
@@ -49,20 +27,11 @@ type State = {
   litNodes: string[]; // the knowledge-graph nodes the latest answer used
   newNodes: string[]; // notes filed this session (shown with a "New" pill)
   tourOpen: boolean;
-  /** Show only these farms on the map (the rest fade), with what they are. */
-  farmFilter: { ids: string[]; label: string; region?: Region | null } | null;
 };
 
 type Actions = {
   setTab: (t: Tab) => void;
   setClimate: (c: Climate) => void;
-  showPlan: (levers: Lever[] | null, label?: string | null) => void;
-  setYear: (y: number) => void;
-  setPlaying: (p: boolean) => void;
-  setLens: (l: Lens) => void;
-  flyTo: (v: View) => void;
-  selectParcel: (p: ParcelPick | null) => void;
-  setPlanSheet: (open: boolean) => void;
   openSheet: (kind: SheetKind, from?: DOMRect | null, issueId?: string) => void;
   closeSheet: () => void;
   setMode: (m: Mode) => void;
@@ -73,25 +42,13 @@ type Actions = {
   light: (ids: string[]) => void;
   markNew: (id: string) => void;
   setTourOpen: (open: boolean) => void;
-  setFarmFilter: (f: { ids: string[]; label: string; region?: Region | null } | null) => void;
 };
 
-const hashTab = (): Tab => {
-  const h = typeof window === "undefined" ? "" : window.location.hash.slice(1);
-  return h === "map" || h === "assistant" ? h : "overview";
-};
+const hashTab = (): Tab => (typeof window !== "undefined" && window.location.hash.slice(1) === "assistant" ? "assistant" : "overview");
 
 export const useStore = create<State & Actions>((set) => ({
   tab: hashTab(),
   climate: "ssp245",
-  planLevers: null,
-  planLabel: null,
-  year: START_YEAR,
-  playing: false,
-  lens: "overall",
-  camera: { target: HOME_VIEW, seq: 0 },
-  selectedParcel: null,
-  planSheetOpen: false,
   sheet: null,
   mode: "ask",
   turns: [],
@@ -99,16 +56,8 @@ export const useStore = create<State & Actions>((set) => ({
   litNodes: [],
   newNodes: [],
   tourOpen: false,
-  farmFilter: null,
   setTab: (tab) => set({ tab, sheet: null }),
-  setClimate: (climate) => set({ climate, planLevers: null, planLabel: null, playing: false }),
-  showPlan: (planLevers, planLabel = null) => set({ planLevers, planLabel }),
-  setYear: (year) => set({ year }),
-  setPlaying: (playing) => set({ playing }),
-  setLens: (lens) => set({ lens }),
-  flyTo: (target) => set((s) => ({ camera: { target, seq: s.camera.seq + 1 } })),
-  selectParcel: (selectedParcel) => set({ selectedParcel }),
-  setPlanSheet: (planSheetOpen) => set({ planSheetOpen }),
+  setClimate: (climate) => set({ climate }),
   openSheet: (kind, from = null, issueId) => set({ sheet: { kind, from, issueId } }),
   closeSheet: () => set({ sheet: null }),
   setMode: (mode) => set({ mode }),
@@ -122,9 +71,4 @@ export const useStore = create<State & Actions>((set) => ({
   light: (litNodes) => set({ litNodes }),
   markNew: (id) => set((s) => ({ newNodes: [...new Set([...s.newNodes, id])] })),
   setTourOpen: (tourOpen) => set({ tourOpen }),
-  setFarmFilter: (farmFilter) => set({ farmFilter }),
 }));
-
-/** The spec the map and season strip show: today's plan or the chosen plan, always 2026–2040. */
-export const activeSpec = (s: Pick<State, "climate" | "planLevers" | "planLabel">): ScenarioSpec | null =>
-  s.planLevers ? { climate: s.climate, horizon_end: HORIZON, levers: s.planLevers, label: s.planLabel } : null;

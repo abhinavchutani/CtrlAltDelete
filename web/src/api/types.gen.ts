@@ -841,6 +841,20 @@ export interface components {
             /** Label */
             label: string;
         };
+        /** FarmBadYears */
+        FarmBadYears: {
+            /** Farm Id */
+            farm_id: string;
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /** Pea Fields */
+            pea_fields: number;
+            /** Bad Years */
+            bad_years: number[];
+        };
         /** FarmStatus */
         FarmStatus: {
             /** Farm Id */
@@ -1380,6 +1394,8 @@ export interface components {
             repeat_farm_ids: string[];
             /** Repeat Region */
             repeat_region: ("FI_SW" | "SE_SKANE") | null;
+            /** Farms Hit */
+            farms_hit: components["schemas"]["FarmBadYears"][];
             /** Near Region */
             near_region: ("FI_SW" | "SE_SKANE") | null;
             /** Worst Region */
