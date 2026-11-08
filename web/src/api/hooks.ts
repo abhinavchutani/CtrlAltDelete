@@ -3,7 +3,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { ApiError, get, post, qs } from "./client";
 import type {
   AdaptationOption, Climate, EntityView, Filed, Graph, Health, Interview, IntentOut, KnowledgeItem, Lever, MonthsFrame, Outlook,
-  Provenance, RadarAskOut, Region, ScenarioSpec, SimResult, Today, TodayCrop,
+  Provenance, RadarAskOut, Region, ScenarioSpec, SimResult,
 } from "./types";
 
 const forever = { staleTime: Infinity };
@@ -22,16 +22,6 @@ export const useOutlook = (climate: Climate, levers: Lever[] | null) =>
     queryKey: ["outlook", climate, levers ?? []],
     queryFn: () => post<Outlook>("/api/radar/outlook", { climate, levers: levers ?? [] }),
     placeholderData: keepPreviousData,
-    ...warmRetry,
-    ...forever,
-  });
-
-/** The season so far on one day (api/radar.py today). `date` null = the server's demo day. */
-export const useToday = (date: string | null, climate: Climate, crop: TodayCrop = "pea") =>
-  useQuery({
-    queryKey: ["today", date, climate, crop],
-    queryFn: () => get<Today>(`/api/radar/today${qs({ date: date ?? undefined, climate, crop })}`),
-    placeholderData: keepPreviousData, // stepping days never flashes empty widgets
     ...warmRetry,
     ...forever,
   });
