@@ -10,7 +10,7 @@ import { BUCKET_LEVEL, cap, typeLabel, useBestPlan, useTodayOutlook } from "./da
 import { OverviewSheets } from "./Sheets";
 import { SeasonHighlights } from "./SeasonHighlights";
 
-const ASK_EXAMPLE = "How did Swedish pea deliveries in 2026 compare with 2021?";
+const ASK_EXAMPLE = "What helps against drought at flowering in pea?";
 const BAR_H = { 1: 24, 2: 52, 3: 96 } as const;
 const rect = (e: MouseEvent) => (e.currentTarget as HTMLElement).getBoundingClientRect();
 
