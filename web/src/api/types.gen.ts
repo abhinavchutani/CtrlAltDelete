@@ -772,6 +772,8 @@ export interface components {
              * @enum {string}
              */
             status: "ok" | "watch" | "risk";
+            /** Change Pct */
+            change_pct: number;
         };
         /** CropArea */
         CropArea: {

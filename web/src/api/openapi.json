@@ -2005,6 +2005,10 @@
        "risk"
       ],
       "title": "Status"
+     },
+     "change_pct": {
+      "type": "number",
+      "title": "Change Pct"
      }
     },
     "type": "object",
@@ -2012,7 +2016,8 @@
      "region",
      "crop",
      "band",
-     "status"
+     "status",
+     "change_pct"
     ],
     "title": "Contract"
    },

@@ -3,25 +3,26 @@
 import { type MouseEvent } from "react";
 import type { Outlook, Region, Status } from "../api/types";
 import {
-  EuroIcon, FieldsIcon, PinIcon, REGION_NAME, Ring, Segmented, SproutIcon, StatusMark, WarnIcon, shortYear,
+  ArrowRight, EuroIcon, FieldsIcon, SearchIcon, PinIcon, REGION_NAME, Ring, Segmented, SproutIcon, StatusMark, WarnIcon, shortYear,
 } from "../components/ui";
 import { CLIMATES, climatePath, REGION_VIEW, START_YEAR, useStore, type SheetKind } from "../state/store";
 import { BUCKET_LEVEL, cap, typeLabel, useBestPlan, useTodayOutlook } from "./data";
 import { OverviewSheets } from "./Sheets";
-import { WeatherWatch } from "./WeatherWatch";
+import { SeasonHighlights } from "./SeasonHighlights";
 
+const ASK_EXAMPLE = "How did Swedish pea deliveries in 2026 compare with 2021?";
 const BAR_H = { 1: 24, 2: 52, 3: 96 } as const;
 const rect = (e: MouseEvent) => (e.currentTarget as HTMLElement).getBoundingClientRect();
 
-function Widget({ size = "S", label, icon, right, cta, onOpen, children, tour }: {
-  size?: "S" | "M" | "L"; label: string; icon: React.ReactNode; right?: React.ReactNode; cta: string;
+function Widget({ size = "S", label, icon, right, cta, note, onOpen, children, tour }: {
+  size?: "S" | "M" | "L"; label: string; icon: React.ReactNode; right?: React.ReactNode; cta: string; note?: string;
   onOpen: (e: MouseEvent) => void; children: React.ReactNode; tour?: string;
 }) {
   return (
     <button type="button" className={`w glass ${size}`} onClick={onOpen} data-tour={tour}>
       <span className="w-label">{icon}{label}{right ? <span className="right">{right}</span> : null}</span>
       {children}
-      <span className="w-cta">{cta} ›</span>
+      <span className="w-cta"><span style={{ whiteSpace: "nowrap" }}>{cta} ›</span>{note ? <span className="w-note" title="One plausible weather path on the chosen climate future, not a forecast">{note}</span> : null}</span>
     </button>
   );
 }
@@ -114,6 +115,7 @@ export function Overview() {
   const showPlan = useStore((s) => s.showPlan);
   const setPlanSheet = useStore((s) => s.setPlanSheet);
   const setFarmFilter = useStore((s) => s.setFarmFilter);
+  const prefill = useStore((s) => s.prefill);
   const q = useTodayOutlook();
   const plan = useBestPlan();
   const o = q.data;
@@ -202,11 +204,17 @@ export function Overview() {
           </div>
         </Widget>
 
-        <Widget size="M" label={`Next season's weather: ${START_YEAR + 1}`} icon={<WarnIcon />}
-          right="one plausible path, not a forecast" cta="Watch it on the map"
-          onOpen={() => { setYear(START_YEAR + 1); toMap(START_YEAR + 1); setLens("rain"); }}>
-          <WeatherWatch year={START_YEAR + 1} climate={climate} />
+        <Widget label="Upcoming season" right={String(o?.next_season ?? START_YEAR + 1)} icon={<WarnIcon />} cta="See it on the map"
+          note="not a forecast"
+          onOpen={() => { toMap(o?.next_season); setLens("rain"); }}>
+          {o ? <SeasonHighlights year={o.next_season} climate={climate} contracts={o.next_contracts} /> : skel("90%", 80)}
         </Widget>
+
+        <button type="button" className="w glass S ask-tile" onClick={() => prefill("ask", ASK_EXAMPLE)} data-tour="ask">
+          <span className="w-label"><SearchIcon />Ask</span>
+          <span className="ask-arrow" aria-hidden="true"><ArrowRight size={56} /></span>
+          <span className="w-sub">“{ASK_EXAMPLE}”</span>
+        </button>
 
         <Widget size="M" label="Hit again and again" icon={<PinIcon />}
           right={o ? `${o.repeat_bins.reduce((x, y) => x + y, 0)} farms, ${o.repeat_years[0]}–${o.repeat_years[1]}` : undefined}

@@ -84,6 +84,7 @@ class Contract(BaseModel):  # one region × crop contract in one season
     crop: str
     band: S.EurBand
     status: Status  # the season € rule applied to this contract alone
+    change_pct: float  # harvest vs the 1991–2020 normal for this region × crop
 
 
 class FarmStatus(BaseModel):
@@ -235,7 +236,8 @@ def outlook(body: OutlookIn) -> Outlook:
 
     next_season = LAST_OBSERVED + 1
     nxt = cube[cube.year == next_season].sort_values("eur_loss", ascending=False)
-    next_contracts = [Contract(region=r.region, crop=r.crop, band=S.eur_band(float(r.eur_loss)), status=status_of(float(r.eur_loss)))
+    next_contracts = [Contract(region=r.region, crop=r.crop, band=S.eur_band(float(r.eur_loss)), status=status_of(float(r.eur_loss)),
+                               change_pct=round(float(r.change_pct)))
                       for r in nxt.itertuples(index=False)]
 
     near = (next_season, next_season + 4)
