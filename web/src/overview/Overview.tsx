@@ -119,16 +119,11 @@ export function Overview() {
 
   return (
     <main className="page" aria-label="Overview">
-      <div className="ov-intro">
-        <div className="eyebrow">Apetit · climate and supply</div>
-        <h1 className="ov-hero">Clean data. Reports that build themselves. No more surprise harvests.</h1>
-      </div>
       <div className={sheet ? "dimwrap dim" : "dimwrap"} aria-hidden={sheet ? true : undefined}><Problems /></div>
 
       <div className="ov-head" id="radar">
         <div>
-          <div className="eyebrow">Supply radar · so Sweden 2026 doesn't happen again</div>
-          <h2 className="ov-title">Supply outlook</h2>
+          <h1 className="ov-title">Supply outlook</h1>
         </div>
         <Segmented className="glass" label="Weather path" value={climate} onChange={setClimate}
           options={CLIMATES.map((c) => ({ key: c.key, label: c.label }))} />

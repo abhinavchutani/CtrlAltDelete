@@ -728,3 +728,21 @@ section:first-child > .group-h { margin-top: 0; }
 .replay-cap { font-size: 10px; }
 .pb-body { flex: 0 1 auto; }
 .pb-proof { margin-top: auto; }
+
+/* ═══ Catch-up: three lines at the top of the Overview ═══ */
+.catchup { padding: 14px 22px 6px; margin: 4px 0 32px; }
+.catchup.skeleton-card { min-height: 150px; }
+.catchup-h { margin-bottom: 2px; }
+.catchup-list { list-style: none; margin: 0; padding: 0; }
+.cu { display: grid; grid-template-columns: 96px 1fr auto; gap: 16px; align-items: baseline; padding: 12px 0;
+  --tone: var(--accent-ink); }
+.cu + .cu { border-top: .5px solid var(--separator); }
+.cu-data { --tone: var(--blue-ink); } .cu-risk { --tone: var(--red-ink); }
+.cu-who { font: 600 13px/20px var(--font-sans); color: var(--label-2); }
+.cu-line { font: 400 16px/24px var(--font-sans); color: var(--label-2); margin: 0; }
+.cu-fig { font: 700 20px/24px var(--font-rounded); color: var(--tone); letter-spacing: -.01em; font-variant-numeric: tabular-nums; margin-right: 2px; }
+.cu-go { font-weight: 600; white-space: nowrap; }
+@media (max-width: 560px) {
+  .cu { grid-template-columns: 1fr auto; gap: 4px 12px; }
+  .cu-who { grid-column: 1 / -1; }
+}
