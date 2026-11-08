@@ -14,9 +14,9 @@ export function TopBar() {
   const health = useHealth();
   const status = health.error ? "API not reachable" : health.data?.mock ? "fixtures" : health.data?.warming ? "model warming up" : null;
   return (
-    <header className="topbar glass">
+    <header className="topbar">
       <div className="brand"><img src="/apetit-logo.png" alt="Apetit" height={30} /> Radar</div>
-      <nav className="tabs" aria-label="Main">
+      <nav className="tabs glass" aria-label="Main">
         {TABS.map((t) => (
           <button key={t.key} type="button" className={`tab ${tab === t.key ? "on" : ""}`} onClick={() => setTab(t.key)}
             aria-current={tab === t.key ? "page" : undefined} data-tour={`tab-${t.key}`}>{t.label}</button>

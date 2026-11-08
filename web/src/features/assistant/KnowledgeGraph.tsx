@@ -59,7 +59,7 @@ export function KnowledgeGraph() {
   const anyLit = litSet.size > 0;
   const c = data?.counts ?? {};
   const sub = !anyLit
-    ? `${c.data ?? "…"} data files, ${c.model ?? "…"} models, ${c.doc ?? "…"} documents and ${c.tacit ?? "…"} notes from people, organised by crop, place and topic.`
+    ? `${c.data ?? "…"} data files, ${c.model ?? "…"} models, ${c.doc ?? "…"} documents and ${c.tacit ?? "…"} note${c.tacit === 1 ? "" : "s"} from people, organised by crop, place and topic.`
     : fresh.some((n) => litSet.has(n))
       ? "New: one note from a person, connected to what it's about. Dashed means unverified."
       : (() => { const n = lit.filter((x) => x !== "crop:pea").length; return `Lit up: the ${n} thing${n === 1 ? "" : "s"} this answer used.`; })();
