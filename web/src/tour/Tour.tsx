@@ -3,28 +3,19 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useStore } from "../state/store";
 
-type Step = { target: string | null; title: string; body: string; tab: "overview" | "map" };
+type Step = { target: string | null; title: string; body: string; tab: "overview" | "assistant" };
 const STEPS: Step[] = [
-  { tab: "overview", target: null, title: "Welcome to Field Radar",
-    body: "See what the weather could cost the farms that grow vegetables for Apetit, year by year to 2040, and find the changes that cut that loss before the season starts. It runs on the challenge's data pack (synthetic)." },
-  { tab: "overview", target: "hero", title: "The problem, and the fix",
-    body: "How much money the weather puts at risk each year on today's plan, and the best plan the model found after simulating every change it can, alone and combined." },
-  { tab: "overview", target: "built-on", title: "Built on the data",
-    body: "Farms, fields, harvest records, pea deliveries and decades of daily weather. The model was checked on harvests it had never seen." },
-  { tab: "map", target: "map", title: "Read the map",
-    body: "Each soft glow is a farm: green on track, amber watch, red a bad year. When the weather turns, you see it: rain, heat haze, dry dust." },
-  { tab: "map", target: "view", title: "Choose what you see",
-    body: "Pick a climate future, what the colours show (crop health, drought or heat), and switch the weather effects on or off." },
-  { tab: "map", target: "years", title: "Play the years",
-    body: "Press play. Each dot is a problem: playback stops there, flies to the worst-hit field and shows what happened, the month's weather and what you can do." },
-  { tab: "map", target: "change", title: "Find the best plan",
-    body: "The model tests every plan it can simulate and re-checks the best in hotter and cooler futures. Or build your own plan and simulate it." },
-  { tab: "map", target: "tab-assistant", title: "Ask, or simulate anything",
-    body: "The assistant opens over the map. Ask about the data, say a what-if and get its full simulation, or ask it to find the best plan." },
-  { tab: "map", target: "help", title: "That's it",
-    body: "Replay this tour any time from this button." },
+  { tab: "overview", target: null, title: "Welcome to Apetit Radar",
+    body: "What the weather could cost the farms that grow for Apetit, season by season to 2040, and the changes that cut it. It runs on the challenge's synthetic data pack." },
+  { tab: "overview", target: "money", title: "One number, then the reasons",
+    body: "Each card gives one answer. Tap it to see what drives it, and at the bottom, how we know." },
+  { tab: "overview", target: "plan", title: "The best plan",
+    body: "The model simulates every change it can, alone and combined, and re-checks the best in hotter and cooler futures." },
+  { tab: "assistant", target: "graph", title: "Ask, simulate, teach",
+    body: "Ask the data, run a plan through the yield model, or tell it what your team knows. The graph lights up what each answer used." },
+  { tab: "assistant", target: "help", title: "That's it", body: "Replay this tour any time from this button." },
 ];
-const SEEN_KEY = "fieldradar.tour.seen.v2"; // v2: the tour changed, so everyone sees it once more
+const SEEN_KEY = "fieldradar.tour.seen.v4"; // v4: the redesign, so everyone sees it once more
 const PAD = 8, CARD_W = 340, GAP = 16;
 
 function seen(): boolean {
@@ -70,13 +61,13 @@ export function Tour() {
   // first visit (or ?tour): open by itself, once the panels have rendered
   useEffect(() => {
     const forced = new URLSearchParams(window.location.search).has("tour");
-    if (!forced && seen()) return;
+    if (!forced && (seen() || new URLSearchParams(window.location.search).has("notour"))) return;
     const t = setTimeout(() => setOpen(true), 600);
     return () => clearTimeout(t);
   }, [setOpen]);
   useEffect(() => { if (open) setI(0); }, [open]);
-  // each step shows its own tab; the assistant stays closed while touring
-  useEffect(() => { if (open) { setTab(step.tab); useStore.getState().setAssistantOpen(false); } }, [open, step.tab, setTab]);
+  // each step shows its own tab
+  useEffect(() => { if (open) setTab(step.tab); }, [open, step.tab, setTab]);
 
   const close = useCallback(() => { markSeen(); setOpen(false); }, [setOpen]);
   const go = useCallback((d: number) => {
@@ -110,21 +101,16 @@ export function Tour() {
   const pos = cardPos(box, cardH);
   const last = i === STEPS.length - 1;
   return (
-    <div className="tour" role="dialog" aria-modal="true" aria-labelledby="tour-title">
-      <div className="tour-spot" style={spot} />
-      <div className="tour-card glass" ref={card} style={{ top: pos.top, left: pos.left, width: CARD_W }}>
-        <div className="tour-count">{i + 1} of {STEPS.length}</div>
-        <h2 id="tour-title">{step.title}</h2>
+    <div className="tour-scrim" role="dialog" aria-modal="true" aria-labelledby="tour-title">
+      <div className="tour-hole" style={spot} />
+      <div className="tour-card glass glass-strong" ref={card} style={{ top: pos.top, left: pos.left, width: CARD_W }}>
+                <h2 id="tour-title">{step.title}</h2>
         <p>{step.body}</p>
-        <div className="tour-actions">
-          {last ? <span /> : <button className="link-btn" onClick={close}>Skip tour</button>}
-          <div className="tour-nav">
-            {i > 0 ? <button className="btn-ghost" onClick={() => go(-1)}>Back</button> : null}
-            <button className="btn-run" ref={next} onClick={() => go(1)}>{i === 0 ? "Show me" : last ? "Done" : "Next"}</button>
-          </div>
-        </div>
-        <div className="tour-dots" aria-hidden="true">
-          {STEPS.map((_, k) => <span key={k} className={k === i ? "on" : ""} />)}
+        <div className="tour-nav">
+          <span className="muted">{i + 1} of {STEPS.length}</span>
+          {last ? null : <button type="button" className="link" onClick={close}>Skip</button>}
+          {i > 0 ? <button type="button" className="btn btn-ghost" onClick={() => go(-1)}>Back</button> : null}
+          <button type="button" className="btn btn-primary" ref={next} onClick={() => go(1)}>{i === 0 ? "Show me" : last ? "Done" : "Next"}</button>
         </div>
       </div>
     </div>

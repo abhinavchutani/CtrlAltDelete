@@ -19,7 +19,7 @@ Rules (doc §7.3–7.4):
   that site's readings continue) for the reviewer;
 * only work facts: the store keeps the statement, tags, links, contributor and review trail, nothing personal.
 The store is an append-only event log, out/v2/knowledge.jsonl (one line per add or decision); state = replay.
-The API shapes match the QUESTION posted in the agent chat (7 Nov); they live here until api/schemas.py adopts them.
+The API shapes live in api/schemas.py (KnowledgeIn, KnowledgeItem, KnowledgeDecision, KnowledgeRefile; #123).
 """
 from __future__ import annotations
 
@@ -28,44 +28,12 @@ import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
 
-from pydantic import BaseModel, Field
-
-from api.schemas import EvidenceRef
+from api.schemas import EvidenceRef, KnowledgeDecision, KnowledgeIn, KnowledgeItem, KnowledgeRefile
 from src.db import REPO_ROOT
 
 STORE = REPO_ROOT / "out" / "v2" / "knowledge.jsonl"
 STOP_WORDS = r"decommission|shut down|closed|stopped|no longer|removed|discontinued|replaced"
-
-
-class KnowledgeIn(BaseModel):
-    statement: str = Field(min_length=3)
-    type: Literal["fact", "explanation", "process", "contact"] = "fact"
-    tags: list[str] = []
-    linked_refs: list[str] = []          # entity IDs (S-SAK, SUP073, …) or record keys
-    contributed_by: str = Field(min_length=1)   # typed by the person; code never fills it
-    role: str | None = None
-    confidence: Literal["sure", "think_so", "heard"] = "sure"
-    valid_from: str | None = None        # ISO date
-    valid_until: str | None = None
-    source: str = "chat"                 # chat message id or voice transcript snippet
-
-
-class KnowledgeItem(KnowledgeIn):
-    knowledge_id: str
-    status: Literal["pending_review", "approved", "rejected", "superseded"] = "pending_review"
-    created_at: str
-    reviewer: str | None = None
-    review_note: str | None = None
-    reviewed_at: str | None = None
-    conflicts: list[EvidenceRef] = []
-
-
-class KnowledgeDecision(BaseModel):
-    decision: Literal["approve", "reject", "supersede"]
-    reviewer: str = Field(min_length=1)  # a person; code never fills it
-    note: str = ""
 
 
 STATUS = {"approve": "approved", "reject": "rejected", "supersede": "superseded"}
@@ -96,6 +64,8 @@ def items(status: str | None = None, path: Path | None = None) -> list[Knowledge
         elif e["event"] == "decision" and e["knowledge_id"] in state:
             state[e["knowledge_id"]].update(status=STATUS[e["decision"]], reviewer=e["reviewer"],
                                             review_note=e["note"], reviewed_at=e["at"])
+        elif e["event"] == "refile" and e["knowledge_id"] in state:
+            state[e["knowledge_id"]].update(tags=e["tags"], linked_refs=e["linked_refs"])
     out = [KnowledgeItem(**v) for v in state.values()]
     return [k for k in out if status is None or k.status == status]
 
@@ -151,6 +121,18 @@ def decide(knowledge_id: str, d: KnowledgeDecision, path: Path | None = None) ->
         raise ValueError("four-eyes rule: the person who stated it cannot review it; ask someone else")
     _append(p, {"event": "decision", "at": _now(), "knowledge_id": knowledge_id, "decision": d.decision,
                 "reviewer": d.reviewer.strip(), "note": d.note})
+    return next(k for k in items(path=p) if k.knowledge_id == knowledge_id)
+
+
+def refile(knowledge_id: str, r: KnowledgeRefile, path: Path | None = None) -> KnowledgeItem | None:
+    """Change where an item is filed (its tags and links; PATCH /api/knowledge/{id}). The statement, contributor and
+    review trail never change; a refile is one more event in the log. Unknown id → None."""
+    p = path or STORE
+    item = next((k for k in items(path=p) if k.knowledge_id == knowledge_id), None)
+    if item is None:
+        return None
+    _append(p, {"event": "refile", "at": _now(), "knowledge_id": knowledge_id,
+                "tags": r.tags, "linked_refs": item.linked_refs if r.linked_refs is None else r.linked_refs})
     return next(k for k in items(path=p) if k.knowledge_id == knowledge_id)
 
 

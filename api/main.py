@@ -14,10 +14,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 
+from api import brief
 from api import geo
 from api import insight
+from api import kgraph
 from api import layers as L
 from api import prediction as P
+from api import radar
 from api import schemas as S
 from src import serve_db
 from src.db import env
@@ -135,6 +138,116 @@ def search(body: S.SearchIn) -> StreamingResponse:
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
+# ── Field Radar v4 (light redesign) ────────────────────────────────
+@app.post("/api/radar/outlook", response_model=radar.Outlook)
+def radar_outlook(body: radar.OutlookIn) -> radar.Outlook:
+    if L.mock_mode():
+        raise HTTPException(503, "the outlook runs the live model (API_MOCK=0)")
+    return radar.outlook(body)
+
+
+@app.get("/api/radar/today", response_model=radar.Today)
+def radar_today(date: str | None = Query(None, description="YYYY-MM-DD, 1 Apr–31 Oct of 2026–2040; default: the demo day"),
+                climate: S.Climate = "ssp245", crop: radar.TodayCrop = "pea") -> radar.Today:
+    if L.mock_mode():
+        raise HTTPException(503, "today runs on the daily weather (API_MOCK=0)")
+    return radar.today(date, climate, crop)
+
+
+@app.get("/api/graph", response_model=kgraph.Graph)
+def graph() -> kgraph.Graph:
+    return kgraph.graph()
+
+
+@app.get("/api/entity/{entity_id}", response_model=kgraph.EntityView)
+def entity(entity_id: str) -> kgraph.EntityView:
+    return kgraph.entity(entity_id)
+
+
+@app.post("/api/radar/ask", response_model=kgraph.RadarAskOut)
+def radar_ask(body: kgraph.RadarAskIn) -> kgraph.RadarAskOut:
+    return kgraph.ask(body)
+
+
+@app.get("/api/solutions", response_model=list[kgraph.Solution])
+def solutions(hazard: list[str] = Query(["H1", "H2"]), crop: str | None = "pea", climate: S.Climate = "ssp245") -> list[kgraph.Solution]:
+    """Cited adaptation measures for a problem (kb/solutions.json); the plan finder's result is added where it ran."""
+    return kgraph.solutions(hazard, crop, climate)
+
+
+@app.get("/api/tacit/topics", response_model=list[str])
+def tacit_topics() -> list[str]:
+    return kgraph.topics()
+
+
+@app.post("/api/tacit/notes", response_model=kgraph.Filed)
+def tacit_note(body: kgraph.NoteIn) -> kgraph.Filed:
+    return kgraph.file_note(body)
+
+
+@app.post("/api/tacit/notes/{note_id}/confirm", response_model=S.KnowledgeItem)
+def tacit_confirm(note_id: str, body: kgraph.ConfirmIn) -> S.KnowledgeItem:
+    return kgraph.confirm(note_id, body)
+
+
+@app.patch("/api/tacit/notes/{note_id}", response_model=kgraph.Filed)
+def tacit_refile(note_id: str, body: kgraph.RefileIn) -> kgraph.Filed:
+    return kgraph.refile(note_id, body)
+
+
+@app.post("/api/tacit/interviews", response_model=kgraph.Interview)
+def tacit_interview(body: kgraph.InterviewIn) -> kgraph.Interview:
+    return kgraph.interview(body)
+
+
+# ── knowledge + gaps (#123): src.r_knowledge / src.r_gaps ──────────
+@app.get("/api/knowledge", response_model=list[S.KnowledgeItem])
+def knowledge(status: str | None = None) -> list[S.KnowledgeItem]:
+    from src import r_knowledge
+    return r_knowledge.items(status)
+
+
+@app.post("/api/knowledge", response_model=S.KnowledgeItem)
+def knowledge_add(body: S.KnowledgeIn) -> S.KnowledgeItem:
+    from src import r_knowledge
+    try:
+        if serve_db.exists():
+            with serve_db.connect() as con:
+                return r_knowledge.add(body, con)
+        return r_knowledge.add(body)
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
+
+
+@app.post("/api/knowledge/{knowledge_id}/decision", response_model=S.KnowledgeItem)
+def knowledge_decide(knowledge_id: str, body: S.KnowledgeDecision) -> S.KnowledgeItem:
+    from src import r_knowledge
+    try:
+        return _found(r_knowledge.decide(knowledge_id, body), f"knowledge {knowledge_id}")
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
+
+
+@app.get("/api/gaps", response_model=list[S.Gap])
+def gaps(year: int | None = None) -> list[S.Gap]:
+    _need_data()
+    from src import r_gaps
+    with serve_db.connect() as con:
+        return [S.Gap(**g) for g in r_gaps.gaps(con, year)["gaps"]]
+
+
+# ── SBTi targets + pathway (#130) ──────────────────────────────────
+@app.post("/api/sbti/pathway", response_model=S.SbtiPathway)
+def sbti_pathway(body: S.SbtiPathwayIn) -> S.SbtiPathway:
+    """Base year 2025 → SBTi near-term targets, BAU under a transition scenario, and the chosen levers' effect."""
+    try:
+        return L.get("sbti_pathway")(body.scenario, body.levers, body.target_year)
+    except (ValueError, LookupError) as e:
+        raise HTTPException(422, str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(503, str(e)) from e
+
+
 # ── retrieval (fixtures while on hold) ─────────────────────────────
 @app.post("/api/ask", response_model=S.AskOut)
 def ask(body: S.AskIn) -> S.AskOut:
@@ -142,6 +255,27 @@ def ask(body: S.AskIn) -> S.AskOut:
 
 
 XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+@app.get("/api/brief")
+def get_brief() -> dict:
+    """The Overview's three problems (scattered data, hand-built reports, Sweden 2026), computed from the snapshot."""
+    _need_data()
+    return brief.brief()
+
+
+@app.get("/api/issues")
+def get_issues(status: str = Query("proposed", pattern="^(proposed|legitimate)$"), source: str | None = None,
+               limit: int = Query(40, ge=1, le=500)) -> list[dict]:
+    _need_data()
+    return brief.issues(status, source, limit)
+
+
+@app.post("/api/report/inventory")
+def make_inventory_report(year: int = Query(2025, ge=2023, le=2025)) -> dict:
+    if L.mock_mode():
+        raise HTTPException(503, "reports are made from the snapshot in real mode (API_MOCK=0)")
+    return brief.inventory_report(year)
 
 
 @app.get("/api/report/{report_id}")

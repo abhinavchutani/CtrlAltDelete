@@ -245,6 +245,268 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/radar/outlook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Radar Outlook */
+        post: operations["radar_outlook_api_radar_outlook_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/radar/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Radar Today */
+        get: operations["radar_today_api_radar_today_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Graph */
+        get: operations["graph_api_graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/entity/{entity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Entity */
+        get: operations["entity_api_entity__entity_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/radar/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Radar Ask */
+        post: operations["radar_ask_api_radar_ask_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/solutions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Solutions
+         * @description Cited adaptation measures for a problem (kb/solutions.json); the plan finder's result is added where it ran.
+         */
+        get: operations["solutions_api_solutions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tacit/topics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tacit Topics */
+        get: operations["tacit_topics_api_tacit_topics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tacit/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tacit Note */
+        post: operations["tacit_note_api_tacit_notes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tacit/notes/{note_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tacit Confirm */
+        post: operations["tacit_confirm_api_tacit_notes__note_id__confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tacit/notes/{note_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Tacit Refile */
+        patch: operations["tacit_refile_api_tacit_notes__note_id__patch"];
+        trace?: never;
+    };
+    "/api/tacit/interviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Tacit Interview */
+        post: operations["tacit_interview_api_tacit_interviews_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/knowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Knowledge */
+        get: operations["knowledge_api_knowledge_get"];
+        put?: never;
+        /** Knowledge Add */
+        post: operations["knowledge_add_api_knowledge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/knowledge/{knowledge_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Knowledge Decide */
+        post: operations["knowledge_decide_api_knowledge__knowledge_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gaps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gaps */
+        get: operations["gaps_api_gaps_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sbti/pathway": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sbti Pathway
+         * @description Base year 2025 → SBTi near-term targets, BAU under a transition scenario, and the chosen levers' effect.
+         */
+        post: operations["sbti_pathway_api_sbti_pathway_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ask": {
         parameters: {
             query?: never;
@@ -256,6 +518,60 @@ export interface paths {
         put?: never;
         /** Ask */
         post: operations["ask_api_ask_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/brief": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Brief
+         * @description The Overview's three problems (scattered data, hand-built reports, Sweden 2026), computed from the snapshot.
+         */
+        get: operations["get_brief_api_brief_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Issues */
+        get: operations["get_issues_api_issues_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/report/inventory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Make Inventory Report */
+        post: operations["make_inventory_report_api_report_inventory_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -555,6 +871,92 @@ export interface components {
             /** Reason */
             reason?: string | null;
         };
+        /** Change */
+        Change: {
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /**
+             * Crop
+             * @enum {string}
+             */
+            crop: "pea" | "potato" | "spinach" | "carrot" | "turnip_rape";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "escalated" | "eased" | "stage" | "jump";
+            /**
+             * From Status
+             * @enum {string}
+             */
+            from_status: "ok" | "watch" | "risk";
+            /**
+             * To Status
+             * @enum {string}
+             */
+            to_status: "ok" | "watch" | "risk";
+            /** Text */
+            text: string;
+        };
+        /** Citation */
+        Citation: {
+            /** Source */
+            source: string;
+            /** Publisher */
+            publisher: string;
+            /** Year */
+            year: number;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "research" | "guide";
+            /** Locator */
+            locator: string;
+            /** Quote */
+            quote: string;
+            /** Translation */
+            translation?: string | null;
+        };
+        /** ConfirmIn */
+        ConfirmIn: {
+            /** Reviewer */
+            reviewer: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
+        /** Contract */
+        Contract: {
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /** Crop */
+            crop: string;
+            /**
+             * Band
+             * @enum {string}
+             */
+            band: "< €50k" | "€50–100k" | "€100–250k" | "€250k–1M" | "> €1M";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "watch" | "risk";
+            /** Change Pct */
+            change_pct: number;
+        };
         /** CropArea */
         CropArea: {
             /**
@@ -602,6 +1004,72 @@ export interface components {
              */
             crop: ("pea" | "potato" | "carrot" | "spinach" | "wheat" | "barley" | "oats" | "turnip_rape" | "grass_ley" | "fallow") | "all";
         };
+        /** Edge */
+        Edge: {
+            /** Source */
+            source: string;
+            /** Target */
+            target: string;
+        };
+        /** EntityGap */
+        EntityGap: {
+            /** Gap Id */
+            gap_id: string;
+            /** Label */
+            label: string;
+        };
+        /** EntityTable */
+        EntityTable: {
+            /** Table */
+            table: string;
+            /** Label */
+            label: string;
+            /** Rows */
+            rows: number;
+            /** Years */
+            years: string;
+            /** Issues */
+            issues?: number | null;
+            /** Corrections */
+            corrections?: number | null;
+        };
+        /**
+         * EntityView
+         * @description Everything linked to one farm or site ID (src.r_entity.entity_view), plus people's notes and open gaps.
+         */
+        EntityView: {
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string | null;
+            /** Tables */
+            tables: components["schemas"]["EntityTable"][];
+            /**
+             * Issue Types
+             * @default []
+             */
+            issue_types: [
+                string,
+                number
+            ][];
+            /**
+             * Notes
+             * @default []
+             */
+            notes: components["schemas"]["KnowledgeItem"][];
+            /**
+             * Gaps
+             * @default []
+             */
+            gaps: components["schemas"]["EntityGap"][];
+            /**
+             * Synthetic
+             * @default true
+             */
+            synthetic: boolean;
+        };
         /** EvidenceRef */
         EvidenceRef: {
             /**
@@ -613,6 +1081,59 @@ export interface components {
             ref: string;
             /** Label */
             label: string;
+        };
+        /** FarmBadYears */
+        FarmBadYears: {
+            /** Farm Id */
+            farm_id: string;
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /** Pea Fields */
+            pea_fields: number;
+            /** Bad Years */
+            bad_years: number[];
+        };
+        /** FarmSpread */
+        FarmSpread: {
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /**
+             * Crop
+             * @enum {string}
+             */
+            crop: "pea" | "potato" | "spinach" | "carrot" | "turnip_rape";
+            /** Farms */
+            farms: number;
+            /** Fields */
+            fields: number;
+            /** P10 */
+            p10: number;
+            /** P50 */
+            p50: number;
+            /** P90 */
+            p90: number;
+            /** Share Ge 90 */
+            share_ge_90: number;
+            /** Share Ge 75 */
+            share_ge_75: number;
+        };
+        /** FarmStatus */
+        FarmStatus: {
+            /** Farm Id */
+            farm_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "watch" | "risk";
+            /** Change Pct */
+            change_pct: number;
         };
         /** FarmYear */
         FarmYear: {
@@ -627,6 +1148,67 @@ export interface components {
              * @enum {string}
              */
             risk: "ok" | "watch" | "bad";
+        };
+        /** Filed */
+        Filed: {
+            /** Note Id */
+            note_id: string;
+            /** Path */
+            path: string[];
+            /** Topic */
+            topic: string;
+            /** Siblings */
+            siblings: number;
+            /** Linked Node Ids */
+            linked_node_ids: string[];
+            /** Linked Labels */
+            linked_labels: string[];
+            /** Verified */
+            verified: boolean;
+            item: components["schemas"]["KnowledgeItem"];
+        };
+        /** Gap */
+        Gap: {
+            /** Gap Id */
+            gap_id: string;
+            /** Record Key */
+            record_key: string;
+            /** Site Id */
+            site_id: string | null;
+            /** Domain */
+            domain: string;
+            /** Year */
+            year: number;
+            /** Month */
+            month: number | null;
+            /** Owner */
+            owner: string;
+            /** Impact */
+            impact: string;
+            /** Draft Message */
+            draft_message: string;
+            /** Estimate */
+            estimate: number | null;
+            /** Explanation */
+            explanation: string | null;
+            /** Evidence */
+            evidence: components["schemas"]["EvidenceRef"][];
+        };
+        /** Graph */
+        Graph: {
+            /** Nodes */
+            nodes: components["schemas"]["Node"][];
+            /** Edges */
+            edges: components["schemas"]["Edge"][];
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+            /**
+             * Synthetic
+             * @default true
+             */
+            synthetic: boolean;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -738,6 +1320,22 @@ export interface components {
              */
             problems: string[];
         };
+        /** Interview */
+        Interview: {
+            /** Gap Id */
+            gap_id: string;
+            /** Recipient */
+            recipient: string;
+            /** Questions */
+            questions: string[];
+            /** Draft Message */
+            draft_message: string;
+        };
+        /** InterviewIn */
+        InterviewIn: {
+            /** Gap Id */
+            gap_id: string;
+        };
         /** Irrigate */
         Irrigate: {
             /**
@@ -756,6 +1354,163 @@ export interface components {
              * @enum {string}
              */
             target: "drought_exposed" | "all";
+        };
+        /** Issue */
+        Issue: {
+            /** Id */
+            id: string;
+            /** Year */
+            year: number;
+            /** Type */
+            type: string;
+            /** Label */
+            label: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "watch" | "risk";
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /** Crop */
+            crop: string;
+            /** Month */
+            month: number | null;
+            /** Eur At Risk */
+            eur_at_risk: ("< €50k" | "€50–100k" | "€100–250k" | "€250k–1M" | "> €1M") | null;
+            /** Rain Vs Normal Pct */
+            rain_vs_normal_pct: number | null;
+            /** Temp Vs Normal C */
+            temp_vs_normal_c: number | null;
+            /** Hot Days */
+            hot_days: number | null;
+            /** Fields Below */
+            fields_below: number;
+            /** Farms Below */
+            farms_below: number;
+            /** Why */
+            why: string;
+            /** Sources */
+            sources: components["schemas"]["SourceRef"][];
+        };
+        /** KnowledgeDecision */
+        KnowledgeDecision: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject" | "supersede";
+            /** Reviewer */
+            reviewer: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
+        /** KnowledgeIn */
+        KnowledgeIn: {
+            /** Statement */
+            statement: string;
+            /**
+             * Type
+             * @default fact
+             * @enum {string}
+             */
+            type: "fact" | "explanation" | "process" | "contact";
+            /**
+             * Tags
+             * @default []
+             */
+            tags: string[];
+            /**
+             * Linked Refs
+             * @default []
+             */
+            linked_refs: string[];
+            /** Contributed By */
+            contributed_by: string;
+            /** Role */
+            role?: string | null;
+            /**
+             * Confidence
+             * @default sure
+             * @enum {string}
+             */
+            confidence: "sure" | "think_so" | "heard";
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid Until */
+            valid_until?: string | null;
+            /**
+             * Source
+             * @default chat
+             */
+            source: string;
+        };
+        /** KnowledgeItem */
+        KnowledgeItem: {
+            /** Statement */
+            statement: string;
+            /**
+             * Type
+             * @default fact
+             * @enum {string}
+             */
+            type: "fact" | "explanation" | "process" | "contact";
+            /**
+             * Tags
+             * @default []
+             */
+            tags: string[];
+            /**
+             * Linked Refs
+             * @default []
+             */
+            linked_refs: string[];
+            /** Contributed By */
+            contributed_by: string;
+            /** Role */
+            role?: string | null;
+            /**
+             * Confidence
+             * @default sure
+             * @enum {string}
+             */
+            confidence: "sure" | "think_so" | "heard";
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid Until */
+            valid_until?: string | null;
+            /**
+             * Source
+             * @default chat
+             */
+            source: string;
+            /** Knowledge Id */
+            knowledge_id: string;
+            /**
+             * Status
+             * @default pending_review
+             * @enum {string}
+             */
+            status: "pending_review" | "approved" | "rejected" | "superseded";
+            /** Created At */
+            created_at: string;
+            /** Reviewer */
+            reviewer?: string | null;
+            /** Review Note */
+            review_note?: string | null;
+            /** Reviewed At */
+            reviewed_at?: string | null;
+            /**
+             * Conflicts
+             * @default []
+             */
+            conflicts: components["schemas"]["EvidenceRef"][];
         };
         /** Meters */
         Meters: {
@@ -810,6 +1565,138 @@ export interface components {
             region: "FI_SW" | "SE_SKANE";
             /** Months */
             months: components["schemas"]["MonthWeather"][];
+        };
+        /** Node */
+        Node: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "hub" | "data" | "model" | "doc" | "tacit" | "gap" | "entity";
+            /** Label */
+            label: string;
+            /** Records */
+            records?: number | null;
+            /** Verified */
+            verified?: boolean | null;
+            /** Detail */
+            detail?: string | null;
+            /** Question */
+            question?: string | null;
+            /** Tags */
+            tags?: string[] | null;
+            /** By */
+            by?: string | null;
+        };
+        /** NoteIn */
+        NoteIn: {
+            /** Text */
+            text: string;
+            /** Contributed By */
+            contributed_by: string;
+            /** Role */
+            role?: string | null;
+            /** Farm Id */
+            farm_id?: string | null;
+            /** Gap Id */
+            gap_id?: string | null;
+        };
+        /** Outlook */
+        Outlook: {
+            /**
+             * Climate
+             * @enum {string}
+             */
+            climate: "ssp126" | "ssp245" | "ssp585";
+            /** Levers */
+            levers: (components["schemas"]["Irrigate"] | components["schemas"]["EarlierSowing"] | components["schemas"]["RegionSplit"] | components["schemas"]["HeatTolerant"] | components["schemas"]["CropArea"])[];
+            /** Years */
+            years: number[];
+            /**
+             * Money
+             * @enum {string}
+             */
+            money: "< €50k" | "€50–100k" | "€100–250k" | "€250k–1M" | "> €1M";
+            /** Costly Years */
+            costly_years: number;
+            /** Worst Year */
+            worst_year: number;
+            /**
+             * Worst Band
+             * @enum {string}
+             */
+            worst_band: "< €50k" | "€50–100k" | "€100–250k" | "€250k–1M" | "> €1M";
+            /** Seasons */
+            seasons: components["schemas"]["Season"][];
+            /** Next Season */
+            next_season: number;
+            /** Next Contracts */
+            next_contracts: components["schemas"]["Contract"][];
+            /** Issues */
+            issues: components["schemas"]["Issue"][];
+            /** Focus Year */
+            focus_year: number;
+            /** Fields Risk */
+            fields_risk: number;
+            /** Fields Watch */
+            fields_watch: number;
+            /** Pea Fields */
+            pea_fields: number;
+            /** Farms Focus */
+            farms_focus: components["schemas"]["FarmStatus"][];
+            /** Near Years */
+            near_years: [
+                number,
+                number
+            ];
+            /** Near Fields Hit */
+            near_fields_hit: number;
+            /** Near Farm Ids */
+            near_farm_ids: string[];
+            /** Repeat Bins */
+            repeat_bins: number[];
+            /** Repeat Years */
+            repeat_years: [
+                number,
+                number
+            ];
+            /** Repeat Farm Ids */
+            repeat_farm_ids: string[];
+            /** Repeat Region */
+            repeat_region: ("FI_SW" | "SE_SKANE") | null;
+            /** Farms Hit */
+            farms_hit: components["schemas"]["FarmBadYears"][];
+            /** Near Region */
+            near_region: ("FI_SW" | "SE_SKANE") | null;
+            /** Worst Region */
+            worst_region: ("FI_SW" | "SE_SKANE") | null;
+            /** Contract Farms */
+            contract_farms: number;
+            /** Regions */
+            regions: ("FI_SW" | "SE_SKANE")[];
+            /** Sources */
+            sources: components["schemas"]["SourceRef"][];
+            /**
+             * Synthetic
+             * @default true
+             */
+            synthetic: boolean;
+        };
+        /** OutlookIn */
+        OutlookIn: {
+            /**
+             * Climate
+             * @default ssp245
+             * @enum {string}
+             */
+            climate: "ssp126" | "ssp245" | "ssp585";
+            /**
+             * Levers
+             * @default []
+             */
+            levers: (components["schemas"]["Irrigate"] | components["schemas"]["EarlierSowing"] | components["schemas"]["RegionSplit"] | components["schemas"]["HeatTolerant"] | components["schemas"]["CropArea"])[];
         };
         /** PathwayItem */
         PathwayItem: {
@@ -894,6 +1781,96 @@ export interface components {
              */
             synthetic: boolean;
         };
+        /** RadarAskIn */
+        RadarAskIn: {
+            /** Question */
+            question: string;
+            /**
+             * History
+             * @default []
+             */
+            history: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** RadarAskOut */
+        RadarAskOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "answered" | "not_in_data";
+            /** Answer Md */
+            answer_md: string;
+            /** Table */
+            table?: {
+                [key: string]: unknown;
+            } | null;
+            /** Evidence */
+            evidence: components["schemas"]["EvidenceRef"][];
+            /** Report */
+            report?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Pending Approval
+             * @default false
+             */
+            pending_approval: boolean;
+            /** Used Node Ids */
+            used_node_ids: string[];
+            /** Sources */
+            sources: components["schemas"]["SourceChip"][];
+            /**
+             * Solutions
+             * @default []
+             */
+            solutions: components["schemas"]["Solution"][];
+        };
+        /** RefileIn */
+        RefileIn: {
+            /** Topic */
+            topic: string;
+        };
+        /** RegionDay */
+        RegionDay: {
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /**
+             * Crop
+             * @enum {string}
+             */
+            crop: "pea" | "potato" | "spinach" | "carrot" | "turnip_rape";
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "not_sown" | "sown" | "flowering" | "fill" | "harvest";
+            /** Stages */
+            stages: components["schemas"]["Stage"][];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "watch" | "risk";
+            /** Dryness */
+            dryness: number;
+            /** Dryness Pct */
+            dryness_pct: number;
+            /** Dryness Normal */
+            dryness_normal: number[];
+            /** Hot Days */
+            hot_days: number;
+            /** Heat Pct */
+            heat_pct: number;
+            /** Hot Normal */
+            hot_normal: number[];
+            /** Hot Days P50 */
+            hot_days_p50: number;
+        };
         /** RegionSplit */
         RegionSplit: {
             /**
@@ -933,6 +1910,198 @@ export interface components {
             eur_at_risk: "< €50k" | "€50–100k" | "€100–250k" | "€250k–1M" | "> €1M";
             /** Bad Year */
             bad_year: boolean;
+        };
+        /** SbtiBase */
+        SbtiBase: {
+            /** Year */
+            year: number;
+            /** By Bucket */
+            by_bucket: {
+                [key: string]: number;
+            };
+            /** Total */
+            total: number;
+            /** Scope1 */
+            scope1: number;
+            /** Scope2 Market */
+            scope2_market: number;
+            /** Scope3 */
+            scope3: number;
+            /** Flag Share Pct */
+            flag_share_pct: number;
+            /** Sources */
+            sources: components["schemas"]["EvidenceRef"][];
+        };
+        /** SbtiCell */
+        SbtiCell: {
+            /** Bau T */
+            bau_t: number;
+            /** Abated T */
+            abated_t: number;
+            /** With Levers T */
+            with_levers_t: number;
+            /** Target T */
+            target_t: number | null;
+        };
+        /** SbtiGap */
+        SbtiGap: {
+            /** Gap T */
+            gap_t: number;
+            /** Needed T */
+            needed_t: number;
+            /** Closed Pct */
+            closed_pct: number;
+        };
+        /** SbtiHistory */
+        SbtiHistory: {
+            /** Year */
+            year: number;
+            /** Total T */
+            total_t: number;
+            /** Scope3 Restated */
+            scope3_restated: boolean;
+            /** Note */
+            note: string;
+        };
+        /** SbtiLever */
+        SbtiLever: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Class
+             * @enum {string}
+             */
+            class: "reduction" | "measurement" | "structural" | "removal";
+            /** Bucket */
+            bucket: ("s12" | "s3" | "flag") | null;
+            /** Abatement T Design */
+            abatement_t_design: number;
+            /** Eur Per T */
+            eur_per_t: number | null;
+            /** Start */
+            start: number;
+            /** Ramp Years */
+            ramp_years: number;
+            /** Confidence */
+            confidence: string;
+            /** Note */
+            note: string | null;
+            /** Selected */
+            selected: boolean;
+            source: components["schemas"]["EvidenceRef"];
+        };
+        /** SbtiPathway */
+        SbtiPathway: {
+            /**
+             * Scenario
+             * @enum {string}
+             */
+            scenario: "current_policies" | "net_zero_2050" | "below_2c" | "delayed_transition" | "ndcs" | "low_demand" | "fragmented_world";
+            base: components["schemas"]["SbtiBase"];
+            targets: components["schemas"]["SbtiTargets"];
+            /** Years */
+            years: components["schemas"]["SbtiYear"][];
+            /** Gap */
+            gap: {
+                [key: string]: components["schemas"]["SbtiGap"];
+            };
+            /** Levers */
+            levers: components["schemas"]["SbtiLever"][];
+            /** Counted Lever Ids */
+            counted_lever_ids: string[];
+            /** Ignored Lever Ids */
+            ignored_lever_ids: string[];
+            /** Lever Cost Eur Per Yr */
+            lever_cost_eur_per_yr: number;
+            /** History */
+            history: components["schemas"]["SbtiHistory"][];
+            /** Warnings */
+            warnings: components["schemas"]["SbtiWarning"][];
+            /** Sources */
+            sources: components["schemas"]["EvidenceRef"][];
+            /** Synthetic */
+            synthetic: boolean;
+        };
+        /** SbtiPathwayIn */
+        SbtiPathwayIn: {
+            /**
+             * Scenario
+             * @default current_policies
+             * @enum {string}
+             */
+            scenario: "current_policies" | "net_zero_2050" | "below_2c" | "delayed_transition" | "ndcs" | "low_demand" | "fragmented_world";
+            /**
+             * Levers
+             * @default []
+             */
+            levers: string[];
+            /**
+             * Target Year
+             * @default 2030
+             * @enum {integer}
+             */
+            target_year: 2030 | 2031 | 2032 | 2033 | 2034 | 2035;
+        };
+        /** SbtiTarget */
+        SbtiTarget: {
+            /** Label */
+            label: string;
+            /** Rate Pct Per Yr */
+            rate_pct_per_yr: number;
+            /** Ambition */
+            ambition: string;
+            /** Base T */
+            base_t: number;
+            /** Target T */
+            target_t: number;
+            /** Cut Pct */
+            cut_pct: number;
+        };
+        /** SbtiTargets */
+        SbtiTargets: {
+            /** Base Year */
+            base_year: number;
+            /** Target Year */
+            target_year: number;
+            /** By Bucket */
+            by_bucket: {
+                [key: string]: components["schemas"]["SbtiTarget"];
+            };
+            /** Flag Target Required */
+            flag_target_required: boolean;
+            /** Sources */
+            sources: components["schemas"]["EvidenceRef"][];
+        };
+        /** SbtiWarning */
+        SbtiWarning: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Body */
+            body: string;
+            /** Sources */
+            sources: components["schemas"]["EvidenceRef"][];
+        };
+        /** SbtiYear */
+        SbtiYear: {
+            /** Year */
+            year: number;
+            /** Demand Index */
+            demand_index: number;
+            s12: components["schemas"]["SbtiCell"];
+            s3: components["schemas"]["SbtiCell"];
+            flag: components["schemas"]["SbtiCell"];
+            /** Bau T */
+            bau_t: number;
+            /** Abated T */
+            abated_t: number;
+            /** With Levers T */
+            with_levers_t: number;
+            /** Target T */
+            target_t: number | null;
         };
         /** ScenarioPreset */
         ScenarioPreset: {
@@ -979,6 +2148,26 @@ export interface components {
              */
             horizon_end: 2031 | 2040 | 2050 | 2060;
         };
+        /** Season */
+        Season: {
+            /** Year */
+            year: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "watch" | "risk";
+            /**
+             * Bucket
+             * @enum {string}
+             */
+            bucket: "lt100k" | "100k_250k" | "250k_plus";
+            /**
+             * Band
+             * @enum {string}
+             */
+            band: "< €50k" | "€50–100k" | "€100–250k" | "€250k–1M" | "> €1M";
+        };
         /** SimResult */
         SimResult: {
             /** Scenario Id */
@@ -994,6 +2183,129 @@ export interface components {
             alerts: components["schemas"]["Alert"][];
             meters: components["schemas"]["Meters"];
             better?: components["schemas"]["BetterOption"] | null;
+            /**
+             * Synthetic
+             * @default true
+             */
+            synthetic: boolean;
+        };
+        /** Solution */
+        Solution: {
+            /** Id */
+            id: string;
+            /** Hazards */
+            hazards: string[];
+            /** Crops */
+            crops: string[];
+            /** Title */
+            title: string;
+            /** What */
+            what: string;
+            /** Window */
+            window: string;
+            /** Lead Time */
+            lead_time: string;
+            /** Cost */
+            cost: string;
+            /** Lever */
+            lever: string | null;
+            /** Limits */
+            limits: string;
+            /** Evidence */
+            evidence: components["schemas"]["Citation"][];
+            /**
+             * Reviewed
+             * @default false
+             */
+            reviewed: boolean;
+            /** Model Saves */
+            model_saves?: ("< €50k" | "€50–100k" | "€100–250k" | "€250k–1M" | "> €1M") | null;
+        };
+        /** SourceChip */
+        SourceChip: {
+            /** Node Id */
+            node_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "data" | "model" | "doc" | "tacit";
+            /** Label */
+            label: string;
+            /** Detail */
+            detail?: string | null;
+        };
+        /** SourceRef */
+        SourceRef: {
+            /** Node Id */
+            node_id: string;
+            /** Label */
+            label: string;
+            /** Detail */
+            detail?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "data" | "model" | "doc" | "tacit";
+        };
+        /** Stage */
+        Stage: {
+            /**
+             * Name
+             * @enum {string}
+             */
+            name: "sown" | "flowering" | "fill" | "harvest";
+            /** Date */
+            date: string;
+            /** Expected */
+            expected: boolean;
+        };
+        /** Today */
+        Today: {
+            /** Date */
+            date: string;
+            /**
+             * Climate
+             * @enum {string}
+             */
+            climate: "ssp126" | "ssp245" | "ssp585";
+            /**
+             * Path
+             * @enum {string}
+             */
+            path: "historical" | "ssp126" | "ssp245" | "ssp585";
+            /**
+             * Crop
+             * @enum {string}
+             */
+            crop: "pea" | "potato" | "spinach" | "carrot" | "turnip_rape";
+            /** Season */
+            season: [
+                string,
+                string
+            ];
+            /** Regions */
+            regions: components["schemas"]["RegionDay"][];
+            /** All */
+            all: components["schemas"]["RegionDay"][];
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+            /** Changes */
+            changes: components["schemas"]["Change"][];
+            /** Farms */
+            farms: components["schemas"]["FarmSpread"][];
+            /** Normal Years */
+            normal_years: [
+                number,
+                number
+            ];
+            /** Default Date */
+            default_date: string;
+            /** Sources */
+            sources: components["schemas"]["SourceRef"][];
             /**
              * Synthetic
              * @default true
@@ -1447,6 +2759,509 @@ export interface operations {
             };
         };
     };
+    radar_outlook_api_radar_outlook_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutlookIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Outlook"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    radar_today_api_radar_today_get: {
+        parameters: {
+            query?: {
+                /** @description YYYY-MM-DD, 1 Apr–31 Oct of 2026–2040; default: the demo day */
+                date?: string | null;
+                climate?: "ssp126" | "ssp245" | "ssp585";
+                crop?: "pea" | "potato" | "spinach" | "carrot" | "turnip_rape";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Today"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    graph_api_graph_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Graph"];
+                };
+            };
+        };
+    };
+    entity_api_entity__entity_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    radar_ask_api_radar_ask_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RadarAskIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadarAskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    solutions_api_solutions_get: {
+        parameters: {
+            query?: {
+                hazard?: string[];
+                crop?: string | null;
+                climate?: "ssp126" | "ssp245" | "ssp585";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Solution"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tacit_topics_api_tacit_topics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
+    tacit_note_api_tacit_notes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Filed"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tacit_confirm_api_tacit_notes__note_id__confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeItem"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tacit_refile_api_tacit_notes__note_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefileIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Filed"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tacit_interview_api_tacit_interviews_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InterviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Interview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    knowledge_api_knowledge_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    knowledge_add_api_knowledge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KnowledgeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeItem"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    knowledge_decide_api_knowledge__knowledge_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                knowledge_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KnowledgeDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeItem"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    gaps_api_gaps_get: {
+        parameters: {
+            query?: {
+                year?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Gap"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sbti_pathway_api_sbti_pathway_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SbtiPathwayIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SbtiPathway"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     ask_api_ask_post: {
         parameters: {
             query?: never;
@@ -1467,6 +3282,96 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_brief_api_brief_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_issues_api_issues_get: {
+        parameters: {
+            query?: {
+                status?: string;
+                source?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    make_inventory_report_api_report_inventory_post: {
+        parameters: {
+            query?: {
+                year?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */

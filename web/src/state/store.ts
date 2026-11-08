@@ -1,126 +1,91 @@
 // UI state only (what is selected / shown). Server data lives in react-query (api/hooks.ts).
-// The map camera is NOT here: MapLibre owns it, so panning never re-renders React. To move the map, call
-// flyTo(); MapView watches `camera.seq` and animates there.
 import { create } from "zustand";
-import type { Alert, Region, ScenarioSpec } from "../api/types";
+import type { Climate, Filed } from "../api/types";
 
-export type MapLayer = "parcels" | "farms" | "weather";
-export type ColorBy = "health" | "drought" | "heat";
-export type Tab = "overview" | "map";
-export type ChatMsg = { id: number; text: string; history: string[]; kind?: "search" };
-export type ParcelPick = { parcel_id: string; farm_id: string; area_ha: number; crop?: string | null; ring: [number, number][] };
-export type Door = "ask" | "simulate";
-export type View = { longitude: number; latitude: number; zoom: number };
+export type Tab = "overview" | "assistant";
+export type Mode = "ask" | "simulate" | "teach";
+export type SheetKind = "issues" | "money" | "plans" | "farms-near" | "farms-repeat";
+/** One turn in the assistant. `context` carries what the user came from (a gap to fill). */
+export type Turn = { id: number; mode: Mode; text: string; history: string[]; context?: { gap?: string } };
 
-export const START_YEAR = 2026;
-export const HOME_VIEW: View = { longitude: 13.33, latitude: 55.85, zoom: 11.6 }; // the densest Skåne cluster
-export const REGION_VIEW: Record<Alert["region"], View> = {
-  FI_SW: { longitude: 22.2, latitude: 61.11, zoom: 11.6 },
-  SE_SKANE: HOME_VIEW,
-};
+export const START_YEAR = 2026; // the last season with observed weather
+export const HORIZON = 2040; // every view shows the same 15 seasons
+export const CLIMATES: { key: Climate; label: string; path: string }[] = [
+  { key: "ssp126", label: "Low emissions", path: "low-emissions weather path" },
+  { key: "ssp245", label: "Middle", path: "middle weather path" },
+  { key: "ssp585", label: "High emissions", path: "high-emissions weather path" },
+];
+export const climatePath = (c: Climate) => CLIMATES.find((x) => x.key === c)?.path ?? "middle weather path";
 
 type State = {
   tab: Tab;
-  scenarioId: string; // a preset id
-  customSpec: ScenarioSpec | null; // set → the active scenario is POST /api/simulate(customSpec)
-  pendingSpec: ScenarioSpec | null; // heard from voice/text, waiting for the user's confirm
-  heard: string[];
-  problems: string[];
-  year: number;
-  playing: boolean;
-  layer: MapLayer;
-  camera: { target: View; seq: number }; // a fly-to request, not the live camera
-  selectedAlert: Alert | null;
-  door: Door;
-  question: string | null;
-  askHistory: string[]; // earlier questions, oldest first (sent as history so "make that a report" works)
-  boardDialogRow: string | null;
-  colorBy: ColorBy;
-  selectedParcel: ParcelPick | null;
-  watched: string[];
-  chat: ChatMsg[];
+  climate: Climate;
+  sheet: { kind: SheetKind; from: DOMRect | null; issueId?: string } | null;
+  mode: Mode;
+  turns: Turn[];
+  draft: string;
+  litNodes: string[]; // the knowledge-graph nodes the latest answer used
+  newNodes: string[]; // notes filed this session (shown with a "New" pill)
   tourOpen: boolean;
-  assistantOpen: boolean; // the assistant floats over whatever tab is open
-  viewRegion: Region; // the region the map is looking at (updated when a move ends)
-  weatherFx: boolean; // rain / heat / drought effects on the map
+  filing: { f: Filed; at: number } | null; // the latest filed note, played as an animation in the graph
+  focus: string | null; // the graph node whose drawer is open
+  graphOpen: boolean; // "Adaptive database" beside the chat; hidden by default so the chat has the room
+  litUnseen: boolean; // an answer lit graph nodes while the graph was hidden (badge on the toggle)
 };
 
 type Actions = {
   setTab: (t: Tab) => void;
-  pickPreset: (id: string) => void;
-  runSpec: (spec: ScenarioSpec) => void;
-  resetSpec: () => void;
-  setPending: (spec: ScenarioSpec | null, heard?: string[], problems?: string[]) => void;
-  setYear: (y: number) => void;
-  setPlaying: (p: boolean) => void;
-  setLayer: (l: MapLayer) => void;
-  flyTo: (v: View) => void;
-  selectAlert: (a: Alert | null) => void;
-  ask: (q: string) => void;
-  setDoor: (d: Door) => void;
-  openDecision: (rowId: string | null) => void;
-  setColorBy: (c: ColorBy) => void;
-  selectParcel: (p: ParcelPick | null) => void;
-  toggleWatch: (parcelId: string) => void;
-  sendChat: (text: string, kind?: "search") => void;
+  setClimate: (c: Climate) => void;
+  openSheet: (kind: SheetKind, from?: DOMRect | null, issueId?: string) => void;
+  closeSheet: () => void;
+  setMode: (m: Mode) => void;
+  setDraft: (d: string) => void;
+  send: (text: string, mode?: Mode, context?: Turn["context"]) => void;
+  /** Go to the assistant with a prompt ready in the composer (the user still presses send). */
+  prefill: (mode: Mode, text: string) => void;
+  light: (ids: string[]) => void;
+  markNew: (id: string) => void;
   setTourOpen: (open: boolean) => void;
-  setAssistantOpen: (open: boolean) => void;
-  setViewRegion: (r: Region) => void;
-  setWeatherFx: (on: boolean) => void;
+  playFiling: (f: Filed | null) => void;
+  setFocus: (id: string | null) => void;
+  setGraphOpen: (open: boolean) => void;
 };
 
+const hashTab = (): Tab => (typeof window !== "undefined" && window.location.hash.slice(1) === "assistant" ? "assistant" : "overview");
+
+
 export const useStore = create<State & Actions>((set) => ({
-  tab: "overview",
-  scenarioId: "current_plan_ssp245",
-  customSpec: null,
-  pendingSpec: null,
-  heard: [],
-  problems: [],
-  year: START_YEAR,
-  playing: false,
-  layer: "parcels",
-  camera: { target: HOME_VIEW, seq: 0 },
-  selectedAlert: null,
-  door: "simulate",
-  question: null,
-  askHistory: [],
-  boardDialogRow: null,
-  colorBy: "health",
-  selectedParcel: null,
-  watched: [],
-  chat: [],
+  tab: hashTab(),
+  climate: "ssp245",
+  sheet: null,
+  mode: "ask",
+  turns: [],
+  draft: "",
+  litNodes: [],
+  newNodes: [],
   tourOpen: false,
-  assistantOpen: false,
-  viewRegion: "SE_SKANE",
-  weatherFx: true,
-  setTab: (tab) => set({ tab }),
-  pickPreset: (id) => set({ scenarioId: id, customSpec: null, selectedAlert: null, playing: false }),
-  runSpec: (spec) => set({ customSpec: spec, pendingSpec: null, selectedAlert: null, door: "simulate", tab: "map", assistantOpen: false }),
-  resetSpec: () => set({ customSpec: null, selectedAlert: null }),
-  setPending: (spec, heard = [], problems = []) => set({ pendingSpec: spec, heard, problems, door: "simulate" }),
-  setYear: (year) => set({ year }),
-  setPlaying: (playing) => set({ playing }),
-  setLayer: (layer) => set({ layer }),
-  flyTo: (target) => set((s) => ({ camera: { target, seq: s.camera.seq + 1 } })),
-  // MapView centres on the alert's pin once that year's farms are loaded
-  selectAlert: (a) => set(a ? { selectedAlert: a, year: a.year, playing: false, selectedParcel: null } : { selectedAlert: null }),
-  ask: (question) =>
-    set((s) => ({
-      question, door: "ask",
-      askHistory: s.question && s.question !== question ? [...s.askHistory, s.question].slice(-5) : s.askHistory,
-    })),
-  setDoor: (door) => set({ door }),
-  openDecision: (boardDialogRow) => set({ boardDialogRow }),
-  setColorBy: (colorBy) => set({ colorBy }),
-  selectParcel: (selectedParcel) => set(selectedParcel ? { selectedParcel, selectedAlert: null } : { selectedParcel }),
-  toggleWatch: (id) => set((s) => ({ watched: s.watched.includes(id) ? s.watched.filter((w) => w !== id) : [...s.watched, id] })),
-  // each chat question remembers the questions before it, so follow-ups ("make that a report") resolve
-  sendChat: (text, kind) => set((s) => ({
-    chat: [...s.chat, { id: Date.now(), text, history: s.chat.map((m) => m.text).slice(-5), kind }],
-    assistantOpen: true,
+  filing: null,
+  focus: null,
+  graphOpen: false,
+  litUnseen: false,
+  setTab: (tab) => set({ tab, sheet: null }),
+  setClimate: (climate) => set({ climate }),
+  openSheet: (kind, from = null, issueId) => set({ sheet: { kind, from, issueId } }),
+  closeSheet: () => set({ sheet: null }),
+  setMode: (mode) => set({ mode }),
+  setDraft: (draft) => set({ draft }),
+  send: (text, mode, context) => set((s) => ({
+    turns: [...s.turns, { id: Date.now(), mode: mode ?? s.mode, text, context,
+      history: s.turns.filter((t) => t.mode === "ask").map((t) => t.text).slice(-5) }],
+    mode: mode ?? s.mode, draft: "", tab: "assistant", sheet: null,
   })),
+  prefill: (mode, draft) => set({ tab: "assistant", mode, draft, sheet: null }),
+  light: (litNodes) => set((s) => ({ litNodes, litUnseen: !s.graphOpen && litNodes.length > 0 })),
+  markNew: (id) => set((s) => ({ newNodes: [...new Set([...s.newNodes, id])] })),
   setTourOpen: (tourOpen) => set({ tourOpen }),
-  setAssistantOpen: (assistantOpen) => set({ assistantOpen }),
-  setViewRegion: (viewRegion) => set({ viewRegion }),
-  setWeatherFx: (weatherFx) => set({ weatherFx }),
+  // a newly filed note opens the graph: watching it file itself is the point
+  playFiling: (f) => set((s) => (f && s.filing?.f.note_id === f.note_id ? {}
+    : { filing: f ? { f, at: Date.now() } : null, ...(f ? { graphOpen: true, litUnseen: false } : {}) })),
+  setFocus: (focus) => set({ focus }),
+  setGraphOpen: (graphOpen) => set({ graphOpen, litUnseen: false, ...(graphOpen ? {} : { focus: null }) }),
 }));

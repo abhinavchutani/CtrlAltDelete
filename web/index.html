@@ -3,7 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Navigator v2</title>
+    <title>Apetit Radar</title>
+    <meta name="theme-color" content="#EEF0EA" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#07090A" media="(prefers-color-scheme: dark)" />
+    <script>
+      (function () {
+        var p = null; try { p = localStorage.getItem("fr-theme"); } catch (e) {}
+        var dark = p === "dark" || (p !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

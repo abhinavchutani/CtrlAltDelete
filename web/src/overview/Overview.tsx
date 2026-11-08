@@ -1,184 +1,192 @@
-// The landing page: the problem (money at risk from weather), the fix the model found, what it is built on, then the
-// chosen year at a glance. Every number comes from the API; € only as bands. Synthetic data, said on the page.
-import { useEffect } from "react";
-import { useProvenance } from "../api/hooks";
-import type { Alert, Region } from "../api/types";
-import { Drop, Euro, Leaf, Play } from "../components/Icons";
-import { CLIMATE_LABEL } from "../domain";
-import { DecisionBoard } from "../features/board/DecisionBoard";
-import { cropName, droughtLevel, REGION_NAME, useFieldData } from "../features/fieldradar/useFieldData";
-import { HedgeChart } from "../features/hedge/HedgeChart";
-import { Meters } from "../features/meters/Meters";
-import { PathwaysGantt } from "../features/pathways/PathwaysGantt";
-import { holds } from "../features/plans/planMeta";
-import { useSearch } from "../state/search";
-import { START_YEAR, useStore } from "../state/store";
+// Layer 1: the widget grid. A widget never lists; each one is a single button that opens its Layer 2.
+// Every number comes from /api/radar/outlook, /api/provenance or the plan finder stream.
+import type { MouseEvent } from "react";
+import type { Outlook, Status } from "../api/types";
+import {
+  ArrowRight, Ring, Segmented, StatusMark, shortYear,
+} from "../components/ui";
+import { CLIMATES, useStore, type SheetKind } from "../state/store";
+import { BUCKET_LEVEL, cap, typeLabel, useBestPlan, useTodayOutlook } from "./data";
+import { OverviewSheets } from "./Sheets";
+import { SeasonHighlights } from "./SeasonHighlights";
+import { rect, skel, Widget } from "./Widget";
 
-const LEVEL = { low: "Low", medium: "Medium", high: "High" } as const;
-const KIND: Record<string, string> = {
-  drought_flowering: "× drought at flowering", heat_flowering: "× heat at flowering", waterlogging: "× waterlogging",
-  wet_harvest: "× wet harvest", blight_weather: "× blight weather", beetle_weather: "× pollen-beetle weather",
-  supply_shortfall: "× supply shortfall", risk_threshold: "× risk threshold", assumption: "× assumption",
-};
-const plain = (s: string) => s.replace(/SE_SKANE/g, "Skåne").replace(/FI_SW/g, "SW Finland");
-const fmt = (n: number) => n.toLocaleString("en-GB");
-const millions = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)} million` : fmt(n));
-
-function Hero({ onAll }: { onAll: () => void }) {
-  const d = useFieldData();
-  const s = useSearch();
-  const setTab = useStore((x) => x.setTab);
-  const setYear = useStore((x) => x.setYear);
-  const setPlaying = useStore((x) => x.setPlaying);
-  const selectAlert = useStore((x) => x.selectAlert);
-  const spec = d.sim.data?.spec;
-  const climate = spec?.climate ?? "ssp245", horizon = spec?.horizon_end ?? 2040;
-  useEffect(() => { void s.start(climate, horizon); }, [climate, horizon]); // eslint-disable-line react-hooks/exhaustive-deps
-  const best = s.best ? s.candidates[s.best] : null;
-  const h = best ? holds(best) : null;
-  // what the alerts on this path are about, counted (e.g. "6 flowering droughts, 2 heat at flowering")
-  const kinds = new Map<string, number>();
-  for (const a of d.sim.data?.alerts ?? []) kinds.set(a.kind, (kinds.get(a.kind) ?? 0) + 1);
-  const causes = [...kinds.entries()].sort((a, b) => b[1] - a[1])
-    .map(([k, n]) => `${n} ${(KIND[k] ?? k.replace(/_/g, " "))}`).join(", ");
-  const watch = () => { selectAlert(null); setTab("map"); setYear(START_YEAR); setPlaying(true); };
-  const runShow = useStore((x) => x.runSpec);
+const ASK_FALLBACK = "What helps against drought at flowering in pea?";
+const REGION_SHORT: Record<string, string> = { FI_SW: "SW Finland", SE_SKANE: "Skåne" };
+/** The Ask tile's prompt, built from the next real issue on this weather path: its year, region and € at risk. */
+function askPrompt(o: Outlook | undefined): string {
+  const next = o?.issues.filter((i) => i.year >= o.next_season).sort((a, b) => a.year - b.year)[0];
+  if (!next || (next.type !== "drought" && next.type !== "heat")) return ASK_FALLBACK;
+  const what = next.type === "drought" ? "drought" : "heat";
+  return `${next.eur_at_risk ? `${next.eur_at_risk} at risk in ${next.year}: h` : "H"}ow do we protect ${REGION_SHORT[next.region]} peas from ${what} at flowering${next.eur_at_risk ? "" : ` in ${next.year}`}?`;
+}
+const BAR_H = { 1: 24, 2: 52, 3: 96 } as const;
+/** The 15 seasons as bars (height = € bucket, colour = status), next season ringed. */
+function SeasonBars({ o }: { o: Outlook }) {
+  const risk = o.seasons.filter((s) => s.status === "risk").length;
   return (
-    <section className="hero" data-tour="hero">
-      <div className="hero-kicker">{START_YEAR}–{horizon} · {CLIMATE_LABEL[climate]} · today's plan · synthetic data</div>
-      <h1 className="hero-title">
-        {s.plan ? <>On this weather path, <em>{s.plan.eur_at_risk_per_year}</em> a year of contract-crop supply is at risk.</>
-          : "Working out what the weather puts at risk…"}
-      </h1>
-      {s.plan ? (
-        <p className="hero-sub">{s.plan.costly_years} of the {s.years} years put €250k or more at risk; the worst year, {s.plan.worst_year}.
-          {causes ? ` The alerts on this path: ${causes}.` : ""}</p>
-      ) : null}
-      <div className="hero-fix">
-        <div className="hero-fix-label">{s.status === "done" ? `The best of ${Object.keys(s.candidates).length} simulated plans` : "Finding the best plan"}</div>
-        {s.status === "running" ? (
-          <div className="finder-run">
-            <div className="finder-count">Simulating plan {Math.max(1, s.done)} of {s.total || "…"}</div>
-            <div className="bar"><span style={{ width: `${s.total ? (100 * s.done) / s.total : 0}%` }} /></div>
+    <>
+      <div className="bars" style={{ height: 150, marginTop: 30 }} role="img"
+        aria-label={`Seasons at risk, ${o.years[0]}–${o.years[o.years.length - 1]}: ${risk} over €250k`}>
+        {o.seasons.map((s, i) => (
+          <div key={s.year} className={`col ${s.year === o.next_season ? "now" : ""}`}>
+            <div className={`bar ${s.status}`} style={{ height: BAR_H[BUCKET_LEVEL[s.bucket] as 1 | 2 | 3] }} />
+            <span className="yl">{i % 2 === 0 || s.year === o.next_season ? shortYear(s.year) : "\u200b"}</span>
           </div>
-        ) : best ? (
-          <>
-            <div className="hero-fix-plan">{best.label}</div>
-            <div className="hero-fix-stats">
-              <span><strong className="vs-better">saves {best.saves}</strong> a year</span>
-              <span>years over €250k: {best.plan_costly_years} → <strong>{best.costly_years}</strong></span>
-              {h ? <span>{h.ok === h.of ? "still better in both other futures" : `better in ${h.ok} of ${h.of} other futures`}</span> : null}
-            </div>
-          </>
-        ) : s.status === "done" ? <div className="muted">No plan beat today's plan on this path.</div>
-          : s.status === "error" ? <div className="sev-critical small">{s.error}</div> : null}
-        <div className="hero-actions">
-          <button className="btn-run" onClick={watch}><Play size={14} /> Watch the years on the map</button>
-          {best ? <button className="btn-ghost" onClick={() => runShow({ climate, horizon_end: horizon, levers: best.levers, label: best.label })}>Show the best plan</button> : null}
-          {s.status === "done" ? <button className="btn-ghost" onClick={onAll}>All {Object.keys(s.candidates).length} plans</button> : null}
-        </div>
+        ))}
       </div>
-    </section>
+      <div className="legend" style={{ marginTop: 10 }}>
+        <span><StatusMark status="risk" size={13} /> over €250k</span>
+        <span><StatusMark status="watch" size={13} /> €100–250k</span>
+        <span><StatusMark status="ok" size={13} /> under €100k</span>
+      </div>
+    </>
   );
 }
 
-function BuiltOn() {
-  const p = useProvenance();
-  if (!p.data) return null;
-  const x = p.data;
-  const facts: [string, string][] = [
-    [fmt(x.farms), "contract farms"],
-    [fmt(x.parcels), `fields, crop records ${x.crop_history_years[0]}–${x.crop_history_years[1]}`],
-    [fmt(x.fi_yield_records), `Finnish harvest records, ${x.fi_yield_years[0]}–${x.fi_yield_years[1]}`],
-    [fmt(x.se_delivery_records), `Skåne pea deliveries, ${x.se_delivery_years[0]}–${x.se_delivery_years[1]}`],
-    [millions(x.weather_days), `days of weather, ${x.weather_cells} grid cells, ${x.weather_years[0]}–${x.weather_years[1]}`],
-    [String(x.climate_paths.length), `climate futures to ${x.climate_years[1]}`],
+/** A 10 × 10 grid with the share filled: "x in 100". */
+function Waffle({ share }: { share: number }) {
+  const n = Math.round(share * 100);
+  return (
+    <svg width={74} height={74} viewBox="0 0 100 100" role="img" aria-label={`${n} in 100 pea fields`} style={{ flex: "none" }}>
+      {Array.from({ length: 100 }, (_, i) => (
+        <rect key={i} x={(i % 10) * 10 + 1} y={Math.floor(i / 10) * 10 + 1} width={8} height={8} rx={1.5}
+          fill={i < n ? "var(--status-risk)" : "var(--surface-sunk)"} />
+      ))}
+    </svg>
+  );
+}
+
+/** Farms by how many bad years they get from next season on: the repeat cases are where help pays off. */
+function RepeatFarms({ o }: { o: Outlook }) {
+  const [none, one, two, more] = o.repeat_bins;
+  const rows: { label: string; n: number; s: Status }[] = [
+    { label: "3+ bad years", n: more, s: "risk" }, { label: "2 bad years", n: two, s: "risk" },
+    { label: "1 bad year", n: one, s: "watch" }, { label: "none", n: none, s: "ok" },
   ];
+  const max = Math.max(...rows.map((r) => r.n), 1);
   return (
-    <section className="built-on" aria-label="What the model is built on" data-tour="built-on">
-      <div className="built-head">
-        <h2>Built on the Apetit data pack</h2>
-        <span className="muted small">Counted from the data the model reads. The pack is synthetic: not Apetit's real figures or farms.</span>
+    <div className="repeat">
+      <div>
+        <span key={two + more} className="w-fig fig-risk">{(two + more).toLocaleString("en-GB")} farms</span>
+        <span className="w-sub" style={{ display: "block" }}>hit 2 or more times by {o.repeat_years[1]}</span>
       </div>
-      <div className="built-facts">
-        {facts.map(([n, l]) => <div key={l} className="built-fact"><div className="built-n">{n}</div><div className="built-l">{l}</div></div>)}
+      <div className="hbars" role="img" aria-label={rows.map((r) => `${r.n} farms with ${r.label}`).join(", ")}>
+        {rows.map((r) => (
+          <div key={r.label} className="hrow">
+            <span className="hlab">{r.label}</span>
+            <span className="htrack"><span className={`bar ${r.s}`} style={{ width: `${Math.max(2, (100 * r.n) / max)}%` }} /></span>
+            <span className="hn">{r.n}</span>
+          </div>
+        ))}
       </div>
-      {x.backtest ? (
-        <p className="backtest">
-          <strong>Checked against harvests it never saw.</strong> Trained on years up to {x.backtest.train_until}, then tested on
-          {" "}{x.backtest.test_years.join(", ")}: total production off by <strong>{x.backtest.model_error_pct} %</strong>, against
-          {" "}{x.backtest.baseline_error_pct} % for a simple farm-average guess.
-        </p>
-      ) : null}
-    </section>
+    </div>
   );
 }
 
-/** The landing page. */
-export function Overview({ onAll }: { onAll: () => void }) {
-  const d = useFieldData();
-  const year = useStore((s) => s.year);
-  const setTab = useStore((s) => s.setTab);
-  const selectAlert = useStore((s) => s.selectAlert);
-  const sim = d.sim.data;
-  const w = d.stats.worst;
-  const dry = (Object.entries(d.stats.drought) as [Region, number | undefined][])
-    .filter(([, v]) => v !== undefined).sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))[0];
-  const alerts = [...(sim?.alerts ?? [])].sort((a, b) => a.year - b.year);
-  const show = (a: Alert) => { selectAlert(a); setTab("map"); };
-  return (
-    <div className="page overview" aria-label="Overview">
-      <Hero onAll={onAll} />
-      <BuiltOn />
+export function Overview() {
+  const climate = useStore((s) => s.climate);
+  const setClimate = useStore((s) => s.setClimate);
+  const sheet = useStore((s) => s.sheet);
+  const openSheet = useStore((s) => s.openSheet);
+  const prefill = useStore((s) => s.prefill);
+  const q = useTodayOutlook();
+  const plan = useBestPlan();
+  const o = q.data;
+  const open = (k: SheetKind) => (e: MouseEvent) => openSheet(k, rect(e));
+  const risk = o?.issues.filter((i) => i.status === "risk").length ?? 0;
+  const watch = o?.issues.filter((i) => i.status === "watch").length ?? 0;
+  const byType = new Map<string, number>();
+  for (const i of o?.issues ?? []) byType.set(i.type, (byType.get(i.type) ?? 0) + 1);
+  const best = plan.best;
 
-      <header className="page-head">
-        <h2 className="section-title">{year} at a glance</h2>
-        <p className="muted">Change the year on the map; this follows it.</p>
-      </header>
-      <div className="tiles">
-        <div className="tile">
-          <span className="tile-icon good"><Leaf /></span>
-          <div className="tile-value">{d.stats.healthPct ?? "—"}{d.stats.healthPct !== undefined ? " %" : ""}</div>
-          <div className="tile-label">of farms on track</div>
-        </div>
-        <div className="tile">
-          <span className="tile-icon warn"><Euro /></span>
-          <div className="tile-value">{w?.band ?? "—"}</div>
-          <div className="tile-label">at risk, worst crop{w ? `: ${REGION_NAME[w.region]} ${cropName(w.crop)}` : ""}</div>
-        </div>
-        <div className="tile">
-          <span className="tile-icon bad"><Drop /></span>
-          <div className="tile-value">{dry ? LEVEL[droughtLevel(dry[1]!)] : "—"}</div>
-          <div className="tile-label">drought{dry ? `, driest region: ${REGION_NAME[dry[0]]}` : ""}</div>
+  return (
+    <main className="page" aria-label="Overview">
+
+      <div className="ov-head" id="radar">
+        <h1 className="ov-title">Contract crop overview</h1>
+        <div className="ov-controls">
+          <Segmented className="glass" label="Weather path" value={climate} onChange={setClimate}
+            options={CLIMATES.map((c) => ({ key: c.key, label: c.label }))} />
         </div>
       </div>
+      {q.error ? <p className="err" role="alert">Couldn't load the outlook: {String(q.error)}</p> : null}
 
-      <section className="card">
-        <h2>Problems ahead on this path</h2>
-        {alerts.length === 0 ? <p className="muted">No alerts on this path.</p> : (
-          <ul className="watch-list">
-            {alerts.map((a) => (
-              <li key={a.id}>
-                <span className={`sev-dot ${a.severity}`} aria-label={a.severity} />
-                <span className="watch-year">{a.year}</span>
-                <span className="watch-title">{plain(a.title)}</span>
-                <span className="watch-eur">{a.eur_at_risk ?? ""}</span>
-                <button className="link-btn" onClick={() => show(a)}>Show on map</button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <div className={`grid ${sheet ? "dim" : ""}`} aria-hidden={sheet ? true : undefined}>
+        <Widget size="L" label="Crops at risk" cta="See what drives it" onOpen={open("money")} tour="money">
+          {o ? (() => {
+            const hit = o.next_contracts.filter((c) => c.status !== "ok");
+            const tone = hit.some((c) => c.status === "risk") ? "fig-risk" : hit.length ? "fig-harvest" : "fig-leaf";
+            return <span key={`${climate}${hit.length}`} className={`w-fig ${tone}`}>{hit.length} of {o.next_contracts.length} crops</span>;
+          })() : skel("70%", 64)}
+          <span className="w-sub">at risk of costing €100k+ to buy in, next season ({o?.next_season ?? "…"})</span>
+          {o ? <SeasonBars o={o} /> : null}
+        </Widget>
 
-      <details className="card more">
-        <summary>More detail: meters, hedge, pathways, decision board</summary>
-        <div className="more-body">
-          <Meters />
-          <HedgeChart />
-          <PathwaysGantt />
-          <DecisionBoard />
-        </div>
-      </details>
-    </div>
+        <Widget label="Issues ahead" cta={o ? `See the ${o.issues.length}` : "See them"} onOpen={open("issues")} tour="issues">
+          <span className="w-row">
+            <Ring size={88} stroke={13} label={`${risk} bad-year issues and ${watch} to watch`}
+              parts={[{ value: watch, color: "var(--status-watch)" }, { value: risk, color: "var(--status-risk)" }]} />
+            <span key={`${climate}${o?.issues.length}`} className="w-fig">{o ? o.issues.length : "…"}</span>
+          </span>
+          <span className="w-sub">{[...byType.entries()].map(([t, n]) => `${n} ${typeLabel(t).toLowerCase().replace(" at flowering", "")}`).join(" · ")}{byType.size ? " at flowering" : ""}</span>
+        </Widget>
+
+        <Widget label="Fields at risk soon" cta="See the farms" onOpen={open("farms-near")}>
+          {o ? (
+            <span className="w-row" style={{ gap: 14 }}>
+              <Waffle share={o.near_fields_hit / Math.max(1, o.pea_fields)} />
+              <span key={`${climate}${o.near_fields_hit}`} className="w-fig fig-risk">{Math.round((100 * o.near_fields_hit) / Math.max(1, o.pea_fields))}%</span>
+            </span>
+          ) : skel(80, 56)}
+          <span className="w-sub">of pea fields have a bad year in {o ? `${o.near_years[0]}–${shortYear(o.near_years[1])}` : "…"}</span>
+        </Widget>
+
+        <Widget size="M" label="Yield optimizer"
+          right={plan.status === "done" ? undefined : "testing plans…"}
+          cta={plan.status === "done" ? `See all ${plan.tested} plans` : "See the plans"} tour="plan" onOpen={open("plans")}>
+          <div className="w-split">
+            <div>
+              {best ? <span key={`${climate}${best.saves}`} className="w-fig fig-leaf">Saves {best.saves}</span>
+                : plan.status === "done" ? <span className="w-sub">No plan beat today's plan on this path.</span>
+                  : plan.status === "error" ? <span className="w-sub err">{plan.error}</span>
+                    : <><span className="w-sub">Simulating plan {Math.max(1, plan.done)} of {plan.total || "…"}</span>
+                      <div className="progress" style={{ marginTop: 8 }}><span style={{ width: `${plan.total ? (100 * plan.done) / plan.total : 0}%` }} /></div></>}
+              {best ? <span className="w-sub">a year · {cap(best.label.toLowerCase())}</span> : null}
+            </div>
+            {best ? (
+              <div className="minibars" role="img" aria-label={`Bad seasons (over €250k) to 2040: ${best.plan_costly_years} today, ${best.costly_years} with the plan`}>
+                {[["Today", best.plan_costly_years, "risk"], ["With plan", best.costly_years, "apetit"]].map(([l, n, c]) => (
+                  <div key={l as string} className="col">
+                    <span className="n">{n}</span>
+                    <div className={`bar ${c}`} style={{ height: 8 + 7 * (n as number) }} />
+                    <span className="cap">{l}</span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </Widget>
+
+        <section className="w glass S season-tile" aria-label="Upcoming season, on one plausible weather path (not a forecast)"
+          title="One plausible weather path on the chosen climate future, not a forecast">
+          <span className="w-label">Upcoming season<span className="right">{o?.next_season ?? "…"}</span></span>
+          {o ? <SeasonHighlights o={o} climate={climate} /> : skel("90%", 80)}
+        </section>
+
+        <button type="button" className="w glass S ask-tile" onClick={() => prefill("ask", askPrompt(o))} data-tour="ask"
+          aria-label={`Ask. For example: ${askPrompt(o)}`}>
+          <span className="ask-head"><span className="w-fig">Ask</span><span className="ask-arrow" aria-hidden="true"><ArrowRight size={36} /></span></span>
+          <span className="w-sub">“{askPrompt(o)}”</span>
+        </button>
+
+        <Widget size="M" label="Hit again and again"
+          right={o ? `${o.repeat_bins.reduce((x, y) => x + y, 0)} farms, ${o.repeat_years[0]}–${o.repeat_years[1]}` : undefined}
+          cta="See the farms" onOpen={open("farms-repeat")}>
+          {o ? <RepeatFarms o={o} /> : <div className="minimap skeleton" />}
+        </Widget>
+      </div>
+      {o ? <OverviewSheets o={o} /> : null}
+    </main>
   );
 }

@@ -15,6 +15,7 @@ from pathlib import Path
 import numpy as np
 
 from api import schemas as S
+from src import b_sbti
 from src.serve_db import connect
 
 OUT = Path(__file__).resolve().parent / "fixtures"
@@ -305,6 +306,7 @@ def main() -> None:
     dump("board", board())
     dump("ask", ask(con))
     dump("intent", intents())
+    dump("sbti_pathway", S.SbtiPathway(**b_sbti.pathway(con)), indent=None)  # real engine output (no levers)
     dump("geo_farms", geo_farms(con), indent=None)
     dump("geo_parcels", geo_parcels(con), indent=None)
     print(f"fixtures → {OUT} ({len(list(OUT.glob('*.json')))} files)")

@@ -60,3 +60,32 @@ export type SearchEvent =
   | { type: "stress"; id: string; futures: Record<string, PlanFuture> }
   | { type: "done"; ranking: string[]; best: string | null; tested: number; seconds: number }
   | { type: "error"; detail: string };
+
+// Field Radar v4 (api/radar.py, api/kgraph.py)
+export type Outlook = S["Outlook"];
+export type OutlookIn = S["OutlookIn"];
+export type Season = S["Season"];
+export type Issue = S["Issue"];
+export type SourceRef = S["SourceRef"];
+export type Status = Season["status"];
+export type Bucket = Season["bucket"];
+export type Graph = S["Graph"];
+export type GraphNode = S["Node"];
+export type RadarAskOut = S["RadarAskOut"];
+export type SourceChip = S["SourceChip"];
+export type Filed = S["Filed"];
+export type EntityView = S["EntityView"];
+export type Interview = S["Interview"];
+export type KnowledgeItem = S["KnowledgeItem"];
+export type Contract = S["Contract"];
+export type FarmBadYears = S["FarmBadYears"];
+export type Solution = S["Solution"];
+export type Citation = S["Citation"];
+
+// Overview "Today" (task #127): the season so far on the demo clock's day (api/radar.py Today)
+export type Today = S["Today"];
+export type RegionDay = S["RegionDay"];
+export type TodayChange = S["Change"];
+export type FarmSpread = S["FarmSpread"];
+export type TodayCrop = RegionDay["crop"];
+export type StageName = S["Stage"]["name"];
