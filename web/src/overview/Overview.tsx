@@ -177,10 +177,10 @@ export function Overview() {
           </div>
         </Widget>
 
-        <section className="w glass S season-tile" aria-label="Upcoming season">
+        <section className="w glass S season-tile" aria-label="Upcoming season, on one plausible weather path (not a forecast)"
+          title="One plausible weather path on the chosen climate future, not a forecast">
           <span className="w-label">Upcoming season<span className="right">{o?.next_season ?? "…"}</span></span>
           {o ? <SeasonHighlights o={o} climate={climate} /> : skel("90%", 80)}
-          <span className="w-note" title="One plausible weather path on the chosen climate future, not a forecast">one weather path, not a forecast</span>
         </section>
 
         <button type="button" className="w glass S ask-tile" onClick={() => prefill("ask", ASK_EXAMPLE)} data-tour="ask"
