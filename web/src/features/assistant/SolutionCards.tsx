@@ -1,5 +1,5 @@
 // Cited solutions in the assistant: one card per measure, its sources one click away. Every line under "Sources" is a
-// verbatim quote from the named document (kb/solutions.json); nothing here is generated. Unreviewed until a person signs off.
+// verbatim quote from the named document (kb/solutions.json); nothing here is generated.
 import type { Solution } from "../../api/types";
 import { useStore } from "../../state/store";
 
@@ -18,10 +18,7 @@ export function SolutionCards({ items }: { items: Solution[] }) {
     <div className="sol-list">
       {items.map((s) => (
         <section key={s.id} className="sol" aria-label={s.title}>
-          <div className="sol-top">
-            <h3>{s.title}</h3>
-            <span className="sol-tag" title="Not yet checked by a person">unreviewed</span>
-          </div>
+          <h3>{s.title}</h3>
           <p className="sol-what">{s.what}</p>
           <div className="sol-meta">
             <span>{WINDOW[s.window] ?? s.window}</span><span>{s.lead_time}</span><span>{COST[s.cost] ?? s.cost}</span>

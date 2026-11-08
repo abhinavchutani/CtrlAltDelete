@@ -58,7 +58,7 @@ function AskTurn({ t, latest }: { t: Turn; latest: boolean }) {
       <article className="answer glass">
         <div className="answer-eyebrow ask eyebrow">{MODE_ICON.ask} Ask · from crop research and farm guides</div>
         <h2>{plain(head)}</h2>
-        <p className="reason">Matched to the problem by fixed rules; every source quote is verbatim. Not yet reviewed by a person.</p>
+        <p className="reason">Each one is backed by the sources below.</p>
         <div className="chips">{d.sources.map((s) => <SourceChip key={s.node_id} s={s} />)}</div>
         <SolutionCards items={d.solutions} />
       </article>

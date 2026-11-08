@@ -81,7 +81,7 @@ def answer(question: str, crop: str = "pea") -> dict | None:
     region = next((name for pat, name in REGIONS if re.search(pat, question, re.I)), None)
     year = re.search(r"\b(20[2-6]\d)\b", question)
     where = ", ".join(x for x in (region, year.group(1) if year else None) if x)
-    lines = [f"{where + ': ' if where else ''}{len(sols)} measures against {what} in {crop}, each backed by the sources below."]
+    lines = [f"{where + ': ' if where else ''}{len(sols)} measures against {what} in {crop}"]
     lines += [f"- **{s['title']}**: {s['what']}" for s in sols]
     evidence = [{"kind": "doc", "ref": f"solutions:{s['id']}#{e['source']}",
                  "label": f"{e['publisher']} ({e['year']}), {e['locator']}"} for s in sols for e in s["evidence"]]
