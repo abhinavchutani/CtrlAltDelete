@@ -10,10 +10,11 @@ const VS = { better: "Still better", same: "About the same", worse: "Worse" } as
 export function PlansTable({ limit }: { limit?: number }) {
   const s = useSearch();
   const options = useAllOptions();
-  const prefill = useStore((x) => x.prefill);
+  const send = useStore((x) => x.send);
   const climate = s.key?.split(":")[0] ?? "ssp245";
   const rows = liveOrder(s).slice(0, limit);
-  const ask = (c: PlanCandidate) => prefill("simulate", `What if we ${c.label.charAt(0).toLowerCase()}${c.label.slice(1).replace(/ \(assumption\)/g, "")}?`);
+  // runs the plan straight away in the assistant (no extra press of send)
+  const ask = (c: PlanCandidate) => send(`What if we ${c.label.charAt(0).toLowerCase()}${c.label.slice(1).replace(/ \(assumption\)/g, "")}?`, "simulate");
   if (!rows.length) return <p className="muted">No plans simulated yet.</p>;
   const others = Object.keys(FUTURE_LABEL).filter((k) => k !== climate);
   return (

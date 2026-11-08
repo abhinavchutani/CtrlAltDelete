@@ -76,7 +76,7 @@ export const useStore = create<State & Actions>((set) => ({
   send: (text, mode, context) => set((s) => ({
     turns: [...s.turns, { id: Date.now(), mode: mode ?? s.mode, text, context,
       history: s.turns.filter((t) => t.mode === "ask").map((t) => t.text).slice(-5) }],
-    mode: mode ?? s.mode, draft: "", tab: "assistant",
+    mode: mode ?? s.mode, draft: "", tab: "assistant", sheet: null,
   })),
   prefill: (mode, draft) => set({ tab: "assistant", mode, draft, sheet: null }),
   light: (litNodes) => set((s) => ({ litNodes, litUnseen: !s.graphOpen && litNodes.length > 0 })),
