@@ -49,6 +49,8 @@ type State = {
   litNodes: string[]; // the knowledge-graph nodes the latest answer used
   newNodes: string[]; // notes filed this session (shown with a "New" pill)
   tourOpen: boolean;
+  /** Show only these farms on the map (the rest fade), with what they are. */
+  farmFilter: { ids: string[]; label: string; region?: Region | null } | null;
 };
 
 type Actions = {
@@ -71,6 +73,7 @@ type Actions = {
   light: (ids: string[]) => void;
   markNew: (id: string) => void;
   setTourOpen: (open: boolean) => void;
+  setFarmFilter: (f: { ids: string[]; label: string; region?: Region | null } | null) => void;
 };
 
 const hashTab = (): Tab => {
@@ -96,6 +99,7 @@ export const useStore = create<State & Actions>((set) => ({
   litNodes: [],
   newNodes: [],
   tourOpen: false,
+  farmFilter: null,
   setTab: (tab) => set({ tab, sheet: null }),
   setClimate: (climate) => set({ climate, planLevers: null, planLabel: null, playing: false }),
   showPlan: (planLevers, planLabel = null) => set({ planLevers, planLabel }),
@@ -118,6 +122,7 @@ export const useStore = create<State & Actions>((set) => ({
   light: (litNodes) => set({ litNodes }),
   markNew: (id) => set((s) => ({ newNodes: [...new Set([...s.newNodes, id])] })),
   setTourOpen: (tourOpen) => set({ tourOpen }),
+  setFarmFilter: (farmFilter) => set({ farmFilter }),
 }));
 
 /** The spec the map and season strip show: today's plan or the chosen plan, always 2026–2040. */

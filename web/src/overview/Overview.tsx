@@ -1,7 +1,6 @@
 // Layer 1: the widget grid. A widget never lists; each one is a single button that opens its Layer 2.
 // Every number comes from /api/radar/outlook, /api/provenance or the plan finder stream.
-import { useMemo, type MouseEvent } from "react";
-import { useGeoFarms } from "../api/hooks";
+import { type MouseEvent } from "react";
 import type { Outlook, Region, Status } from "../api/types";
 import {
   EuroIcon, FieldsIcon, PinIcon, REGION_NAME, Ring, Segmented, SproutIcon, StatusMark, WarnIcon, shortYear,
@@ -61,40 +60,42 @@ function SeasonBars({ o }: { o: Outlook }) {
   );
 }
 
-/** Field status by farm in one season, both regions side by side (each drawn in its own box). */
-function MiniMap({ o }: { o: Outlook }) {
-  const farms = useGeoFarms();
-  const pts = useMemo(() => {
-    const status = new Map(o.farms_focus.map((f) => [f.farm_id, f.status]));
-    const by: Record<Region, { x: number; y: number; s: Status }[]> = { FI_SW: [], SE_SKANE: [] };
-    for (const f of farms.data?.features ?? []) {
-      const s = status.get(f.properties.farm_id);
-      if (s) by[f.properties.region].push({ x: f.geometry.coordinates[0], y: f.geometry.coordinates[1], s });
-    }
-    return by;
-  }, [farms.data, o.farms_focus]);
-  const W = 1000, H = 260;
-  const box = (r: Region, x0: number) => {
-    const p = pts[r];
-    if (!p.length) return null;
-    const xs = p.map((q) => q.x), ys = p.map((q) => q.y);
-    const [a, b, c, d] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-    const sx = (W / 2 - 60) / Math.max(b - a, 1e-6), sy = (H - 60) / Math.max(d - c, 1e-6);
-    return p.map((q, i) => (
-      <rect key={`${r}${i}`} x={x0 + 30 + (q.x - a) * sx - 7} y={40 + (d - q.y) * sy - 4} width={14} height={9} rx={2}
-        fill={`var(--status-${q.s})`} opacity={q.s === "ok" ? 0.75 : 0.95} />
-    ));
-  };
-  const counts = (r: Region) => pts[r].filter((p) => p.s === "risk").length;
+/** A 10 × 10 grid with the share filled: "x in 100". */
+function Waffle({ share }: { share: number }) {
+  const n = Math.round(share * 100);
   return (
-    <div className="minimap" role="img"
-      aria-label={`Farm status in ${o.focus_year}: SW Finland ${counts("FI_SW")} farms in a bad year, Skåne ${counts("SE_SKANE")}`}>
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
-        <line x1={W / 2} x2={W / 2} y1={0} y2={H} stroke="#D9E6EA" strokeWidth={6} />
-        {box("FI_SW", 0)}{box("SE_SKANE", W / 2)}
-      </svg>
-      <span className="lbl" style={{ left: 12 }}>SW Finland</span>
-      <span className="lbl" style={{ left: "52%" }}>Skåne</span>
+    <svg width={74} height={74} viewBox="0 0 100 100" role="img" aria-label={`${n} in 100 pea fields`} style={{ flex: "none" }}>
+      {Array.from({ length: 100 }, (_, i) => (
+        <rect key={i} x={(i % 10) * 10 + 1} y={Math.floor(i / 10) * 10 + 1} width={8} height={8} rx={1.5}
+          fill={i < n ? "var(--status-risk)" : "var(--surface-sunk)"} />
+      ))}
+    </svg>
+  );
+}
+
+/** Farms by how many bad years they get from next season on: the repeat cases are where help pays off. */
+function RepeatFarms({ o }: { o: Outlook }) {
+  const [none, one, two, more] = o.repeat_bins;
+  const rows: { label: string; n: number; s: Status }[] = [
+    { label: "3+ bad years", n: more, s: "risk" }, { label: "2 bad years", n: two, s: "risk" },
+    { label: "1 bad year", n: one, s: "watch" }, { label: "none", n: none, s: "ok" },
+  ];
+  const max = Math.max(...rows.map((r) => r.n), 1);
+  return (
+    <div className="repeat">
+      <div>
+        <span className="w-fig fig-risk">{(two + more).toLocaleString("en-GB")} farms</span>
+        <span className="w-sub" style={{ display: "block" }}>hit 2 or more times by {o.repeat_years[1]}</span>
+      </div>
+      <div className="hbars" role="img" aria-label={rows.map((r) => `${r.n} farms with ${r.label}`).join(", ")}>
+        {rows.map((r) => (
+          <div key={r.label} className="hrow">
+            <span className="hl">{r.label}</span>
+            <span className="htrack"><span className={`bar ${r.s}`} style={{ width: `${Math.max(2, (100 * r.n) / max)}%` }} /></span>
+            <span className="hn">{r.n}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -112,6 +113,7 @@ export function Overview() {
   const flyTo = useStore((s) => s.flyTo);
   const showPlan = useStore((s) => s.showPlan);
   const setPlanSheet = useStore((s) => s.setPlanSheet);
+  const setFarmFilter = useStore((s) => s.setFarmFilter);
   const q = useTodayOutlook();
   const plan = useBestPlan();
   const o = q.data;
@@ -119,6 +121,7 @@ export function Overview() {
   const toMap = (year?: number, region?: Region | null) => {
     if (year) setYear(year);
     setLens("overall");
+    setFarmFilter(null);
     if (region) flyTo(REGION_VIEW[region]);
     setTab("map");
   };
@@ -160,12 +163,15 @@ export function Overview() {
           <span className="w-sub">{[...byType.entries()].map(([t, n]) => `${n} ${typeLabel(t).toLowerCase().replace(" at flowering", "")}`).join(" · ")}{byType.size ? " at flowering" : ""}</span>
         </Widget>
 
-        <Widget label="Fields at risk" icon={<FieldsIcon />} cta="Show on the map" onOpen={() => toMap(o?.focus_year, o?.worst_region)}>
-          {o ? <span className="w-fig fig-risk">{o.fields_risk.toLocaleString("en-GB")}</span> : skel(80, 56)}
-          <span className="w-sub">of {o?.pea_fields.toLocaleString("en-GB") ?? "…"} pea fields in {o?.focus_year ?? "…"}</span>
-          <span className="w-sub" style={{ color: "var(--risk-ink)", display: "flex", alignItems: "center", gap: 8 }}>
-            <StatusMark status="risk" size={12} /> Bad year, worst season
-          </span>
+        <Widget label="Fields at risk soon" icon={<FieldsIcon />} cta="Show them on the map"
+          onOpen={() => { toMap(o?.next_season, o?.near_region); if (o) setFarmFilter({ ids: o.near_farm_ids, label: `with a bad year in ${o.near_years[0]}–${shortYear(o.near_years[1])}`, region: o.near_region }); }}>
+          {o ? (
+            <span className="w-row" style={{ gap: 14 }}>
+              <Waffle share={o.near_fields_hit / Math.max(1, o.pea_fields)} />
+              <span className="w-fig fig-risk">{Math.round((100 * o.near_fields_hit) / Math.max(1, o.pea_fields))}%</span>
+            </span>
+          ) : skel(80, 56)}
+          <span className="w-sub">of pea fields have a bad year in {o ? `${o.near_years[0]}–${shortYear(o.near_years[1])}` : "…"}</span>
         </Widget>
 
         <Widget size="M" label={plan.status === "done" ? `Best of ${plan.tested} plans` : "Finding the best plan"} icon={<SproutIcon />}
@@ -200,11 +206,11 @@ export function Overview() {
           <WeatherWatch year={START_YEAR + 1} climate={climate} />
         </Widget>
 
-        <Widget size="M" label={`Where it hurts in ${o?.focus_year ?? "…"}`} icon={<PinIcon />}
-          right={o ? `${o.contract_farms.toLocaleString("en-GB")} contract farms${o.worst_region ? ` · ${REGION_NAME[o.worst_region]} worst` : ""}` : undefined}
-          cta="Open the map"
-          onOpen={() => toMap(o?.focus_year, o?.worst_region)}>
-          {o ? <MiniMap o={o} /> : <div className="minimap skeleton" />}
+        <Widget size="M" label="Hit again and again" icon={<PinIcon />}
+          right={o ? `${o.repeat_bins.reduce((x, y) => x + y, 0)} farms, ${o.repeat_years[0]}–${o.repeat_years[1]}` : undefined}
+          cta="Show them on the map"
+          onOpen={() => { toMap(o?.focus_year, o?.repeat_region); if (o) setFarmFilter({ ids: o.repeat_farm_ids, label: "with 2+ bad years", region: o.repeat_region }); }}>
+          {o ? <RepeatFarms o={o} /> : <div className="minimap skeleton" />}
         </Widget>
       </div>
       {o ? <OverviewSheets o={o} /> : null}

@@ -31,6 +31,7 @@ export const centroid = (ring: [number, number][]): [number, number] => {
 export function useFieldData() {
   const year = useStore((s) => s.year);
   const lens = useStore((s) => s.lens);
+  const farmFilter = useStore((s) => s.farmFilter);
   const sim = useActiveScenario();
   const farms = useFarms(sim.data?.scenario_id, year);
   const geoParcels = useGeoParcels();
@@ -66,10 +67,12 @@ export function useFieldData() {
   const cellOf = (farmId: string): WeatherCell | undefined => cellById.get(cellOfFarm.get(farmId) ?? "");
 
   const statusOf = useMemo(() => {
-    if (lens === "overall") return (f: string) => farmRisk.get(f) ?? null;
-    const rule = LENS_RULE[lens].status;
-    return (f: string) => { const c = cellById.get(cellOfFarm.get(f) ?? ""); return c ? rule(c) : null; };
-  }, [lens, farmRisk, cellById, cellOfFarm]);
+    const keep = farmFilter ? new Set(farmFilter.ids) : null;
+    const base = lens === "overall"
+      ? (f: string) => farmRisk.get(f) ?? null
+      : (f: string) => { const c = cellById.get(cellOfFarm.get(f) ?? ""); return c ? LENS_RULE[lens as Exclude<Lens, "overall">].status(c) : null; };
+    return keep ? (f: string) => (keep.has(f) ? base(f) : null) : base; // filtered-out farms draw faded (no status)
+  }, [lens, farmRisk, cellById, cellOfFarm, farmFilter]);
 
   const parcels = geoParcels.data?.features ?? [];
   const counts = useMemo(() => {
@@ -84,7 +87,7 @@ export function useFieldData() {
 
   const active = [sim, farms, geoParcels, geoFarms, weather];
   return {
-    parcels: parcels as GeoParcel[], statusOf, trigger: [lens, farms.data, weather.data], sim, counts,
+    parcels: parcels as GeoParcel[], statusOf, trigger: [lens, farms.data, weather.data, farmFilter], sim, counts,
     farmChange, farmRisk, farmRegion, cellOf,
     pending: active.some((q) => q.isLoading || q.isFetching), error: active.find((q) => q.error)?.error ?? null,
   };

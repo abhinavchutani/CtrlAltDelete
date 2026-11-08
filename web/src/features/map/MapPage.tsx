@@ -23,6 +23,8 @@ function LensCard({ satellite, setSatellite }: { satellite: boolean; setSatellit
   const setLens = useStore((s) => s.setLens);
   const d = useFieldData();
   const ref = useIsolate<HTMLElement>();
+  const filter = useStore((s) => s.farmFilter);
+  const setFilter = useStore((s) => s.setFarmFilter);
   const worst = (Object.entries(d.counts) as [Region, { risk: number; watch: number; ok: number }][])
     .sort((a, b) => b[1].risk - a[1].risk)[0];
   const total = Object.values(d.counts).reduce((s, c) => s + c.risk, 0);
@@ -33,6 +35,12 @@ function LensCard({ satellite, setSatellite }: { satellite: boolean; setSatellit
       <p aria-live="polite">{d.pending && !total ? "Loading the season…" : total
         ? `${total.toLocaleString("en-GB")} pea fields ${LENS_WORD[lens]}${worst && worst[1].risk ? `, most in ${REGION_NAME[worst[0]]}` : ""}.`
         : `No pea fields ${LENS_WORD[lens].replace(/^(have|are) /, "")} this season.`}</p>
+      {filter ? (
+        <div className="filter-chip" role="status">
+          <span>Showing {filter.ids.length} farms {filter.label}</span>
+          <button type="button" className="link" onClick={() => setFilter(null)}>Show all</button>
+        </div>
+      ) : null}
       <Segmented label="Colour the fields by" value={lens} onChange={setLens} options={LENSES} />
       <div title={lens === "overall" ? "Farm yield vs its normal: 20 %+ below is a bad year, 10 %+ below is watch" : LENS_RULE[lens].rule}>
         <StatusLegend />

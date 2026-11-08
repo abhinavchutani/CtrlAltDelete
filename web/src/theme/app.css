@@ -190,6 +190,24 @@ button.source-chip:hover { border-color: var(--ink); }
 .bars .col.now .bar { outline: 2px solid var(--ink); outline-offset: 2px; }
 .bars .col.now .yl { color: var(--ink); font-weight: 700; }
 
+.repeat { display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: center; flex: 1; }
+.hbars { display: flex; flex-direction: column; gap: 6px; }
+.hrow { display: grid; grid-template-columns: 92px 1fr 36px; gap: 8px; align-items: center; font: 500 13px/18px var(--font-sans); }
+.hrow .hl { color: var(--ink-muted); text-align: right; }
+.hrow .hn { font-variant-numeric: tabular-nums; font-weight: 600; }
+.htrack { height: 14px; background: var(--surface-sunk); border-radius: 4px; overflow: hidden; display: block; }
+.htrack .bar { display: block; height: 100%; border-radius: 4px; }
+.filter-chip { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; padding: 6px 12px;
+  background: var(--risk-soft); color: var(--risk-ink); border-radius: 12px; font: 500 13px/18px var(--font-sans); }
+.filter-chip .link { font-size: 13px; }
+.wl { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 4px 0 4px; }
+.wl-region { min-width: 0; }
+.wl-region svg { width: 100%; height: auto; display: block; overflow: visible; }
+.wl-name { font: 600 12px/16px var(--font-sans); }
+.wl-key { display: flex; gap: 14px; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
+.wl-key i { display: inline-block; width: 16px; height: 0; border-top: 2px solid var(--ink); vertical-align: middle; margin-right: 4px; }
+.wl-key i.dash { border-top: 2px dashed var(--ink-muted); }
+
 /* bar charts */
 .bars { display: flex; gap: 6px; align-items: flex-end; padding: 0 4px; }
 .bars .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; min-width: 0; position: relative; }
@@ -471,7 +489,8 @@ section:first-child > .group-h { margin-top: 0; }
   .composer .mode-chip { padding: 6px 10px; }
   .page { padding: 20px 16px 40px; }
   .grid { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-rows: auto; }
-  .w.M .ww { grid-template-columns: 1fr; }
+  .w.M .ww, .wl { grid-template-columns: 1fr; }
+  .repeat { grid-template-columns: 1fr; }
   .w, .w.L, .w.M { grid-column: span 1; grid-row: auto; min-height: 210px; }
   .w.L { min-height: 420px; }
   .stat-tiles, .tiles2 { grid-template-columns: 1fr; }

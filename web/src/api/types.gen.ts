@@ -1358,6 +1358,28 @@ export interface components {
             pea_fields: number;
             /** Farms Focus */
             farms_focus: components["schemas"]["FarmStatus"][];
+            /** Near Years */
+            near_years: [
+                number,
+                number
+            ];
+            /** Near Fields Hit */
+            near_fields_hit: number;
+            /** Near Farm Ids */
+            near_farm_ids: string[];
+            /** Repeat Bins */
+            repeat_bins: number[];
+            /** Repeat Years */
+            repeat_years: [
+                number,
+                number
+            ];
+            /** Repeat Farm Ids */
+            repeat_farm_ids: string[];
+            /** Repeat Region */
+            repeat_region: ("FI_SW" | "SE_SKANE") | null;
+            /** Near Region */
+            near_region: ("FI_SW" | "SE_SKANE") | null;
             /** Worst Region */
             worst_region: ("FI_SW" | "SE_SKANE") | null;
             /** Contract Farms */

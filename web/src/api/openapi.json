@@ -3582,6 +3582,89 @@
       "type": "array",
       "title": "Farms Focus"
      },
+     "near_years": {
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       }
+      ],
+      "type": "array",
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Near Years"
+     },
+     "near_fields_hit": {
+      "type": "integer",
+      "title": "Near Fields Hit"
+     },
+     "near_farm_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Near Farm Ids"
+     },
+     "repeat_bins": {
+      "items": {
+       "type": "integer"
+      },
+      "type": "array",
+      "title": "Repeat Bins"
+     },
+     "repeat_years": {
+      "prefixItems": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "integer"
+       }
+      ],
+      "type": "array",
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Repeat Years"
+     },
+     "repeat_farm_ids": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Repeat Farm Ids"
+     },
+     "repeat_region": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "FI_SW",
+         "SE_SKANE"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Repeat Region"
+     },
+     "near_region": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "FI_SW",
+         "SE_SKANE"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Near Region"
+     },
      "worst_region": {
       "anyOf": [
        {
@@ -3643,6 +3726,14 @@
      "fields_watch",
      "pea_fields",
      "farms_focus",
+     "near_years",
+     "near_fields_hit",
+     "near_farm_ids",
+     "repeat_bins",
+     "repeat_years",
+     "repeat_farm_ids",
+     "repeat_region",
+     "near_region",
      "worst_region",
      "contract_farms",
      "regions",

@@ -28,6 +28,7 @@ export function MapView({ satellite }: { satellite: boolean }) {
   const camera = useStore((s) => s.camera);
   const selectedParcel = useStore((s) => s.selectedParcel);
   const selectParcel = useStore((s) => s.selectParcel);
+  const farmFilter = useStore((s) => s.farmFilter);
   const d = useFieldData();
   const [light, setLight] = useState<string | StyleSpecification>(PLAIN);
   useEffect(() => { void (LIGHT ??= lightStyle()).then(setLight); }, []);
@@ -42,6 +43,20 @@ export function MapView({ satellite }: { satellite: boolean }) {
   // MapLibre owns the click (deck's own tap recogniser misses some clicks in interleaved mode); deck only picks.
   const overlay = useRef<MapboxOverlay | null>(null);
   const onReady = useCallback((o: MapboxOverlay) => { overlay.current = o; }, []);
+  // a farm filter (from an Overview widget) zooms to fit those farms' fields in the region where most of them are
+  useEffect(() => {
+    if (!farmFilter || !d.parcels.length || !mapRef.current) return;
+    const keep = new Set(farmFilter.ids);
+    let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
+    for (const p of d.parcels) {
+      if (!keep.has(p.properties.farm_id)) continue;
+      if (farmFilter.region && d.farmRegion.get(p.properties.farm_id) !== farmFilter.region) continue; // most of them
+      for (const [x, y] of p.geometry.coordinates[0]) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+    }
+    if (x0 === Infinity) return;
+    mapRef.current.fitBounds([[x0, y0], [x1, y1]], { padding: { top: 80, bottom: 140, left: 440, right: 60 }, duration: 1400, maxZoom: 13 });
+  }, [farmFilter, d.parcels.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const onClick = (e: MapLayerMouseEvent) => {
     if (cardClickedJustNow()) return;
     const info = overlay.current?.pickObject({ x: e.point.x, y: e.point.y, radius: 3 });
