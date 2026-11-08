@@ -2,7 +2,7 @@
 // No numbers are made here; everything comes from /api/radar/outlook and the /api/search stream.
 import { useEffect } from "react";
 import { useOutlook } from "../api/hooks";
-import type { Bucket, Issue, PlanCandidate, Region, Season, Status } from "../api/types";
+import type { Bucket, Issue, PlanCandidate, Region } from "../api/types";
 import { useSearch } from "../state/search";
 import { HORIZON, useStore } from "../state/store";
 
@@ -35,14 +35,6 @@ export function useTodayOutlook() {
   const climate = useStore((s) => s.climate);
   return useOutlook(climate, null);
 }
-
-export const marksByYear = (issues: Issue[]): Record<number, Status[]> => {
-  const m: Record<number, Status[]> = {};
-  for (const i of issues) (m[i.year] ??= []).push(i.status);
-  return m;
-};
-export const seasonMarks = (seasons: Season[]): Record<number, Status[]> =>
-  Object.fromEntries(seasons.map((s) => [s.year, [s.status]]));
 
 /** The region most issues of a type fall in ("SW Finland farms hit hardest"). */
 export function mostlyIn(issues: Issue[]): Region | null {

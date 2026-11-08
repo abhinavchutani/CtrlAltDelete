@@ -3,11 +3,11 @@ import { useState } from "react";
 import { useOutlook, useSolutions } from "../api/hooks";
 import type { Issue, Outlook, Status } from "../api/types";
 import {
-  Crumbs, Receipt, REGION_NAME, SeasonStrip, Segmented, Sheet, SourceChip, StatusMark, shortYear,
+  Crumbs, Receipt, REGION_NAME, Segmented, Sheet, SourceChip, StatusMark, shortYear,
 } from "../components/ui";
 import { PlansTable } from "../features/plans/PlansTable";
 import { climatePath, useStore } from "../state/store";
-import { BUCKET_LEVEL, cap, issueHeadline, marksByYear, mostlyIn, typeLabel, useBestPlan, word } from "./data";
+import { BUCKET_LEVEL, cap, issueHeadline, mostlyIn, typeLabel, useBestPlan, word } from "./data";
 
 const CLIMATE_NOTE = { ssp126: "Low emissions = SSP1-2.6", ssp245: "Middle path = SSP2-4.5", ssp585: "High emissions = SSP5-8.5" } as const;
 const sign = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "0");
@@ -20,7 +20,6 @@ function IssuesSheet({ o, onClose }: { o: Outlook; onClose: () => void }) {
   const groups = new Map<string, Issue[]>();
   for (const i of o.issues) groups.set(i.type, [...(groups.get(i.type) ?? []), i]);
   const seasons = new Set(o.issues.map((i) => i.year)).size;
-  const pickYear = (y: number) => { const i = o.issues.find((x) => x.year === y); if (i) setSel(i.id); };
   const send = useStore((s) => s.send);
   const hz = issue ? ({ drought: "H1", heat: "H2" } as Record<string, string>)[issue.type] : undefined;
   const sols = useSolutions(hz ? [hz] : [], climate);
@@ -32,7 +31,6 @@ function IssuesSheet({ o, onClose }: { o: Outlook; onClose: () => void }) {
         <h2 className="sheet-title">{o.issues.length} issues in {seasons} seasons</h2>
         <p className="sheet-sub">{cap(climatePath(climate))}, {o.years[0]}–{o.years[o.years.length - 1]}. Tap one to see what happens that season.</p>
       </div></div>
-      <SeasonStrip years={o.years} marks={marksByYear(o.issues)} selected={issue?.year ?? null} onPick={pickYear} />
       <div className="issues-body">
         <div>
           {[...groups.entries()].map(([type, list]) => (
