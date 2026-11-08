@@ -32,6 +32,8 @@ type State = {
   /** The Overview's demo clock: an ISO day (1 Apr–31 Oct), or null = the server's demo day. */
   asOf: string | null;
   dayPlaying: boolean;
+  graphOpen: boolean; // "Adaptive database" beside the chat; hidden by default so the chat has the room
+  litUnseen: boolean; // an answer lit graph nodes while the graph was hidden (badge on the toggle)
 };
 
 type Actions = {
@@ -51,6 +53,7 @@ type Actions = {
   setFocus: (id: string | null) => void;
   setAsOf: (d: string | null) => void;
   setDayPlaying: (p: boolean) => void;
+  setGraphOpen: (open: boolean) => void;
 };
 
 const hashTab = (): Tab => (typeof window !== "undefined" && window.location.hash.slice(1) === "assistant" ? "assistant" : "overview");
@@ -74,6 +77,8 @@ export const useStore = create<State & Actions>((set) => ({
   focus: null,
   asOf: urlAsOf(),
   dayPlaying: false,
+  graphOpen: false,
+  litUnseen: false,
   setTab: (tab) => set({ tab, sheet: null }),
   setClimate: (climate) => set({ climate }),
   openSheet: (kind, from = null, issueId) => set({ sheet: { kind, from, issueId } }),
@@ -86,11 +91,14 @@ export const useStore = create<State & Actions>((set) => ({
     mode: mode ?? s.mode, draft: "", tab: "assistant",
   })),
   prefill: (mode, draft) => set({ tab: "assistant", mode, draft, sheet: null }),
-  light: (litNodes) => set({ litNodes }),
+  light: (litNodes) => set((s) => ({ litNodes, litUnseen: !s.graphOpen && litNodes.length > 0 })),
   markNew: (id) => set((s) => ({ newNodes: [...new Set([...s.newNodes, id])] })),
   setTourOpen: (tourOpen) => set({ tourOpen }),
-  playFiling: (f) => set((s) => (f && s.filing?.f.note_id === f.note_id ? {} : { filing: f ? { f, at: Date.now() } : null })),
+  // a newly filed note opens the graph: watching it file itself is the point
+  playFiling: (f) => set((s) => (f && s.filing?.f.note_id === f.note_id ? {}
+    : { filing: f ? { f, at: Date.now() } : null, ...(f ? { graphOpen: true, litUnseen: false } : {}) })),
   setFocus: (focus) => set({ focus }),
   setAsOf: (asOf) => set({ asOf }),
   setDayPlaying: (dayPlaying) => set({ dayPlaying }),
+  setGraphOpen: (graphOpen) => set({ graphOpen, litUnseen: false, ...(graphOpen ? {} : { focus: null }) }),
 }));

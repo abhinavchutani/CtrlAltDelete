@@ -1,7 +1,7 @@
-// The Assistant tab: the conversation on the left, "What it knows" on the right. Three modes: Ask, Simulate, Teach.
+// The Assistant tab: the conversation, and the adaptive database beside it when opened (a newly filed note opens it). Three modes: Ask, Simulate, Teach.
 import { useEffect, useRef } from "react";
 import { useGraph } from "../../api/hooks";
-import { Mic } from "../../components/Icons";
+import { GraphIcon, Mic } from "../../components/Icons";
 import { ArrowRight } from "../../components/ui";
 import { useStore, type Mode } from "../../state/store";
 import { useSpeech } from "../voice/useSpeech";
@@ -64,7 +64,7 @@ function Empty() {
   return (
     <div>
       <h1>What do you want to decide?</h1>
-      <p className="asst-lede">Three ways to use it. Everything it says links back to what it knows, on the right.</p>
+      <p className="asst-lede">Three ways to use it. Everything it says links back to its adaptive database.</p>
       <div className="modes">
         {MODES.map((m) => (
           <section key={m.key} className={`mode-card ${m.key} ${m.key !== "teach" ? "glass" : ""}`} aria-label={m.title}>
@@ -91,12 +91,29 @@ function Empty() {
   );
 }
 
+/** Shows the adaptive database beside the chat. A dot says the latest answer lit nodes you haven't looked at yet. */
+function GraphToggle() {
+  const g = useGraph();
+  const setOpen = useStore((s) => s.setGraphOpen);
+  const unseen = useStore((s) => s.litUnseen);
+  const lit = useStore((s) => s.litNodes.filter((n) => n !== "crop:pea").length);
+  const n = g.data?.nodes.length;
+  return (
+    <button type="button" className="kg-toggle glass glass-strong" data-tour="graph" aria-expanded={false} onClick={() => setOpen(true)}>
+      <GraphIcon size={18} />
+      <span>Adaptive database{n ? <span className="muted"> · {n}</span> : null}</span>
+      {unseen && lit ? <span className="kg-toggle-badge">{lit} used</span> : null}
+    </button>
+  );
+}
+
 export function AssistantPage() {
   const turns = useStore((s) => s.turns);
+  const open = useStore((s) => s.graphOpen);
   const end = useRef<HTMLDivElement>(null);
   useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [turns.length]);
   return (
-    <main className="asst" aria-label="Assistant">
+    <main className={`asst ${open ? "graph-open" : ""}`} aria-label="Assistant">
       <div className="asst-main">
         <div className="convo" aria-live="polite">
           {turns.length === 0 ? <Empty /> : turns.map((t, i) => <TurnView key={t.id} t={t} latest={i === turns.length - 1} />)}
@@ -104,7 +121,7 @@ export function AssistantPage() {
         </div>
         <Composer />
       </div>
-      <KnowledgeGraph />
+      {open ? <KnowledgeGraph /> : <GraphToggle />}
     </main>
   );
 }

@@ -97,28 +97,6 @@ export function Segmented<T extends string>({ options, value, onChange, label, c
   );
 }
 
-/** One marker per season (a year may hold two). Click picks the year; the selected year is ringed in ink. */
-export function SeasonStrip({ years, marks, selected, onPick, labelEvery = 1, full = false }: {
-  years: number[]; marks: Record<number, Status[]>; selected: number | null; onPick: (y: number) => void;
-  labelEvery?: number; full?: boolean;
-}) {
-  return (
-    <div className="strip" role="group" aria-label="Seasons">
-      {years.map((y, i) => {
-        const m = marks[y] ?? [];
-        const show = i % labelEvery === 0 || y === selected || i === years.length - 1;
-        return (
-          <button key={y} type="button" className={y === selected ? "on" : ""} aria-pressed={y === selected} onClick={() => onPick(y)}
-            aria-label={`${y}: ${m.length ? m.map((s) => STATUS_LABEL[s]).join(", ") : "no issue"}`}>
-            <span className="marks">{m.length ? m.map((s, j) => <StatusMark key={j} status={s} size={16} />) : <span className="nodot" />}</span>
-            <span>{show ? (full ? y : shortYear(y)) : "​"}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 const FOCUSABLE = 'a[href],button:not([disabled]),input,textarea,select,summary,[tabindex]:not([tabindex="-1"])';
 
 /** A dialog that grows from the widget that opened it (FLIP), traps focus, closes on Esc and returns focus. */

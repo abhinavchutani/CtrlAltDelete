@@ -1,4 +1,4 @@
-// "What it knows": the assistant's knowledge graph. Nodes are coloured by kind and sized by log(records); the latest
+// "Adaptive database": the assistant's knowledge graph. Nodes are coloured by kind and sized by log(records); the latest
 // answer's nodes light up; people's notes get a ring (dashed until a second person confirms); gaps are hollow "?"s.
 // Farms and sites are their own nodes, so notes and gaps about the same place group around one point.
 // A freshly filed note plays its filing: tag chips one by one, then the node drops in and its edges draw.
@@ -118,6 +118,7 @@ export function KnowledgeGraph() {
   const playFiling = useStore((s) => s.playFiling);
   const focus = useStore((s) => s.focus);
   const setFocus = useStore((s) => s.setFocus);
+  const setGraphOpen = useStore((s) => s.setGraphOpen);
   const [full, setFull] = useState(false);
   const data = g.data;
   const prev = useRef<Map<string, P> | null>(null);
@@ -154,17 +155,20 @@ export function KnowledgeGraph() {
   const sub = playing
     ? "Filing a note: it tags it, finds what it's about, and links it there. Nobody types a tag."
     : !anyLit
-      ? `${c.data ?? "…"} data files, ${c.model ?? "…"} models, ${c.doc ?? "…"} documents and ${c.tacit ?? "…"} note${c.tacit === 1 ? "" : "s"} from people, grouped by farm, site, crop and topic. Click any node.`
+      ? `${c.data ?? "…"} data files, ${c.model ?? "…"} models, ${c.doc ?? "…"} documents and ${c.tacit ?? "…"} note${c.tacit === 1 ? "" : "s"} from people, It files, links and groups new knowledge itself, by farm, site, crop and topic. Click any node.`
       : fresh.some((n) => litSet.has(n))
         ? "New: one note from a person, connected to what it's about. Dashed means unverified."
         : (() => { const n = lit.filter((x) => x !== HUB).length; return `Lit up: the ${n} thing${n === 1 ? "" : "s"} this answer used.`; })();
   const label = data ? `Knowledge graph: ${data.nodes.length} nodes. ${anyLit ? `${lit.length} lit by the latest answer.` : ""}` : "Knowledge graph loading";
   const edgeColor = mode === "teach" ? "var(--kg-tacit)" : "var(--leaf)";
   return (
-    <aside className={`kg glass ${full ? "kg-full glass-strong" : ""}`} aria-label="What it knows" data-tour="graph">
+    <aside className={`kg glass ${full ? "kg-full glass-strong" : ""}`} aria-label="Adaptive database" data-tour="graph">
       <div className="kg-head">
-        <h2>What it knows</h2>
-        <button type="button" className="link" onClick={() => setFull(!full)} aria-pressed={full}>{full ? "Close full view" : "Full view"}</button>
+        <h2>Adaptive database</h2>
+        <div className="kg-head-actions">
+          <button type="button" className="link" onClick={() => setFull(!full)} aria-pressed={full}>{full ? "Close full view" : "Full view"}</button>
+          <button type="button" className="kg-x" onClick={() => { setFull(false); setGraphOpen(false); }} aria-label="Hide the adaptive database" title="Hide">×</button>
+        </div>
       </div>
       <p className="kg-sub" aria-live="polite">{sub}</p>
       <div className="kg-canvas">
