@@ -100,3 +100,63 @@ def test_offline_routes_pass_their_eval_questions(tmp_path, monkeypatch):
     s = V.run(out_path=tmp_path / "ask_eval.json")
     assert s["offline_passed"] == s["offline_total"] == 12            # done-when: the offline routes still pass
     assert all(r["status"] == "not_in_data" for r in s["rows"] if r["needs_llm"])   # honest without a key
+
+
+def test_out_of_steps_asks_once_more_without_tools(monkeypatch, con):
+    steps = [call("run_sql", {"sql": SQL, "params": ["S-SAK", 2024]}, i=str(i)) for i in range(2)]
+    seen = script(monkeypatch, steps + [say("2 refrigerant service events were logged at S-SAK in 2024.")])
+    out = r_loop.llm_ask(con, "How many service events at S-SAK in 2024?", max_steps=2)
+    assert out["status"] == "answered" and seen[-1][-1] == "user"        # the final nudge, no tools
+
+
+def test_energy_by_site_applies_corrections(con, tmp_path):
+    p = tmp_path / "e.duckdb"
+    c = duckdb.connect(str(p))
+    c.execute("CREATE TABLE raw_energy_meter_readings AS SELECT * FROM (VALUES "
+              "('energy:S-SAK:2025-01:electricity', 'S-SAK', 2025, 1, 'electricity', 100.0, 'MWh'), "
+              "('energy:S-KAN:2025-01:electricity', 'S-KAN', 2025, 1, 'electricity', 900.0, 'MWh')) "
+              "t(record_key, site_id, year, month, carrier, value, unit)")
+    c.execute("CREATE TABLE corrections AS SELECT 'energy:S-KAN:2025-01:electricity' AS record_key, 'value' AS field, "
+              "'90' AS new_value")
+    c.close()
+    ro = duckdb.connect(str(p), read_only=True)
+    res = r_loop.energy_by_site(ro, 2025, "electricity")
+    assert res["rows"] == [["S-SAK", 100.0, 0], ["S-KAN", 90.0, 1]]     # the unit-error correction reorders them
+
+
+def test_climate_outlook_filters_and_ranks(tmp_path):
+    sim = {"spec": {"label": "Current plan, middle path"}, "years": [2030, 2031], "meters": {"eur_at_risk_per_year": "€100–250k"},
+           "regions": [{"region": "FI_SW", "crop": "pea", "year": 2030, "change_vs_baseline_pct": -3.0},
+                       {"region": "SE_SKANE", "crop": "pea", "year": 2030, "change_vs_baseline_pct": -12.0}],
+           "alerts": [{"region": "FI_SW", "crop": "pea", "year": 2030, "severity": "notable", "title": "a"},
+                      {"region": "SE_SKANE", "crop": "pea", "year": 2030, "severity": "critical", "title": "b",
+                       "suggested_lever": {"type": "region_split", "crop": "pea", "fi_share": 0.7}}]}
+    (tmp_path / "current_plan_ssp245.json").write_text(json.dumps(sim))
+    out = r_loop.climate_outlook(2030, scenarios_dir=tmp_path)
+    assert [a["title"] for a in out["alerts"]] == ["b", "a"] and out["region_crop"][0]["region"] == "SE_SKANE"
+    assert out["alerts"][0]["suggested_action"] == "split pea sourcing 70 % Finland / 30 % Sweden"
+    assert "error" in r_loop.climate_outlook(2050, scenarios_dir=tmp_path)
+
+
+def test_k_and_m_bands_count_as_tool_numbers():
+    from src import e_check
+    assert e_check.unsupported_numbers("About €250 k–1 M is at risk.", [{"eur_at_risk": "€250k–1M"}]) == []
+
+
+def test_help_needs_no_model():
+    from src import r_agent
+    out = r_agent.route_help(None, "what can you do")
+    assert out["status"] == "answered" and "Simulate" in out["answer_md"]
+
+
+def test_plural_crop_names_still_match(tmp_path):
+    sim = {"spec": {"label": "x"}, "years": [2030], "meters": {}, "alerts": [],
+           "regions": [{"region": "SE_SKANE", "crop": "pea", "year": 2030, "change_vs_baseline_pct": -12.0}]}
+    (tmp_path / "current_plan_ssp245.json").write_text(json.dumps(sim))
+    assert len(r_loop.climate_outlook(2030, crop="Peas", region="se_skane", scenarios_dir=tmp_path)["region_crop"]) == 1
+
+
+def test_gemini_thought_signature_is_kept():
+    from types import SimpleNamespace as N
+    t = N(id="c1", function=N(name="run_sql", arguments="{}"), extra_content={"google": {"thought_signature": "sig"}})
+    assert e_llm._tool_call(t)["extra_content"]["google"]["thought_signature"] == "sig"

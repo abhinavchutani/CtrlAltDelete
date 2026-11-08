@@ -11,7 +11,7 @@ FIXTURE_MODEL = {"scenarios": list[S.ScenarioPreset], "scenario_current_plan_ssp
                  "scenario_current_plan_ssp585": S.SimResult, "farms": list[S.FarmYear],
                  "weather": list[S.WeatherFrame], "hedge": S.Hedge, "pathways": list[S.PathwayItem],
                  "options": list[S.AdaptationOption], "board": list[S.BoardRow], "ask": list[S.AskOut],
-                 "intent": dict[str, S.IntentOut]}
+                 "intent": dict[str, S.IntentOut], "sbti_pathway": S.SbtiPathway}
 
 
 @pytest.fixture()

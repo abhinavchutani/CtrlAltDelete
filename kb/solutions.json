@@ -1,0 +1,183 @@
+{
+  "about": "Cited adaptation solutions for the hazards the twin actually shows for pea: drought at flowering (H1) and heat at flowering (H2). Every quote was read in the source on 2026-11-08 (verbatim, short). Nothing here is reviewed by a person yet: reviewed_by stays null until a human signs it off. The yield model can run some of these (lever); the rest are evidence only, never simulated numbers.",
+  "sources": [
+    {
+      "id": "SJV2017",
+      "kind": "guide",
+      "publisher": "Jordbruksverket (Swedish Board of Agriculture)",
+      "year": 2017,
+      "title": "Handlingsplan för klimatanpassning: Jordbruksverkets arbete med klimatanpassning inom jordbruks- och trädgårdssektorn (Rapport 2017:7)",
+      "url": "https://www2.jordbruksverket.se/download/18.3db40d0c15c1952be6bbb6d5/1495186955398/ra17_7.pdf"
+    },
+    {
+      "id": "LSTH2024",
+      "kind": "guide",
+      "publisher": "Länsstyrelsen i Hallands län (County Administrative Board of Halland)",
+      "year": 2024,
+      "title": "Värmebölja i Hallands län: Råd kopplade till lantbruket och livsmedelsproduktionen",
+      "url": "https://www.lansstyrelsen.se/download/18.d135c3f188ba3e920d3207c/1716536005786/R%C3%A5d%20kopplade%20till%20lantbruket%20och%20livsmedelsf%C3%B6rs%C3%B6rjningen_V%C3%A4rmeb%C3%B6lja.pdf"
+    },
+    {
+      "id": "CA-CONS",
+      "kind": "guide",
+      "publisher": "Climate-ADAPT (European Environment Agency)",
+      "year": 2020,
+      "title": "Conservation agriculture (adaptation option)",
+      "url": "https://climate-adapt.eea.europa.eu/en/metadata/adaptation-options/conservation-agriculture"
+    },
+    {
+      "id": "CA-VAR",
+      "kind": "guide",
+      "publisher": "Climate-ADAPT (European Environment Agency)",
+      "year": 2020,
+      "title": "Adapted crops and varieties (adaptation option)",
+      "url": "https://climate-adapt.eea.europa.eu/en/metadata/adaptation-options/use-of-adapted-crops-and-varieties"
+    },
+    {
+      "id": "LAM2021",
+      "kind": "research",
+      "publisher": "Lamichaney A. et al., Frontiers in Plant Science 12:635868",
+      "year": 2021,
+      "title": "Untangling the Influence of Heat Stress on Crop Phenology, Seed Set, Seed Weight, and Germination in Field Pea (Pisum sativum L.)",
+      "url": "https://doi.org/10.3389/fpls.2021.635868"
+    },
+    {
+      "id": "TAF2019",
+      "kind": "research",
+      "publisher": "Tafesse E.G., Warkentin T.D., Bueckert R.A., Field Crops Research 241:107561",
+      "year": 2019,
+      "title": "Canopy architecture and leaf type as traits of heat resistance in pea",
+      "url": "https://doi.org/10.1016/j.fcr.2019.107561"
+    },
+    {
+      "id": "AND1991",
+      "kind": "research",
+      "publisher": "Andersen M.N., Aremu J.A., Irrigation Science 12(1)",
+      "year": 1991,
+      "title": "Drought sensitivity, root development and osmotic adjustment in field grown peas",
+      "url": "https://doi.org/10.1007/BF00190708"
+    }
+  ],
+  "solutions": [
+    {
+      "id": "SOL-01",
+      "hazards": ["H1"],
+      "crops": ["pea"],
+      "title": "Water the peas at flowering, not all season",
+      "what": "Plan supplementary irrigation for the flowering weeks (June in both regions), when a dry spell costs the most pods.",
+      "window": "in_season",
+      "lead_time": "same season if equipment and water exist",
+      "cost": "med",
+      "lever": "irrigate",
+      "limits": "Summer water may not be there when it is needed most, especially in south-east Sweden.",
+      "evidence": [
+        { "source": "AND1991", "locator": "Abstract (as indexed; full text paywalled)",
+          "quote": "the drought sensitivity of pea was high during the flowering phase … and considerably lower during the pod filling phase" },
+        { "source": "AND1991", "locator": "Abstract (as indexed; full text paywalled)",
+          "quote": "The yield loss was mainly the result of a lower number of pods per stalk." },
+        { "source": "SJV2017", "locator": "§5.5, Bevattning i dag och i framtiden",
+          "quote": "Tillgången på ytvatten för bevattning kan komma att bli mycket begränsad i vissa områden under den period då vattenbehovet är som störst.",
+          "translation": "Surface water for irrigation may become very limited in some areas just when the need is greatest." }
+      ]
+    },
+    {
+      "id": "SOL-02",
+      "hazards": ["H1"],
+      "crops": ["pea", "all"],
+      "title": "Store water before summer: ponds and wetlands",
+      "what": "Build or restore irrigation ponds and wetlands with neighbours, so water caught in winter and spring is there for June.",
+      "window": "strategic",
+      "lead_time": "1–3 years (planning, permits, construction)",
+      "cost": "high",
+      "lever": null,
+      "limits": "Needs local planning and permits; county grants exist but are not guaranteed.",
+      "evidence": [
+        { "source": "LSTH2024", "locator": "p. 2, Våtmarker eller bevattningsdammar i odlingslandskapet",
+          "quote": "kan du reglera vattenflöden och magasinera vatten inför torra perioder",
+          "translation": "you can regulate water flows and store water ahead of dry periods" },
+        { "source": "SJV2017", "locator": "§5.5, Bevattning i dag och i framtiden",
+          "quote": "I framtiden kommer torka bli ett större problem under sommaren, framför allt i östra och sydöstra Sverige",
+          "translation": "In future, drought will become a bigger problem in summer, above all in eastern and south-eastern Sweden" }
+      ]
+    },
+    {
+      "id": "SOL-03",
+      "hazards": ["H1"],
+      "crops": ["pea", "all"],
+      "title": "Keep more water in the soil: reduced tillage and cover crops",
+      "what": "Move towards reduced or no tillage and keep the soil covered, so it holds more of the spring rain into the dry weeks.",
+      "window": "strategic",
+      "lead_time": "about a year to start; soil benefits build over several seasons",
+      "cost": "med",
+      "lever": null,
+      "limits": "Possible short-term yield dip while switching; machinery can be costly for small farms.",
+      "evidence": [
+        { "source": "CA-CONS", "locator": "Description",
+          "quote": "can protect the soil from erosion, retain moisture, suppress weeds and pests, and improve biodiversity and soil structure" },
+        { "source": "CA-CONS", "locator": "Implementation time; Disadvantages",
+          "quote": "Possible short-term yield reductions during the transition period." },
+        { "source": "LSTH2024", "locator": "p. 3, Ett variationsrikt landskap och en mångfald av grödor",
+          "quote": "använda olika typer av täckgrödor för att minska avdunstning från jorden vid torka",
+          "translation": "use different kinds of cover crops to reduce evaporation from the soil in drought" }
+      ]
+    },
+    {
+      "id": "SOL-04",
+      "hazards": ["H1", "H2"],
+      "crops": ["pea"],
+      "title": "Sow earlier so peas flower before the summer stress",
+      "what": "Use the earlier spring to sow peas sooner, moving flowering ahead of the hottest and driest weeks.",
+      "window": "pre_season",
+      "lead_time": "next season",
+      "cost": "low",
+      "lever": "earlier_sowing",
+      "limits": "Cold, wet soils in early spring can hurt emergence; the gain depends on the year.",
+      "evidence": [
+        { "source": "SJV2017", "locator": "§5.1.4 Förändrade förutsättningar för jordbruk och trädgårdsodling",
+          "quote": "Den största skillnaden blir då främst tidigare start på vegetationsperioden i södra och sydvästra Sverige.",
+          "translation": "The biggest change is above all an earlier start of the growing season in southern and south-western Sweden." },
+        { "source": "LAM2021", "locator": "Introduction",
+          "quote": "the production declines when the maximum day temperature during flowering exceeds 25°C" }
+      ]
+    },
+    {
+      "id": "SOL-05",
+      "hazards": ["H2"],
+      "crops": ["pea"],
+      "title": "Grow heat-resistant pea types: upright, semi-leafless cultivars",
+      "what": "Prefer upright, semi-leafless cultivars that stay cooler and set more pods in heat, and trial new heat-tolerant lines with breeders.",
+      "window": "pre_season",
+      "lead_time": "1 year to switch cultivar; years for new breeding lines",
+      "cost": "low",
+      "lever": "heat_tolerant_variety",
+      "limits": "The model's heat-tolerant pea effect is an assumption, not measured; trials are needed before relying on it.",
+      "evidence": [
+        { "source": "TAF2019", "locator": "Abstract",
+          "quote": "semileafless cultivars with the upright habit had cooler canopies and greater seed yield, pod number and pod to node ratio than normal leafed vining cultivars" },
+        { "source": "LAM2021", "locator": "Discussion",
+          "quote": "the impact of HSEs is more prominent on the RP than the vegetative period" },
+        { "source": "CA-VAR", "locator": "Description; Implementation time",
+          "quote": "One year is needed to change cultivated varieties of annual crops and obtain the production" }
+      ]
+    },
+    {
+      "id": "SOL-06",
+      "hazards": ["H1", "H2"],
+      "crops": ["pea", "all"],
+      "title": "Spread the risk: several varieties and both regions",
+      "what": "Contract a mix of pea varieties and keep volume in both SW Finland and Skåne, so one bad June does not hit everything.",
+      "window": "strategic",
+      "lead_time": "next contracting round",
+      "cost": "low",
+      "lever": "region_split",
+      "limits": "Spreading lowers the worst year but not the average weather risk.",
+      "evidence": [
+        { "source": "LSTH2024", "locator": "p. 3, Ett variationsrikt landskap och en mångfald av grödor",
+          "quote": "Genom att ha ett diversifierat jordbruk sprider du riskerna mellan olika typer av grödor",
+          "translation": "With diversified farming you spread the risks across different kinds of crops" },
+        { "source": "CA-VAR", "locator": "Description",
+          "quote": "Diversifying crops and selecting climate resilient varieties strengthen the ability of the agro-ecosystem" }
+      ]
+    }
+  ]
+}

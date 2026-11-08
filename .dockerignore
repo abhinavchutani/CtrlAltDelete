@@ -1,0 +1,16 @@
+# Secrets never go into the image (the host injects env vars)
+.env
+.env.*
+# Local tooling and checkouts
+.git
+.venv
+.worktrees
+**/__pycache__
+**/.pytest_cache
+web/node_modules
+web/dist
+# Passed in as named contexts by scripts/build_image.sh (they are symlinks in worktrees)
+data
+out/v2
+# Regenerated at runtime
+out/cache
