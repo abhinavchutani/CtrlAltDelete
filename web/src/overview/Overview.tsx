@@ -27,19 +27,28 @@ function Widget({ size = "S", label, icon, right, cta, onOpen, children, tour }:
   );
 }
 
-/** The 15 seasons as bars (height = € bucket, colour = status), with the next costly season and the worst one tagged. */
-function SeasonBars({ o, next }: { o: Outlook; next: number | null }) {
+const CROP: Record<string, string> = { pea: "Pea", potato: "Potato", carrot: "Carrot", spinach: "Spinach", turnip_rape: "Turnip rape" };
+const REG: Record<string, string> = { FI_SW: "FI", SE_SKANE: "SE" };
+
+/** Next season's contracts as one mark each (shape + colour), then the 15 seasons as bars with next season ringed. */
+function SeasonBars({ o }: { o: Outlook }) {
   const risk = o.seasons.filter((s) => s.status === "risk").length;
   return (
     <>
-      <div className="bars" style={{ height: 150, marginTop: 14 }} role="img"
-        aria-label={`Cost of shortfalls by season, ${o.years[0]}–${o.years[o.years.length - 1]}: ${risk} seasons over €250k; next ${next ?? "none"}, worst ${o.worst_year}`}>
+      <div className="contracts" role="list" aria-label={`Contracts in ${o.next_season}`}>
+        {o.next_contracts.map((c) => (
+          <span key={c.region + c.crop} role="listitem" className={`contract ${c.status}`}
+            title={`${CROP[c.crop] ?? c.crop}, ${REGION_NAME[c.region]}: ${c.band} at stake in ${o.next_season}`}>
+            <StatusMark status={c.status} size={12} /> {CROP[c.crop] ?? c.crop} {REG[c.region]}
+          </span>
+        ))}
+      </div>
+      <div className="bars" style={{ height: 130, marginTop: 18 }} role="img"
+        aria-label={`Seasons at risk, ${o.years[0]}–${o.years[o.years.length - 1]}: ${risk} over €250k`}>
         {o.seasons.map((s, i) => (
-          <div key={s.year} className="col">
-            {s.year === next ? <span className="bar-tag">Next</span> : s.year === o.worst_year ? <span className="bar-tag worst">Worst</span> : null}
+          <div key={s.year} className={`col ${s.year === o.next_season ? "now" : ""}`}>
             <div className={`bar ${s.status}`} style={{ height: BAR_H[BUCKET_LEVEL[s.bucket] as 1 | 2 | 3] }} />
-            <span className="yl" style={s.year === next || s.year === o.worst_year ? { color: "var(--ink)", fontWeight: 700 } : undefined}>
-              {i % 2 === 0 || s.year === next || s.year === o.worst_year ? shortYear(s.year) : "\u200b"}</span>
+            <span className="yl">{i % 2 === 0 || s.year === o.next_season ? shortYear(s.year) : "\u200b"}</span>
           </div>
         ))}
       </div>
@@ -117,7 +126,6 @@ export function Overview() {
   const watch = o?.issues.filter((i) => i.status === "watch").length ?? 0;
   const byType = new Map<string, number>();
   for (const i of o?.issues ?? []) byType.set(i.type, (byType.get(i.type) ?? 0) + 1);
-  const next = o?.seasons.find((x) => x.status === "risk" && x.year > START_YEAR)?.year ?? null;
   const best = plan.best;
 
   return (
@@ -134,14 +142,13 @@ export function Overview() {
 
       <div className={`grid ${sheet ? "dim" : ""}`} aria-hidden={sheet ? true : undefined}>
         <Widget size="L" label="What weather shortfalls will cost us" icon={<EuroIcon />} cta="See what drives it" onOpen={open("money")} tour="money">
-          {o ? <span className="w-fig fig-harvest">{o.costly_years} of {o.seasons.length} seasons</span> : skel("70%", 64)}
-          <span className="w-sub">cost over €250k each: the extra we pay to buy in the contract crops our farms can't deliver.</span>
-          {o ? <SeasonBars o={o} next={next} /> : null}
-          {o ? (
-            <span className="w-story">
-              {next ? <>Next one: <b>{next}</b>. </> : null}Worst: <b>{o.worst_year}</b>, {o.worst_band}. On average <b>{o.money}</b> a year.
-            </span>
-          ) : null}
+          {o ? (() => {
+            const hit = o.next_contracts.filter((c) => c.status !== "ok");
+            const tone = hit.some((c) => c.status === "risk") ? "fig-risk" : hit.length ? "fig-harvest" : "fig-leaf";
+            return <span className={`w-fig ${tone}`}>{hit.length} of {o.next_contracts.length} crops</span>;
+          })() : skel("70%", 64)}
+          <span className="w-sub">at risk of costing €100k+ to buy in, next season ({o?.next_season ?? "…"})</span>
+          {o ? <SeasonBars o={o} /> : null}
         </Widget>
 
         <Widget label="Issues ahead" icon={<WarnIcon />} cta={o ? `See the ${o.issues.length}` : "See them"} onOpen={open("issues")} tour="issues">

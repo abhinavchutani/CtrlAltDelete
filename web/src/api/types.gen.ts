@@ -753,6 +753,26 @@ export interface components {
              */
             note: string;
         };
+        /** Contract */
+        Contract: {
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /** Crop */
+            crop: string;
+            /**
+             * Band
+             * @enum {string}
+             */
+            band: "< €50k" | "€50–100k" | "€100–250k" | "€250k–1M" | "> €1M";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "watch" | "risk";
+        };
         /** CropArea */
         CropArea: {
             /**
@@ -1322,6 +1342,10 @@ export interface components {
             worst_band: "< €50k" | "€50–100k" | "€100–250k" | "€250k–1M" | "> €1M";
             /** Seasons */
             seasons: components["schemas"]["Season"][];
+            /** Next Season */
+            next_season: number;
+            /** Next Contracts */
+            next_contracts: components["schemas"]["Contract"][];
             /** Issues */
             issues: components["schemas"]["Issue"][];
             /** Focus Year */

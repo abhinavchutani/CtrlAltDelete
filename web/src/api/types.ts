@@ -76,3 +76,4 @@ export type SourceChip = S["SourceChip"];
 export type Filed = S["Filed"];
 export type Interview = S["Interview"];
 export type KnowledgeItem = S["KnowledgeItem"];
+export type Contract = S["Contract"];

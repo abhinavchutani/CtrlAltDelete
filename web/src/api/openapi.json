@@ -1972,6 +1972,50 @@
     ],
     "title": "ConfirmIn"
    },
+   "Contract": {
+    "properties": {
+     "region": {
+      "type": "string",
+      "enum": [
+       "FI_SW",
+       "SE_SKANE"
+      ],
+      "title": "Region"
+     },
+     "crop": {
+      "type": "string",
+      "title": "Crop"
+     },
+     "band": {
+      "type": "string",
+      "enum": [
+       "< €50k",
+       "€50–100k",
+       "€100–250k",
+       "€250k–1M",
+       "> €1M"
+      ],
+      "title": "Band"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "watch",
+       "risk"
+      ],
+      "title": "Status"
+     }
+    },
+    "type": "object",
+    "required": [
+     "region",
+     "crop",
+     "band",
+     "status"
+    ],
+    "title": "Contract"
+   },
    "CropArea": {
     "properties": {
      "type": {
@@ -3497,6 +3541,17 @@
       "type": "array",
       "title": "Seasons"
      },
+     "next_season": {
+      "type": "integer",
+      "title": "Next Season"
+     },
+     "next_contracts": {
+      "items": {
+       "$ref": "#/components/schemas/Contract"
+      },
+      "type": "array",
+      "title": "Next Contracts"
+     },
      "issues": {
       "items": {
        "$ref": "#/components/schemas/Issue"
@@ -3580,6 +3635,8 @@
      "worst_year",
      "worst_band",
      "seasons",
+     "next_season",
+     "next_contracts",
      "issues",
      "focus_year",
      "fields_risk",

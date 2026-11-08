@@ -182,6 +182,14 @@ button.source-chip:hover { border-color: var(--ink); }
 .ww-col .yl { font: 500 11px/14px var(--font-sans); color: var(--ink-muted); }
 .ww-col.flower .yl { color: var(--leaf); font-weight: 700; }
 
+.contracts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.contract { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font: 500 13px/18px var(--font-sans);
+  background: rgba(255,255,255,.7); border: 1px solid var(--line); }
+.contract.risk { background: var(--risk-soft); border-color: transparent; color: var(--risk-ink); }
+.contract.watch { background: var(--harvest-soft); border-color: transparent; color: var(--harvest-ink); }
+.bars .col.now .bar { outline: 2px solid var(--ink); outline-offset: 2px; }
+.bars .col.now .yl { color: var(--ink); font-weight: 700; }
+
 /* bar charts */
 .bars { display: flex; gap: 6px; align-items: flex-end; padding: 0 4px; }
 .bars .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; min-width: 0; position: relative; }

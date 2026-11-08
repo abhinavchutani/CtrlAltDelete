@@ -29,6 +29,7 @@ from api import schemas as S
 from src import serve_db
 
 HORIZON = 2040
+LAST_OBSERVED = 2026  # the last season with observed weather (src.p_spec.FIRST_YEAR): "next season" is the one after
 RISK_EUR, WATCH_EUR = 250_000, 100_000
 Status = Literal["ok", "watch", "risk"]
 Bucket = Literal["lt100k", "100k_250k", "250k_plus"]
@@ -78,6 +79,13 @@ class Issue(BaseModel):
     sources: list[SourceRef]
 
 
+class Contract(BaseModel):  # one region × crop contract in one season
+    region: S.Region
+    crop: str
+    band: S.EurBand
+    status: Status  # the season € rule applied to this contract alone
+
+
 class FarmStatus(BaseModel):
     farm_id: str
     status: Status
@@ -93,6 +101,8 @@ class Outlook(BaseModel):
     worst_year: int
     worst_band: S.EurBand
     seasons: list[Season]
+    next_season: int  # the first season after the last observed one (2026)
+    next_contracts: list[Contract]  # every contract crop's € at stake in next_season
     issues: list[Issue]
     focus_year: int  # the worst season: the Overview's "fields needing attention" / "where it hurts"
     fields_risk: int  # pea fields on 'bad' farms in focus_year
@@ -210,6 +220,11 @@ def outlook(body: OutlookIn) -> Outlook:
                 hot_days=hot, fields_below=n_fields, farms_below=farms_hit, why=a["why"],
                 sources=_issue_sources(body.climate, a["year"], a["region"])))
 
+    next_season = LAST_OBSERVED + 1
+    nxt = cube[cube.year == next_season].sort_values("eur_loss", ascending=False)
+    next_contracts = [Contract(region=r.region, crop=r.crop, band=S.eur_band(float(r.eur_loss)), status=status_of(float(r.eur_loss)))
+                      for r in nxt.itertuples(index=False)]
+
     fy = farms[farms.year == worst_year]
     status_by_farm = {r.farm_id: FARM_STATUS[r.risk] for r in fy.itertuples(index=False)}
     fields_risk = sum(n for f, n in pea.items() if status_by_farm.get(f) == "risk")
@@ -220,6 +235,7 @@ def outlook(body: OutlookIn) -> Outlook:
         climate=body.climate, levers=body.levers, years=[s.year for s in seasons],
         money=S.eur_band(float(by_year.mean())), costly_years=sum(s.status == "risk" for s in seasons),
         worst_year=worst_year, worst_band=S.eur_band(float(by_year.max())), seasons=seasons, issues=issues,
+        next_season=next_season, next_contracts=next_contracts,
         focus_year=worst_year, fields_risk=fields_risk, fields_watch=fields_watch, pea_fields=sum(pea.values()),
         farms_focus=[FarmStatus(farm_id=r.farm_id, status=FARM_STATUS[r.risk], change_pct=round(float(r.change_pct), 1))
                      for r in fy.itertuples(index=False)],
