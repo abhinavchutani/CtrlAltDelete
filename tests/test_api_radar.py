@@ -73,3 +73,18 @@ def test_notes_and_gaps_group_around_entity_nodes(tmp_path, monkeypatch):
     assert v.id == "F0112" and v.tables and [k.knowledge_id for k in v.notes] == [f.note_id]
     with pytest.raises(Exception):
         G.entity("not-an-id")
+
+
+def test_today_endpoint():
+    from fastapi.testclient import TestClient
+
+    from api.main import app
+
+    c = TestClient(app)
+    r = c.get("/api/radar/today")
+    assert r.status_code == 200
+    t = r.json()
+    assert t["date"] == t["default_date"] and t["path"] == "historical" and t["synthetic"] is True
+    assert sum(t["counts"].values()) == len(t["all"]) and t["sources"]
+    assert c.get("/api/radar/today", params={"date": "2025-06-01"}).status_code == 422
+    assert c.get("/api/radar/today", params={"crop": "wheat"}).status_code == 422

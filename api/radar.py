@@ -284,3 +284,85 @@ def outlook(body: OutlookIn) -> Outlook:
         contract_farms=len(region_of), regions=sorted(set(region_of.values())),  # type: ignore[arg-type]
         sources=provenance_sources(),
     )
+
+
+# ── Today (task #127): the season so far on the demo clock's day ─────
+TodayCrop = Literal["pea", "potato", "spinach", "carrot", "turnip_rape"]
+StageName = Literal["sown", "flowering", "fill", "harvest"]
+
+
+class Stage(BaseModel):
+    name: StageName
+    date: str  # ISO day: measured if reached by today, else the 1991–2020 median (expected)
+    expected: bool
+
+
+class RegionDay(BaseModel):
+    region: S.Region
+    crop: TodayCrop
+    stage: Literal["not_sown", "sown", "flowering", "fill", "harvest"]
+    stages: list[Stage]
+    status: Status
+    dryness: float  # 1 − ΣAET/ΣPET since sowing, region mean (0 = no water stress)
+    dryness_pct: int  # percentile vs the same day in 1991–2020
+    dryness_normal: list[float]  # the 30 normal years on this day (the dot strip)
+    hot_days: float  # days ≥ 27 °C since flowering began, region mean, whole days
+    heat_pct: int
+    hot_normal: list[float]
+    hot_days_p50: float
+
+
+class Change(BaseModel):
+    region: S.Region
+    crop: TodayCrop
+    kind: Literal["escalated", "eased", "stage", "jump"]
+    from_status: Status
+    to_status: Status
+    text: str
+
+
+class FarmSpread(BaseModel):
+    region: S.Region
+    crop: TodayCrop
+    farms: int
+    fields: int
+    p10: int  # farms' dryness percentiles, each vs its own grid cell × soil normal
+    p50: int
+    p90: int
+    share_ge_90: float
+    share_ge_75: float
+
+
+class Today(BaseModel):
+    date: str
+    climate: S.Climate
+    path: Literal["historical", "ssp126", "ssp245", "ssp585"]
+    crop: TodayCrop
+    season: tuple[str, str]
+    regions: list[RegionDay]  # the chosen crop, one row per region growing it
+    all: list[RegionDay]  # every region × contract crop (the "since yesterday" ring)
+    counts: dict[Status, int]
+    changes: list[Change]
+    farms: list[FarmSpread]
+    normal_years: tuple[int, int]
+    default_date: str
+    sources: list[SourceRef]
+    synthetic: bool = True
+
+
+def today(date: str | None, climate: str, crop: str) -> Today:
+    from src import p_today
+
+    if not serve_db.exists():
+        raise HTTPException(503, "out/serve.duckdb missing: run `make snapshot`")
+    default = p_today.default_date()
+    try:
+        t = p_today.today(date or default, climate, crop)
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
+    year = int(t["date"][:4])
+    srcs = [SourceRef(node_id="data:raw_weather_daily", label="Daily weather, 84 grid cells",
+                      detail=f"{t['path']} {year} · normal {p_today.NORMAL[0]}–{p_today.NORMAL[1]}", kind="data"),
+            SourceRef(node_id="model:yield", label="Crop stage + soil-water model", detail="src.c_features", kind="model"),
+            SourceRef(node_id="data:raw_parcels", label=f"{p_today.CROP_YEAR} parcel mix, soil per field", kind="data")]
+    return Today(**t, default_date=default, sources=srcs)

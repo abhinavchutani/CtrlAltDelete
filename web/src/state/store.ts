@@ -4,7 +4,7 @@ import type { Climate, Filed } from "../api/types";
 
 export type Tab = "overview" | "assistant";
 export type Mode = "ask" | "simulate" | "teach";
-export type SheetKind = "issues" | "money" | "plans" | "farms-near" | "farms-repeat" | "data" | "report";
+export type SheetKind = "issues" | "money" | "plans" | "farms-near" | "farms-repeat" | "data" | "report" | "changes" | "unusual";
 /** One turn in the assistant. `context` carries what the user came from (a gap to fill). */
 export type Turn = { id: number; mode: Mode; text: string; history: string[]; context?: { gap?: string } };
 
@@ -29,6 +29,9 @@ type State = {
   tourOpen: boolean;
   filing: { f: Filed; at: number } | null; // the latest filed note, played as an animation in the graph
   focus: string | null; // the graph node whose drawer is open
+  /** The Overview's demo clock: an ISO day (1 Apr–31 Oct), or null = the server's demo day. */
+  asOf: string | null;
+  dayPlaying: boolean;
 };
 
 type Actions = {
@@ -46,9 +49,16 @@ type Actions = {
   setTourOpen: (open: boolean) => void;
   playFiling: (f: Filed | null) => void;
   setFocus: (id: string | null) => void;
+  setAsOf: (d: string | null) => void;
+  setDayPlaying: (p: boolean) => void;
 };
 
 const hashTab = (): Tab => (typeof window !== "undefined" && window.location.hash.slice(1) === "assistant" ? "assistant" : "overview");
+
+const urlAsOf = (): string | null => {
+  const v = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("asof");
+  return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+};
 
 export const useStore = create<State & Actions>((set) => ({
   tab: hashTab(),
@@ -62,6 +72,8 @@ export const useStore = create<State & Actions>((set) => ({
   tourOpen: false,
   filing: null,
   focus: null,
+  asOf: urlAsOf(),
+  dayPlaying: false,
   setTab: (tab) => set({ tab, sheet: null }),
   setClimate: (climate) => set({ climate }),
   openSheet: (kind, from = null, issueId) => set({ sheet: { kind, from, issueId } }),
@@ -79,4 +91,6 @@ export const useStore = create<State & Actions>((set) => ({
   setTourOpen: (tourOpen) => set({ tourOpen }),
   playFiling: (f) => set((s) => (f && s.filing?.f.note_id === f.note_id ? {} : { filing: f ? { f, at: Date.now() } : null })),
   setFocus: (focus) => set({ focus }),
+  setAsOf: (asOf) => set({ asOf }),
+  setDayPlaying: (dayPlaying) => set({ dayPlaying }),
 }));

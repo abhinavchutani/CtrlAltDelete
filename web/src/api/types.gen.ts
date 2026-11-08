@@ -262,6 +262,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/radar/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Radar Today */
+        get: operations["radar_today_api_radar_today_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/graph": {
         parameters: {
             query?: never;
@@ -501,6 +518,60 @@ export interface paths {
         put?: never;
         /** Ask */
         post: operations["ask_api_ask_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/brief": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Brief
+         * @description The Overview's three problems (scattered data, hand-built reports, Sweden 2026), computed from the snapshot.
+         */
+        get: operations["get_brief_api_brief_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Issues */
+        get: operations["get_issues_api_issues_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/report/inventory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Make Inventory Report */
+        post: operations["make_inventory_report_api_report_inventory_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -800,6 +871,36 @@ export interface components {
             /** Reason */
             reason?: string | null;
         };
+        /** Change */
+        Change: {
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /**
+             * Crop
+             * @enum {string}
+             */
+            crop: "pea" | "potato" | "spinach" | "carrot" | "turnip_rape";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "escalated" | "eased" | "stage" | "jump";
+            /**
+             * From Status
+             * @enum {string}
+             */
+            from_status: "ok" | "watch" | "risk";
+            /**
+             * To Status
+             * @enum {string}
+             */
+            to_status: "ok" | "watch" | "risk";
+            /** Text */
+            text: string;
+        };
         /** Citation */
         Citation: {
             /** Source */
@@ -994,6 +1095,33 @@ export interface components {
             pea_fields: number;
             /** Bad Years */
             bad_years: number[];
+        };
+        /** FarmSpread */
+        FarmSpread: {
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /**
+             * Crop
+             * @enum {string}
+             */
+            crop: "pea" | "potato" | "spinach" | "carrot" | "turnip_rape";
+            /** Farms */
+            farms: number;
+            /** Fields */
+            fields: number;
+            /** P10 */
+            p10: number;
+            /** P50 */
+            p50: number;
+            /** P90 */
+            p90: number;
+            /** Share Ge 90 */
+            share_ge_90: number;
+            /** Share Ge 75 */
+            share_ge_75: number;
         };
         /** FarmStatus */
         FarmStatus: {
@@ -1704,6 +1832,45 @@ export interface components {
             /** Topic */
             topic: string;
         };
+        /** RegionDay */
+        RegionDay: {
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /**
+             * Crop
+             * @enum {string}
+             */
+            crop: "pea" | "potato" | "spinach" | "carrot" | "turnip_rape";
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "not_sown" | "sown" | "flowering" | "fill" | "harvest";
+            /** Stages */
+            stages: components["schemas"]["Stage"][];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "watch" | "risk";
+            /** Dryness */
+            dryness: number;
+            /** Dryness Pct */
+            dryness_pct: number;
+            /** Dryness Normal */
+            dryness_normal: number[];
+            /** Hot Days */
+            hot_days: number;
+            /** Heat Pct */
+            heat_pct: number;
+            /** Hot Normal */
+            hot_normal: number[];
+            /** Hot Days P50 */
+            hot_days_p50: number;
+        };
         /** RegionSplit */
         RegionSplit: {
             /**
@@ -2081,6 +2248,69 @@ export interface components {
              * @enum {string}
              */
             kind: "data" | "model" | "doc" | "tacit";
+        };
+        /** Stage */
+        Stage: {
+            /**
+             * Name
+             * @enum {string}
+             */
+            name: "sown" | "flowering" | "fill" | "harvest";
+            /** Date */
+            date: string;
+            /** Expected */
+            expected: boolean;
+        };
+        /** Today */
+        Today: {
+            /** Date */
+            date: string;
+            /**
+             * Climate
+             * @enum {string}
+             */
+            climate: "ssp126" | "ssp245" | "ssp585";
+            /**
+             * Path
+             * @enum {string}
+             */
+            path: "historical" | "ssp126" | "ssp245" | "ssp585";
+            /**
+             * Crop
+             * @enum {string}
+             */
+            crop: "pea" | "potato" | "spinach" | "carrot" | "turnip_rape";
+            /** Season */
+            season: [
+                string,
+                string
+            ];
+            /** Regions */
+            regions: components["schemas"]["RegionDay"][];
+            /** All */
+            all: components["schemas"]["RegionDay"][];
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+            /** Changes */
+            changes: components["schemas"]["Change"][];
+            /** Farms */
+            farms: components["schemas"]["FarmSpread"][];
+            /** Normal Years */
+            normal_years: [
+                number,
+                number
+            ];
+            /** Default Date */
+            default_date: string;
+            /** Sources */
+            sources: components["schemas"]["SourceRef"][];
+            /**
+             * Synthetic
+             * @default true
+             */
+            synthetic: boolean;
         };
         /** ValidationError */
         ValidationError: {
@@ -2562,6 +2792,40 @@ export interface operations {
             };
         };
     };
+    radar_today_api_radar_today_get: {
+        parameters: {
+            query?: {
+                /** @description YYYY-MM-DD, 1 Apr–31 Oct of 2026–2040; default: the demo day */
+                date?: string | null;
+                climate?: "ssp126" | "ssp245" | "ssp585";
+                crop?: "pea" | "potato" | "spinach" | "carrot" | "turnip_rape";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Today"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     graph_api_graph_get: {
         parameters: {
             query?: never;
@@ -3018,6 +3282,96 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_brief_api_brief_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    get_issues_api_issues_get: {
+        parameters: {
+            query?: {
+                status?: string;
+                source?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    make_inventory_report_api_report_inventory_post: {
+        parameters: {
+            query?: {
+                year?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */

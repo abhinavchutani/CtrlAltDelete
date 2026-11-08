@@ -1,6 +1,6 @@
 // Layer 1: the widget grid. A widget never lists; each one is a single button that opens its Layer 2.
 // Every number comes from /api/radar/outlook, /api/provenance or the plan finder stream.
-import { type MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import type { Outlook, Status } from "../api/types";
 import {
   ArrowRight, Ring, Segmented, StatusMark, shortYear,
@@ -10,6 +10,11 @@ import { BUCKET_LEVEL, cap, typeLabel, useBestPlan, useTodayOutlook } from "./da
 import { OverviewSheets } from "./Sheets";
 import { Problems, ProblemSheets } from "./Problems";
 import { SeasonHighlights } from "./SeasonHighlights";
+import { TodayView } from "./TodayView";
+import { rect, skel, Widget } from "./Widget";
+
+type View = "season" | "outlook";
+const VIEWS: { key: View; label: string }[] = [{ key: "season", label: "This season" }, { key: "outlook", label: "Next 15 seasons" }];
 
 const ASK_FALLBACK = "What helps against drought at flowering in pea?";
 const REGION_SHORT: Record<string, string> = { FI_SW: "SW Finland", SE_SKANE: "Skåne" };
@@ -21,21 +26,6 @@ function askPrompt(o: Outlook | undefined): string {
   return `${next.eur_at_risk ? `${next.eur_at_risk} at risk in ${next.year}: h` : "H"}ow do we protect ${REGION_SHORT[next.region]} peas from ${what} at flowering${next.eur_at_risk ? "" : ` in ${next.year}`}?`;
 }
 const BAR_H = { 1: 24, 2: 52, 3: 96 } as const;
-const rect = (e: MouseEvent) => (e.currentTarget as HTMLElement).getBoundingClientRect();
-
-function Widget({ size = "S", label, right, cta, onOpen, children, tour }: {
-  size?: "S" | "M" | "L"; label: string; right?: React.ReactNode; cta: string;
-  onOpen: (e: MouseEvent) => void; children: React.ReactNode; tour?: string;
-}) {
-  return (
-    <button type="button" className={`w glass ${size}`} onClick={onOpen} data-tour={tour}>
-      <span className="w-label">{label}{right ? <span className="right">{right}</span> : null}</span>
-      {children}
-      <span className="w-cta">{cta} ›</span>
-    </button>
-  );
-}
-
 /** The 15 seasons as bars (height = € bucket, colour = status), next season ringed. */
 function SeasonBars({ o }: { o: Outlook }) {
   const risk = o.seasons.filter((s) => s.status === "risk").length;
@@ -99,8 +89,6 @@ function RepeatFarms({ o }: { o: Outlook }) {
   );
 }
 
-const skel = (w: number | string, h: number) => <span className="skeleton" style={{ width: w, height: h, display: "block" }} />;
-
 export function Overview() {
   const climate = useStore((s) => s.climate);
   const setClimate = useStore((s) => s.setClimate);
@@ -116,18 +104,21 @@ export function Overview() {
   const byType = new Map<string, number>();
   for (const i of o?.issues ?? []) byType.set(i.type, (byType.get(i.type) ?? 0) + 1);
   const best = plan.best;
+  const [view, setView] = useState<View>("outlook");
 
   return (
     <main className="page" aria-label="Overview">
       <div className={sheet ? "dimwrap dim" : "dimwrap"} aria-hidden={sheet ? true : undefined}><Problems /></div>
 
       <div className="ov-head" id="radar">
-        <div>
-          <h1 className="ov-title">Supply outlook</h1>
+        <h1 className="ov-title">Supply outlook</h1>
+        <div className="ov-controls">
+          <Segmented className="glass" label="View" value={view} onChange={setView} options={VIEWS} />
+          <Segmented className="glass" label={view === "season" ? "Weather path after 2026" : "Weather path"} value={climate} onChange={setClimate}
+            options={CLIMATES.map((c) => ({ key: c.key, label: c.label }))} />
         </div>
-        <Segmented className="glass" label="Weather path" value={climate} onChange={setClimate}
-          options={CLIMATES.map((c) => ({ key: c.key, label: c.label }))} />
       </div>
+      {view === "season" ? <TodayView /> : <>
       {q.error ? <p className="err" role="alert">Couldn't load the outlook: {String(q.error)}</p> : null}
 
       <div className={`grid ${sheet ? "dim" : ""}`} aria-hidden={sheet ? true : undefined}>
@@ -204,6 +195,7 @@ export function Overview() {
           {o ? <RepeatFarms o={o} /> : <div className="minimap skeleton" />}
         </Widget>
       </div>
+      </>}
       {o ? <OverviewSheets o={o} /> : null}
       <ProblemSheets />
     </main>
