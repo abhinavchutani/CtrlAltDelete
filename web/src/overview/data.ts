@@ -18,9 +18,16 @@ export function useBestPlan() {
   const climate = useStore((s) => s.climate);
   const s = useSearch();
   useEffect(() => { void s.start(climate, HORIZON); }, [climate]); // eslint-disable-line react-hooks/exhaustive-deps
+  // the model may still be warming up (503): try again every few seconds instead of showing the error for good
+  const warming = s.status === "error" && /^503|warming/.test(s.error ?? "");
+  useEffect(() => {
+    if (!warming) return;
+    const t = setTimeout(() => void s.start(climate, HORIZON), 4000);
+    return () => clearTimeout(t);
+  }, [warming, climate]); // eslint-disable-line react-hooks/exhaustive-deps
   const mine = s.key === `${climate}:${HORIZON}`;
   const best: PlanCandidate | null = mine && s.best ? s.candidates[s.best] ?? null : null;
-  return { status: mine ? s.status : "running", best, tested: mine ? Object.keys(s.candidates).length : 0,
+  return { status: mine && !warming ? s.status : "running", best, tested: mine ? Object.keys(s.candidates).length : 0,
     done: mine ? s.done : 0, total: mine ? s.total : 0, error: s.error };
 }
 

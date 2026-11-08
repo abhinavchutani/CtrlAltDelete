@@ -296,6 +296,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/solutions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Solutions
+         * @description Cited adaptation measures for a problem (kb/solutions.json); the plan finder's result is added where it ran.
+         */
+        get: operations["solutions_api_solutions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tacit/topics": {
         parameters: {
             query?: never;
@@ -743,6 +763,30 @@ export interface components {
             /** Reason */
             reason?: string | null;
         };
+        /** Citation */
+        Citation: {
+            /** Source */
+            source: string;
+            /** Publisher */
+            publisher: string;
+            /** Year */
+            year: number;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "research" | "guide";
+            /** Locator */
+            locator: string;
+            /** Quote */
+            quote: string;
+            /** Translation */
+            translation?: string | null;
+        };
         /** ConfirmIn */
         ConfirmIn: {
             /** Reviewer */
@@ -752,6 +796,28 @@ export interface components {
              * @default
              */
             note: string;
+        };
+        /** Contract */
+        Contract: {
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /** Crop */
+            crop: string;
+            /**
+             * Band
+             * @enum {string}
+             */
+            band: "< €50k" | "€50–100k" | "€100–250k" | "€250k–1M" | "> €1M";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "watch" | "risk";
+            /** Change Pct */
+            change_pct: number;
         };
         /** CropArea */
         CropArea: {
@@ -818,6 +884,20 @@ export interface components {
             ref: string;
             /** Label */
             label: string;
+        };
+        /** FarmBadYears */
+        FarmBadYears: {
+            /** Farm Id */
+            farm_id: string;
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "FI_SW" | "SE_SKANE";
+            /** Pea Fields */
+            pea_fields: number;
+            /** Bad Years */
+            bad_years: number[];
         };
         /** FarmStatus */
         FarmStatus: {
@@ -1322,6 +1402,10 @@ export interface components {
             worst_band: "< €50k" | "€50–100k" | "€100–250k" | "€250k–1M" | "> €1M";
             /** Seasons */
             seasons: components["schemas"]["Season"][];
+            /** Next Season */
+            next_season: number;
+            /** Next Contracts */
+            next_contracts: components["schemas"]["Contract"][];
             /** Issues */
             issues: components["schemas"]["Issue"][];
             /** Focus Year */
@@ -1334,6 +1418,30 @@ export interface components {
             pea_fields: number;
             /** Farms Focus */
             farms_focus: components["schemas"]["FarmStatus"][];
+            /** Near Years */
+            near_years: [
+                number,
+                number
+            ];
+            /** Near Fields Hit */
+            near_fields_hit: number;
+            /** Near Farm Ids */
+            near_farm_ids: string[];
+            /** Repeat Bins */
+            repeat_bins: number[];
+            /** Repeat Years */
+            repeat_years: [
+                number,
+                number
+            ];
+            /** Repeat Farm Ids */
+            repeat_farm_ids: string[];
+            /** Repeat Region */
+            repeat_region: ("FI_SW" | "SE_SKANE") | null;
+            /** Farms Hit */
+            farms_hit: components["schemas"]["FarmBadYears"][];
+            /** Near Region */
+            near_region: ("FI_SW" | "SE_SKANE") | null;
             /** Worst Region */
             worst_region: ("FI_SW" | "SE_SKANE") | null;
             /** Contract Farms */
@@ -1485,6 +1593,11 @@ export interface components {
             used_node_ids: string[];
             /** Sources */
             sources: components["schemas"]["SourceChip"][];
+            /**
+             * Solutions
+             * @default []
+             */
+            solutions: components["schemas"]["Solution"][];
         };
         /** RefileIn */
         RefileIn: {
@@ -1616,6 +1729,38 @@ export interface components {
              * @default true
              */
             synthetic: boolean;
+        };
+        /** Solution */
+        Solution: {
+            /** Id */
+            id: string;
+            /** Hazards */
+            hazards: string[];
+            /** Crops */
+            crops: string[];
+            /** Title */
+            title: string;
+            /** What */
+            what: string;
+            /** Window */
+            window: string;
+            /** Lead Time */
+            lead_time: string;
+            /** Cost */
+            cost: string;
+            /** Lever */
+            lever: string | null;
+            /** Limits */
+            limits: string;
+            /** Evidence */
+            evidence: components["schemas"]["Citation"][];
+            /**
+             * Reviewed
+             * @default false
+             */
+            reviewed: boolean;
+            /** Model Saves */
+            model_saves?: ("< €50k" | "€50–100k" | "€100–250k" | "€250k–1M" | "> €1M") | null;
         };
         /** SourceChip */
         SourceChip: {
@@ -2165,6 +2310,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RadarAskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    solutions_api_solutions_get: {
+        parameters: {
+            query?: {
+                hazard?: string[];
+                crop?: string | null;
+                climate?: "ssp126" | "ssp245" | "ssp585";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Solution"][];
                 };
             };
             /** @description Validation Error */

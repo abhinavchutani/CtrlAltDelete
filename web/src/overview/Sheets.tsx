@@ -1,12 +1,12 @@
 // Layers 2 + 3 of the Overview: the sheets that open over the grid. Each ends in its receipt.
 import { useState } from "react";
-import { useOutlook, useProvenance } from "../api/hooks";
+import { useOutlook, useSolutions } from "../api/hooks";
 import type { Issue, Outlook, Status } from "../api/types";
 import {
   Crumbs, Receipt, REGION_NAME, SeasonStrip, Segmented, Sheet, SourceChip, StatusMark, shortYear,
 } from "../components/ui";
 import { PlansTable } from "../features/plans/PlansTable";
-import { climatePath, REGION_VIEW, useStore } from "../state/store";
+import { climatePath, useStore } from "../state/store";
 import { BUCKET_LEVEL, cap, issueHeadline, marksByYear, mostlyIn, typeLabel, useBestPlan, word } from "./data";
 
 const CLIMATE_NOTE = { ssp126: "Low emissions = SSP1-2.6", ssp245: "Middle path = SSP2-4.5", ssp585: "High emissions = SSP5-8.5" } as const;
@@ -15,20 +15,16 @@ const sign = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "0"
 function IssuesSheet({ o, onClose }: { o: Outlook; onClose: () => void }) {
   const sheet = useStore((s) => s.sheet);
   const climate = useStore((s) => s.climate);
-  const setTab = useStore((s) => s.setTab);
-  const setYear = useStore((s) => s.setYear);
-  const flyTo = useStore((s) => s.flyTo);
-  const setLens = useStore((s) => s.setLens);
-  const prefill = useStore((s) => s.prefill);
   const [sel, setSel] = useState<string | null>(sheet?.issueId ?? o.issues.find((i) => i.status === "risk")?.id ?? o.issues[0]?.id ?? null);
   const issue = o.issues.find((i) => i.id === sel) ?? null;
   const groups = new Map<string, Issue[]>();
   for (const i of o.issues) groups.set(i.type, [...(groups.get(i.type) ?? []), i]);
   const seasons = new Set(o.issues.map((i) => i.year)).size;
   const pickYear = (y: number) => { const i = o.issues.find((x) => x.year === y); if (i) setSel(i.id); };
-  const help = (i: Issue) => prefill("simulate", i.type === "heat"
-    ? `What if we plant a heat-tolerant pea from ${Math.max(2028, i.year - 2)}?`
-    : "What if we irrigate the driest pea fields?");
+  const send = useStore((s) => s.send);
+  const hz = issue ? ({ drought: "H1", heat: "H2" } as Record<string, string>)[issue.type] : undefined;
+  const sols = useSolutions(hz ? [hz] : [], climate);
+  const help = (i: Issue) => send(`What helps against ${typeLabel(i.type).toLowerCase()} in pea?`, "ask");
   return (
     <Sheet label="Issues ahead" from={sheet?.from} onClose={onClose}>
       <div className="sheet-head"><div>
@@ -68,12 +64,16 @@ function IssuesSheet({ o, onClose }: { o: Outlook; onClose: () => void }) {
                 <div className="s">vs normal</div></div>
             </div>
             <p className="line">{issue.fields_below.toLocaleString("en-GB")} pea fields on {issue.farms_below} farms in {REGION_NAME[issue.region]} fall 10 %+ below their normal yield. {issue.eur_at_risk ? `${issue.eur_at_risk} at risk.` : ""}</p>
+            {sols.data?.length ? (
+              <div className="helps">
+                <div className="eyebrow">What helps, from research</div>
+                <ul>{sols.data.slice(0, 3).map((x) => (
+                  <li key={x.id}><b>{x.title}</b><span className="muted"> · {x.evidence.length} source{x.evidence.length === 1 ? "" : "s"}</span></li>
+                ))}</ul>
+              </div>
+            ) : null}
             <div className="actions">
-              <button type="button" className="btn btn-primary" onClick={() => {
-                setYear(issue.year); setLens(issue.type === "heat" ? "heat" : issue.type === "drought" ? "drought" : "overall");
-                flyTo(REGION_VIEW[issue.region]); setTab("map");
-              }}>Show {issue.year} on the map</button>
-              <button type="button" className="btn btn-ghost" onClick={() => help(issue)}>What would help?</button>
+              <button type="button" className="btn btn-primary" onClick={() => help(issue)}>See every measure and its sources</button>
             </div>
             <div className="know">How do we know? {issue.sources.map((s) => <SourceChip key={s.node_id + s.label} s={s} />)}</div>
           </aside>
@@ -89,9 +89,6 @@ function MoneySheet({ o, onClose }: { o: Outlook; onClose: () => void }) {
   const sheet = useStore((s) => s.sheet);
   const climate = useStore((s) => s.climate);
   const openSheet = useStore((s) => s.openSheet);
-  const showPlan = useStore((s) => s.showPlan);
-  const setPlanSheet = useStore((s) => s.setPlanSheet);
-  const setTab = useStore((s) => s.setTab);
   const plan = useBestPlan();
   const [withPlan, setWithPlan] = useState<"today" | "best">("today");
   const planned = useOutlook(climate, plan.best && withPlan === "best" ? plan.best.levers : null);
@@ -99,7 +96,7 @@ function MoneySheet({ o, onClose }: { o: Outlook; onClose: () => void }) {
   const types = new Map<string, Issue[]>();
   for (const i of o.issues) types.set(i.type, [...(types.get(i.type) ?? []), i]);
   const bars = shown.seasons;
-  const openPlan = () => { if (plan.best) showPlan(plan.best.levers, plan.best.label); setPlanSheet(true); setTab("map"); };
+  const openPlan = () => openSheet("plans");
   return (
     <Sheet label="Money at stake" from={sheet?.from} onClose={onClose}>
       <div className="sheet-head">
@@ -154,21 +151,44 @@ function MoneySheet({ o, onClose }: { o: Outlook; onClose: () => void }) {
   );
 }
 
-function AccuracySheet({ o, onClose }: { o: Outlook; onClose: () => void }) {
+/** Layer 2 for the two field widgets: which farms, where, and in which seasons they have a bad year. */
+function FarmsSheet({ o, near, onClose }: { o: Outlook; near: boolean; onClose: () => void }) {
   const sheet = useStore((s) => s.sheet);
-  const p = useProvenance();
-  const b = p.data?.backtest;
+  const [y0, y1] = near ? o.near_years : o.repeat_years;
+  const rows = o.farms_hit
+    .map((f) => ({ ...f, years: f.bad_years.filter((y) => y >= y0 && y <= y1) }))
+    .filter((f) => (near ? f.years.length >= 1 && f.pea_fields > 0 : f.years.length >= 2));
+  const fields = rows.reduce((n, f) => n + f.pea_fields, 0);
+  const byRegion = new Map<string, number>();
+  for (const f of rows) byRegion.set(f.region, (byRegion.get(f.region) ?? 0) + 1);
+  const years = Array.from({ length: y1 - y0 + 1 }, (_, i) => y0 + i);
   return (
-    <Sheet label="Forecast accuracy" from={sheet?.from} onClose={onClose}>
+    <Sheet label={near ? "Fields at risk soon" : "Hit again and again"} from={sheet?.from} onClose={onClose}>
       <div className="sheet-head"><div>
-        <Crumbs items={[{ label: "Overview", onClick: onClose }, { label: "Forecast accuracy" }]} />
-        <h2 className="sheet-title">{b ? `${b.model_error_pct}% off on seasons it never saw` : "How we checked"}</h2>
-        {b ? <p className="sheet-sub">Trained on harvests up to {b.train_until}, then asked to predict {b.test_years.join(", ")}. Total production
-          was off by {b.model_error_pct}%; a naive guess (each farm's average) was off by {b.baseline_error_pct}%.</p> : null}
+        <Crumbs items={[{ label: "Overview", onClick: onClose }, { label: near ? "Fields at risk soon" : "Hit again and again" }]} />
+        <h2 className="sheet-title">{near
+          ? `${rows.length} farms, ${fields.toLocaleString("en-GB")} pea fields, a bad year in ${y0}–${shortYear(y1)}`
+          : `${rows.length} farms hit 2 or more times by ${y1}`}</h2>
+        <p className="sheet-sub">{[...byRegion.entries()].map(([r, n]) => `${n} in ${REGION_NAME[r as keyof typeof REGION_NAME]}`).join(" · ")}.
+          A bad year: the farm's yield 20 %+ below its normal. One plausible weather path, not a forecast.</p>
       </div></div>
-      <div style={{ marginTop: 28 }}>
-        <Receipt sources={o.sources} foot="Back-test score from out/scores/C1_backtest.json. Synthetic data pack, not Apetit's real figures." />
+      <div className="farm-table" role="table" aria-label="Farms and their bad years"
+        style={{ ["--cols" as string]: `minmax(150px, 1.4fr) 70px repeat(${years.length}, minmax(18px, 1fr))` }}>
+        <div className="farm-row head" role="row">
+          <span role="columnheader">Farm</span><span role="columnheader">Pea fields</span>
+          {years.map((y) => <span key={y} role="columnheader" className="yc">{shortYear(y)}</span>)}
+        </div>
+        {rows.slice(0, 60).map((f) => (
+          <div key={f.farm_id} className="farm-row" role="row">
+            <span role="cell"><b>{f.farm_id}</b> <span className="muted">{REGION_NAME[f.region]}</span></span>
+            <span role="cell">{f.pea_fields}</span>
+            {years.map((y) => (
+              <span key={y} role="cell" className="yc">{f.years.includes(y) ? <StatusMark status="risk" size={12} /> : <span className="nodot" />}</span>
+            ))}
+          </div>
+        ))}
       </div>
+      {rows.length > 60 ? <p className="muted" style={{ marginTop: 10 }}>Showing the 60 most-hit farms of {rows.length}.</p> : null}
     </Sheet>
   );
 }
@@ -195,7 +215,7 @@ export function OverviewSheets({ o }: { o: Outlook }) {
   if (!sheet) return null;
   if (sheet.kind === "issues") return <IssuesSheet key={sheet.issueId ?? "issues"} o={o} onClose={close} />;
   if (sheet.kind === "money") return <MoneySheet o={o} onClose={close} />;
-  if (sheet.kind === "accuracy") return <AccuracySheet o={o} onClose={close} />;
+  if (sheet.kind === "farms-near" || sheet.kind === "farms-repeat") return <FarmsSheet o={o} near={sheet.kind === "farms-near"} onClose={close} />;
   if (sheet.kind === "plans") return <PlansSheet onClose={close} />;
   return null; // "data" / "report" are the problem sheets (Problems.tsx)
 }

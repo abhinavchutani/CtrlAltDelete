@@ -1,11 +1,9 @@
 import { useHealth } from "../api/hooks";
-import { BrandMark } from "../components/ui";
 import { useStore, type Tab } from "../state/store";
 import { useTheme, type ThemePref } from "../theme/theme";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "Overview" },
-  { key: "map", label: "Map" },
   { key: "assistant", label: "Assistant" },
 ];
 
@@ -29,10 +27,7 @@ export function TopBar() {
   const status = health.error ? "API not reachable" : health.data?.mock ? "fixtures" : health.data?.warming ? "model warming up" : null;
   return (
     <header className="topbar">
-      <div className="brand">
-        <BrandMark />
-        <span>Field Radar<small>Contract crop outlook</small></span>
-      </div>
+      <div className="brand"><img src="/apetit-logo.png" alt="Apetit" /> Radar</div>
       <nav className="tabs glass" aria-label="Main">
         {TABS.map((t) => (
           <button key={t.key} type="button" className={`tab ${tab === t.key ? "on" : ""}`} onClick={() => setTab(t.key)}

@@ -156,6 +156,12 @@ def radar_ask(body: kgraph.RadarAskIn) -> kgraph.RadarAskOut:
     return kgraph.ask(body)
 
 
+@app.get("/api/solutions", response_model=list[kgraph.Solution])
+def solutions(hazard: list[str] = Query(["H1", "H2"]), crop: str | None = "pea", climate: S.Climate = "ssp245") -> list[kgraph.Solution]:
+    """Cited adaptation measures for a problem (kb/solutions.json); the plan finder's result is added where it ran."""
+    return kgraph.solutions(hazard, crop, climate)
+
+
 @app.get("/api/tacit/topics", response_model=list[str])
 def tacit_topics() -> list[str]:
     return kgraph.topics()

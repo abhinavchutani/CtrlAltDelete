@@ -6,7 +6,7 @@
 import { useState, type MouseEvent, type ReactNode } from "react";
 import { useBrief, useInventoryReport, useIssues, type Brief } from "../api/brief";
 import { CheckCircle, Crumbs, Segmented, Sheet } from "../components/ui";
-import { REGION_VIEW, useStore } from "../state/store";
+import { useStore } from "../state/store";
 
 const n0 = (v: number) => v.toLocaleString("en-GB");
 const kt = (t: number) => (t >= 1e6 ? `${(t / 1e6).toFixed(1)}M` : t >= 1e4 ? `${Math.round(t / 1e3)}k` : n0(t));
@@ -41,7 +41,7 @@ function Pillar({ n, tone, problem, answer, children, proof, actions }: {
 function SourceBars({ d }: { d: Brief["data"] }) {
   const max = Math.max(...d.by_source.map((s) => s.n), 1);
   return (
-    <div className="hbars" role="img" aria-label={`Errors by source: ${d.by_source.map((s) => `${s.label} ${s.n}`).join(", ")}`}>
+    <div className="src-bars" role="img" aria-label={`Errors by source: ${d.by_source.map((s) => `${s.label} ${s.n}`).join(", ")}`}>
       {d.by_source.slice(0, 5).map((s) => (
         <div key={s.key} className="hbar">
           <span className="hbar-l">{s.label}</span>
@@ -108,10 +108,7 @@ export function Problems() {
   const q = useBrief();
   const b = q.data;
   const openSheet = useStore((s) => s.openSheet);
-  const setTab = useStore((s) => s.setTab);
-  const setYear = useStore((s) => s.setYear);
-  const setLens = useStore((s) => s.setLens);
-  const flyTo = useStore((s) => s.flyTo);
+  const prefill = useStore((s) => s.prefill);
   const report = useInventoryReport();
   const download = () => report.mutate(2025, { onSuccess: (r) => { window.location.href = r.url; } });
 
@@ -161,8 +158,8 @@ export function Problems() {
           <>Same season, Finnish peas were <b>+{s.fi_change_pct}%</b>: the two-region hedge works</>,
         ]}
         actions={<>
-          <button type="button" className="btn btn-primary" onClick={() => { setYear(s.year); setLens("drought"); flyTo(REGION_VIEW.SE_SKANE); setTab("map"); }}>
-            Replay {s.year} on the map
+          <button type="button" className="btn btn-primary" onClick={() => prefill("ask", "What helps against drought at flowering in pea?")}>
+            What would have helped?
           </button>
           <a className="btn btn-ghost" href="#radar">What's coming next</a>
         </>}>

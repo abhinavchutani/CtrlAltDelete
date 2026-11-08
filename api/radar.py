@@ -29,6 +29,7 @@ from api import schemas as S
 from src import serve_db
 
 HORIZON = 2040
+LAST_OBSERVED = 2026  # the last season with observed weather (src.p_spec.FIRST_YEAR): "next season" is the one after
 RISK_EUR, WATCH_EUR = 250_000, 100_000
 Status = Literal["ok", "watch", "risk"]
 Bucket = Literal["lt100k", "100k_250k", "250k_plus"]
@@ -78,6 +79,21 @@ class Issue(BaseModel):
     sources: list[SourceRef]
 
 
+class Contract(BaseModel):  # one region × crop contract in one season
+    region: S.Region
+    crop: str
+    band: S.EurBand
+    status: Status  # the season € rule applied to this contract alone
+    change_pct: float  # harvest vs the 1991–2020 normal for this region × crop
+
+
+class FarmBadYears(BaseModel):  # one farm with at least one bad year after the last observed season
+    farm_id: str
+    region: S.Region
+    pea_fields: int
+    bad_years: list[int]
+
+
 class FarmStatus(BaseModel):
     farm_id: str
     status: Status
@@ -93,12 +109,23 @@ class Outlook(BaseModel):
     worst_year: int
     worst_band: S.EurBand
     seasons: list[Season]
+    next_season: int  # the first season after the last observed one (2026)
+    next_contracts: list[Contract]  # every contract crop's € at stake in next_season
     issues: list[Issue]
     focus_year: int  # the worst season: the Overview's "fields needing attention" / "where it hurts"
     fields_risk: int  # pea fields on 'bad' farms in focus_year
     fields_watch: int
     pea_fields: int
-    farms_focus: list[FarmStatus]  # every farm's status in focus_year (the mini map)
+    farms_focus: list[FarmStatus]  # every farm's status in focus_year
+    near_years: tuple[int, int]  # the next five seasons
+    near_fields_hit: int  # pea fields on farms with at least one bad year in near_years
+    near_farm_ids: list[str]  # those farms (pea growers only; the map filter)
+    repeat_bins: list[int]  # farms by number of bad years after the last observed season: [0, 1, 2, 3+]
+    repeat_years: tuple[int, int]
+    repeat_farm_ids: list[str]  # farms with 2+ bad years (the map filter)
+    repeat_region: S.Region | None  # where most of them are
+    farms_hit: list[FarmBadYears]  # every farm with a bad year from next season on, most-hit first
+    near_region: S.Region | None
     worst_region: S.Region | None
     contract_farms: int
     regions: list[S.Region]
@@ -169,6 +196,11 @@ def _issue_sources(climate: str, year: int, region: str) -> list[SourceRef]:
             SourceRef(node_id="model:yield", label="Yield model", kind="model")]
 
 
+def _majority(farm_ids: list[str], region_of: dict[str, str]):
+    c = Counter(region_of.get(f) for f in farm_ids if region_of.get(f))
+    return c.most_common(1)[0][0] if c else None
+
+
 # ── the endpoint ────────────────────────────────────────────────────
 def outlook(body: OutlookIn) -> Outlook:
     from src import p_alerts, p_season
@@ -210,6 +242,27 @@ def outlook(body: OutlookIn) -> Outlook:
                 hot_days=hot, fields_below=n_fields, farms_below=farms_hit, why=a["why"],
                 sources=_issue_sources(body.climate, a["year"], a["region"])))
 
+    next_season = LAST_OBSERVED + 1
+    nxt = cube[cube.year == next_season].sort_values("eur_loss", ascending=False)
+    next_contracts = [Contract(region=r.region, crop=r.crop, band=S.eur_band(float(r.eur_loss)), status=status_of(float(r.eur_loss)),
+                               change_pct=round(float(r.change_pct)))
+                      for r in nxt.itertuples(index=False)]
+
+    near = (next_season, next_season + 4)
+    fut = farms[farms.year >= next_season]
+    bad = fut[fut.risk == "bad"]
+    near_farms = set(bad[bad.year <= near[1]].farm_id)
+    near_fields_hit = sum(n for f, n in pea.items() if f in near_farms)
+    per_farm = bad.groupby("farm_id").size()
+    counts = [int(per_farm.get(f, 0)) for f in fut.farm_id.unique()]
+    repeat_bins = [sum(c == k for c in counts) for k in (0, 1, 2)] + [sum(c >= 3 for c in counts)]
+    repeat_ids = sorted(per_farm[per_farm >= 2].index)
+
+    farms_hit = sorted(
+        (FarmBadYears(farm_id=f, region=region_of[f], pea_fields=int(pea[f]),  # type: ignore[arg-type]
+                      bad_years=sorted(int(y) for y in g.year)) for f, g in bad.groupby("farm_id") if f in region_of),
+        key=lambda x: (-len(x.bad_years), x.bad_years[0], x.farm_id))
+
     fy = farms[farms.year == worst_year]
     status_by_farm = {r.farm_id: FARM_STATUS[r.risk] for r in fy.itertuples(index=False)}
     fields_risk = sum(n for f, n in pea.items() if status_by_farm.get(f) == "risk")
@@ -220,6 +273,10 @@ def outlook(body: OutlookIn) -> Outlook:
         climate=body.climate, levers=body.levers, years=[s.year for s in seasons],
         money=S.eur_band(float(by_year.mean())), costly_years=sum(s.status == "risk" for s in seasons),
         worst_year=worst_year, worst_band=S.eur_band(float(by_year.max())), seasons=seasons, issues=issues,
+        next_season=next_season, next_contracts=next_contracts,
+        near_years=near, near_fields_hit=near_fields_hit, near_farm_ids=sorted(f for f in near_farms if pea[f]), repeat_bins=repeat_bins,
+        repeat_years=(next_season, int(fut.year.max())), repeat_farm_ids=repeat_ids,
+        repeat_region=_majority(repeat_ids, region_of), farms_hit=farms_hit, near_region=_majority(list(near_farms), region_of),
         focus_year=worst_year, fields_risk=fields_risk, fields_watch=fields_watch, pea_fields=sum(pea.values()),
         farms_focus=[FarmStatus(farm_id=r.farm_id, status=FARM_STATUS[r.risk], change_pct=round(float(r.change_pct), 1))
                      for r in fy.itertuples(index=False)],
