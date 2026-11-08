@@ -30,6 +30,7 @@ def test_linear_target_formula():
     assert B.linear_target(1000.0, 3.03, 2025, 2032) == pytest.approx(1000 * (1 - 0.0303 * 7))
 
 
+@needs_pack
 def test_target_matches_copilot_rule(con):
     q = ("illustrative: with 2025 as base year and the sbti minimum 4.2 %/yr linear rate for scope 1+2 "
          "(market-based), what is a 2030 target?")

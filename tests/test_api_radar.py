@@ -75,6 +75,7 @@ def test_notes_and_gaps_group_around_entity_nodes(tmp_path, monkeypatch):
         G.entity("not-an-id")
 
 
+@needs_data
 def test_today_endpoint():
     from fastapi.testclient import TestClient
 
