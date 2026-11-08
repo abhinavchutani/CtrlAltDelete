@@ -1,11 +1,11 @@
 // Layer 1: the widget grid. A widget never lists; each one is a single button that opens its Layer 2.
 // Every number comes from /api/radar/outlook, /api/provenance or the plan finder stream.
-import { type MouseEvent } from "react";
+import type { MouseEvent } from "react";
 import type { Outlook, Status } from "../api/types";
 import {
   ArrowRight, Ring, Segmented, StatusMark, shortYear,
 } from "../components/ui";
-import { CLIMATES, HORIZON, useStore, type SheetKind } from "../state/store";
+import { CLIMATES, useStore, type SheetKind } from "../state/store";
 import { BUCKET_LEVEL, cap, typeLabel, useBestPlan, useTodayOutlook } from "./data";
 import { OverviewSheets } from "./Sheets";
 import { SeasonHighlights } from "./SeasonHighlights";
@@ -104,7 +104,7 @@ export function Overview() {
     <main className="page" aria-label="Overview">
 
       <div className="ov-head" id="radar">
-        <h1 className="ov-title">Contract crop risk to {HORIZON}</h1>
+        <h1 className="ov-title">Contract crop overview</h1>
         <div className="ov-controls">
           <Segmented className="glass" label="Weather path" value={climate} onChange={setClimate}
             options={CLIMATES.map((c) => ({ key: c.key, label: c.label }))} />
