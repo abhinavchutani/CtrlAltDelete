@@ -224,9 +224,10 @@ button.source-chip:hover { border-color: var(--ink); }
 .ask-tile:hover .ask-arrow { transform: translateX(4px); }
 .season-tile { cursor: default; }
 .season-tile .w-note { margin-top: auto; }
-.hl { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.hl { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; flex: 1; min-height: 0; }
+.hl-dots { margin-top: auto; } /* pinned to the tile bottom: headlines of 2–4 lines never move it */
 .hl-text { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: baseline; font: 500 18px/24px var(--font-display);
-  min-height: 78px; animation: hl-in .5s ease-out; }
+  animation: hl-in .5s ease-out; }
 .hl-text b { font-weight: 700; }
 .hl-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; transform: translateY(1px); }
 .hl-dot.good { background: var(--apetit); }
