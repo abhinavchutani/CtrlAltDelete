@@ -21,6 +21,7 @@ export const Sun = (p: P) => svg(<><circle cx={12} cy={12} r={4} /><path d="M12 
 export const Max = (p: P) => svg(<><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></>, p);
 export const Min = (p: P) => svg(<><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7" /></>, p);
 export const Dock = (p: P) => svg(<><rect x={3} y={4} width={18} height={16} rx={2} /><path d="M15 4v16" /></>, p);
+export const GraphIcon = (p: P) => svg(<><circle cx={6} cy={7} r={2.5} /><circle cx={18} cy={6} r={2.5} /><circle cx={12} cy={18} r={2.5} /><path d="M8.3 8.2 10.8 16M15.8 7.3 13.2 16M8.5 6.8h7" /></>, p);
 export const Close = (p: P) => svg(<path d="M6 6l12 12M18 6 6 18" />, p);
 export const Send = (p: P) => svg(<><path d="m22 2-7 20-4-9-9-4z" /><path d="M22 2 11 13" /></>, p);
 export const Mic = (p: P) => svg(<><rect x={9} y={2} width={6} height={12} rx={3} /><path d="M5 10a7 7 0 0 0 14 0M12 19v3" /></>, p);

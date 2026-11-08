@@ -29,6 +29,8 @@ type State = {
   tourOpen: boolean;
   filing: { f: Filed; at: number } | null; // the latest filed note, played as an animation in the graph
   focus: string | null; // the graph node whose drawer is open
+  graphOpen: boolean; // "Adaptive database" beside the chat; hidden by default so the chat has the room
+  litUnseen: boolean; // an answer lit graph nodes while the graph was hidden (badge on the toggle)
 };
 
 type Actions = {
@@ -46,6 +48,7 @@ type Actions = {
   setTourOpen: (open: boolean) => void;
   playFiling: (f: Filed | null) => void;
   setFocus: (id: string | null) => void;
+  setGraphOpen: (open: boolean) => void;
 };
 
 const hashTab = (): Tab => (typeof window !== "undefined" && window.location.hash.slice(1) === "assistant" ? "assistant" : "overview");
@@ -62,6 +65,8 @@ export const useStore = create<State & Actions>((set) => ({
   tourOpen: false,
   filing: null,
   focus: null,
+  graphOpen: false,
+  litUnseen: false,
   setTab: (tab) => set({ tab, sheet: null }),
   setClimate: (climate) => set({ climate }),
   openSheet: (kind, from = null, issueId) => set({ sheet: { kind, from, issueId } }),
@@ -74,9 +79,12 @@ export const useStore = create<State & Actions>((set) => ({
     mode: mode ?? s.mode, draft: "", tab: "assistant",
   })),
   prefill: (mode, draft) => set({ tab: "assistant", mode, draft, sheet: null }),
-  light: (litNodes) => set({ litNodes }),
+  light: (litNodes) => set((s) => ({ litNodes, litUnseen: !s.graphOpen && litNodes.length > 0 })),
   markNew: (id) => set((s) => ({ newNodes: [...new Set([...s.newNodes, id])] })),
   setTourOpen: (tourOpen) => set({ tourOpen }),
-  playFiling: (f) => set((s) => (f && s.filing?.f.note_id === f.note_id ? {} : { filing: f ? { f, at: Date.now() } : null })),
+  // a newly filed note opens the graph: watching it file itself is the point
+  playFiling: (f) => set((s) => (f && s.filing?.f.note_id === f.note_id ? {}
+    : { filing: f ? { f, at: Date.now() } : null, ...(f ? { graphOpen: true, litUnseen: false } : {}) })),
   setFocus: (focus) => set({ focus }),
+  setGraphOpen: (graphOpen) => set({ graphOpen, litUnseen: false, ...(graphOpen ? {} : { focus: null }) }),
 }));

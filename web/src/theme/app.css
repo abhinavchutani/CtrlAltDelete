@@ -334,8 +334,19 @@ section:first-child > .group-h { margin-top: 0; }
 .receipt-foot { font-size: 13px; }
 
 /* ── assistant ───────────────────────────────────────── */
-.asst { display: grid; grid-template-columns: minmax(0, 1fr) 480px; gap: 24px; padding: 28px 32px 20px; width: 100%; max-width: 1280px; margin: 0 auto;
+.asst { display: grid; grid-template-columns: minmax(0, 820px) auto; justify-content: center; gap: 24px; padding: 28px 32px 20px; width: 100%; max-width: 1280px; margin: 0 auto;
   position: relative; z-index: 1; height: calc(100vh - 68px); }
+.asst.graph-open { grid-template-columns: minmax(0, 1fr) 480px; justify-content: stretch; }
+.asst.graph-open > .kg { animation: kgIn .28s ease-out both; }
+@keyframes kgIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+.kg-toggle { align-self: start; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px;
+  border-radius: 999px; border: 1px solid var(--line); font: 600 14px/20px var(--font-sans); color: var(--ink); cursor: pointer; }
+.kg-toggle:hover { border-color: var(--line-strong); }
+.kg-toggle svg { color: var(--kg-data); }
+.kg-toggle .muted { font-weight: 400; }
+.kg-toggle-badge { background: var(--leaf); color: var(--on-leaf); border-radius: 999px; padding: 1px 8px; font: 600 12px/18px var(--font-sans);
+  animation: kgFade .3s ease-out both; }
+.kg-head-actions { display: flex; align-items: center; gap: 10px; }
 .asst-main { display: flex; flex-direction: column; min-height: 0; }
 .convo { flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 16px; padding: 2px 4px 16px 2px; }
 .asst h1 { font: 600 36px/42px var(--font-display); letter-spacing: -.01em; margin-top: 8px; }
@@ -501,7 +512,7 @@ section:first-child > .group-h { margin-top: 0; }
 .kg-link:hover { border-color: var(--line-strong); background: var(--surface-sunk); }
 .kg-foot { margin-top: auto; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
 @media (prefers-reduced-motion: reduce) {
-  .pop, .kg-drop, .kg-pill, .kg-ants, .kg-drawer { animation: none; }
+  .pop, .kg-drop, .kg-pill, .kg-ants, .kg-drawer, .asst.graph-open > .kg, .kg-toggle-badge { animation: none; }
   .kg-draw { animation: none; stroke-dashoffset: 0; }
 }
 
@@ -531,7 +542,8 @@ section:first-child > .group-h { margin-top: 0; }
 
 /* ── responsive ──────────────────────────────────────── */
 @media (max-width: 1100px) {
-  .asst { grid-template-columns: 1fr; height: auto; padding: 20px 16px; }
+  .asst, .asst.graph-open { grid-template-columns: 1fr; height: auto; padding: 20px 16px; }
+  .kg-toggle { position: static; justify-self: end; order: -1; }
   .kg { min-height: 560px; }
   .issues-body { grid-template-columns: 1fr; }
 }
