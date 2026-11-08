@@ -5,6 +5,7 @@ import { useConfirmNote, useFileNote, useGraph, useIntentQuery, useInterview, us
 import type { Filed, ScenarioSpec, Table } from "../../api/types";
 import { SearchIcon, SourceChip, SproutIcon, TrendIcon, Typing } from "../../components/ui";
 import { leverLabel } from "../../domain";
+import { SimCharts } from "./SimCharts";
 import { SolutionCards } from "./SolutionCards";
 import { useStore, type Mode, type Turn } from "../../state/store";
 
@@ -125,9 +126,10 @@ function SimTurn({ t, latest }: { t: Turn; latest: boolean }) {
         <SourceChip s={{ kind: "data", label: "Weather", detail: spec.climate ?? "ssp245" }} />
         <SourceChip s={{ kind: "data", label: "Contract prices" }} />
       </div>
+      <SimCharts plan={d} climate={spec.climate ?? climate} />
       <details><summary>Show the numbers</summary>
         <TableView t={{ columns: ["Year", "Region", "Pea vs normal", "€ at risk"],
-          rows: pea.map((r) => [r.year, r.region === "FI_SW" ? "SW Finland" : "Skåne", `${r.change_vs_baseline_pct > 0 ? "+" : ""}${r.change_vs_baseline_pct} %`, r.eur_at_risk]) }} />
+          rows: pea.map((r) => [String(r.year), r.region === "FI_SW" ? "SW Finland" : "Skåne", `${r.change_vs_baseline_pct > 0 ? "+" : ""}${r.change_vs_baseline_pct} %`, r.eur_at_risk]) }} />
       </details>
       <Followups items={[{ mode: "ask", label: "Which farms are hit hardest today?", prompt: "Which pea farms had the lowest yields in 2025?" },
         { mode: "teach", label: "Ask the field team if it's realistic", prompt: "Field team view on this plan: " }]} />
