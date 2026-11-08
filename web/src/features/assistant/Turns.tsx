@@ -5,6 +5,7 @@ import { useConfirmNote, useFileNote, useGraph, useIntentQuery, useInterview, us
 import type { Filed, ScenarioSpec, Table } from "../../api/types";
 import { SearchIcon, SourceChip, SproutIcon, TrendIcon, Typing } from "../../components/ui";
 import { leverLabel } from "../../domain";
+import { SolutionCards } from "./SolutionCards";
 import { useStore, type Mode, type Turn } from "../../state/store";
 
 export const MODE_ICON: Record<Mode, JSX.Element> = { ask: <SearchIcon />, simulate: <TrendIcon />, teach: <SproutIcon /> };
@@ -51,6 +52,18 @@ function AskTurn({ t, latest }: { t: Turn; latest: boolean }) {
   if (a.isLoading) return <Typing />;
   if (a.error) return <div className="answer glass err" role="alert">{String(a.error)}</div>;
   const d = a.data!;
+  if (d.solutions?.length) {
+    const head = d.answer_md.split("\n")[0];
+    return (
+      <article className="answer glass">
+        <div className="answer-eyebrow ask eyebrow">{MODE_ICON.ask} Ask · from crop research and farm guides</div>
+        <h2>{plain(head)}</h2>
+        <p className="reason">Matched to the problem by fixed rules; every source quote is verbatim. Not yet reviewed by a person.</p>
+        <div className="chips">{d.sources.map((s) => <SourceChip key={s.node_id} s={s} />)}</div>
+        <SolutionCards items={d.solutions} />
+      </article>
+    );
+  }
   const paras = d.answer_md.split(/\n\s*\n/).map((p) => plain(p.trim())).filter(Boolean);
   const [head, ...rest] = paras;
   const sweden = /swed|skåne|skane|foodhills/i.test(t.text);

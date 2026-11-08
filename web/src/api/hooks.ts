@@ -100,3 +100,12 @@ export const useInterview = (gapId: string | null) =>
     enabled: !!gapId,
     ...forever,
   });
+
+/** Cited adaptation measures for a problem (kb/solutions.json via /api/solutions). */
+export const useSolutions = (hazards: string[], climate: Climate) =>
+  useQuery({
+    queryKey: ["solutions", hazards, climate],
+    queryFn: () => get<import("./types").Solution[]>(`/api/solutions?${hazards.map((h) => `hazard=${h}`).join("&")}&crop=pea&climate=${climate}`),
+    enabled: hazards.length > 0,
+    staleTime: 60_000,
+  });

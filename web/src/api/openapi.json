@@ -617,6 +617,89 @@
     }
    }
   },
+  "/api/solutions": {
+   "get": {
+    "summary": "Solutions",
+    "description": "Cited adaptation measures for a problem (kb/solutions.json); the plan finder's result is added where it ran.",
+    "operationId": "solutions_api_solutions_get",
+    "parameters": [
+     {
+      "name": "hazard",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "default": [
+        "H1",
+        "H2"
+       ],
+       "title": "Hazard"
+      }
+     },
+     {
+      "name": "crop",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": "pea",
+       "title": "Crop"
+      }
+     },
+     {
+      "name": "climate",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "ssp126",
+        "ssp245",
+        "ssp585"
+       ],
+       "type": "string",
+       "default": "ssp245",
+       "title": "Climate"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/Solution"
+         },
+         "title": "Response Solutions Api Solutions Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/tacit/topics": {
    "get": {
     "summary": "Tacit Topics",
@@ -1952,6 +2035,69 @@
      "simulated"
     ],
     "title": "BoardRow"
+   },
+   "Citation": {
+    "properties": {
+     "source": {
+      "type": "string",
+      "title": "Source"
+     },
+     "publisher": {
+      "type": "string",
+      "title": "Publisher"
+     },
+     "year": {
+      "type": "integer",
+      "title": "Year"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "url": {
+      "type": "string",
+      "title": "Url"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "research",
+       "guide"
+      ],
+      "title": "Kind"
+     },
+     "locator": {
+      "type": "string",
+      "title": "Locator"
+     },
+     "quote": {
+      "type": "string",
+      "title": "Quote"
+     },
+     "translation": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Translation"
+     }
+    },
+    "type": "object",
+    "required": [
+     "source",
+     "publisher",
+     "year",
+     "title",
+     "url",
+     "kind",
+     "locator",
+     "quote"
+    ],
+    "title": "Citation"
    },
    "ConfirmIn": {
     "properties": {
@@ -4158,6 +4304,14 @@
       },
       "type": "array",
       "title": "Sources"
+     },
+     "solutions": {
+      "items": {
+       "$ref": "#/components/schemas/Solution"
+      },
+      "type": "array",
+      "title": "Solutions",
+      "default": []
      }
     },
     "type": "object",
@@ -4500,6 +4654,108 @@
      "meters"
     ],
     "title": "SimResult"
+   },
+   "Solution": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "hazards": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Hazards"
+     },
+     "crops": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Crops"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "what": {
+      "type": "string",
+      "title": "What"
+     },
+     "window": {
+      "type": "string",
+      "title": "Window"
+     },
+     "lead_time": {
+      "type": "string",
+      "title": "Lead Time"
+     },
+     "cost": {
+      "type": "string",
+      "title": "Cost"
+     },
+     "lever": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lever"
+     },
+     "limits": {
+      "type": "string",
+      "title": "Limits"
+     },
+     "evidence": {
+      "items": {
+       "$ref": "#/components/schemas/Citation"
+      },
+      "type": "array",
+      "title": "Evidence"
+     },
+     "reviewed": {
+      "type": "boolean",
+      "title": "Reviewed",
+      "default": false
+     },
+     "model_saves": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "< €50k",
+         "€50–100k",
+         "€100–250k",
+         "€250k–1M",
+         "> €1M"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Model Saves"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "hazards",
+     "crops",
+     "title",
+     "what",
+     "window",
+     "lead_time",
+     "cost",
+     "lever",
+     "limits",
+     "evidence"
+    ],
+    "title": "Solution"
    },
    "SourceChip": {
     "properties": {

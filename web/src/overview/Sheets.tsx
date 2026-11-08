@@ -1,6 +1,6 @@
 // Layers 2 + 3 of the Overview: the sheets that open over the grid. Each ends in its receipt.
 import { useState } from "react";
-import { useOutlook } from "../api/hooks";
+import { useOutlook, useSolutions } from "../api/hooks";
 import type { Issue, Outlook, Status } from "../api/types";
 import {
   Crumbs, Receipt, REGION_NAME, SeasonStrip, Segmented, Sheet, SourceChip, StatusMark, shortYear,
@@ -15,16 +15,16 @@ const sign = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "0"
 function IssuesSheet({ o, onClose }: { o: Outlook; onClose: () => void }) {
   const sheet = useStore((s) => s.sheet);
   const climate = useStore((s) => s.climate);
-  const prefill = useStore((s) => s.prefill);
   const [sel, setSel] = useState<string | null>(sheet?.issueId ?? o.issues.find((i) => i.status === "risk")?.id ?? o.issues[0]?.id ?? null);
   const issue = o.issues.find((i) => i.id === sel) ?? null;
   const groups = new Map<string, Issue[]>();
   for (const i of o.issues) groups.set(i.type, [...(groups.get(i.type) ?? []), i]);
   const seasons = new Set(o.issues.map((i) => i.year)).size;
   const pickYear = (y: number) => { const i = o.issues.find((x) => x.year === y); if (i) setSel(i.id); };
-  const help = (i: Issue) => prefill("simulate", i.type === "heat"
-    ? `What if we plant a heat-tolerant pea from ${Math.max(2028, i.year - 2)}?`
-    : "What if we irrigate the driest pea fields?");
+  const send = useStore((s) => s.send);
+  const hz = issue ? ({ drought: "H1", heat: "H2" } as Record<string, string>)[issue.type] : undefined;
+  const sols = useSolutions(hz ? [hz] : [], climate);
+  const help = (i: Issue) => send(`What helps against ${typeLabel(i.type).toLowerCase()} in pea?`, "ask");
   return (
     <Sheet label="Issues ahead" from={sheet?.from} onClose={onClose}>
       <div className="sheet-head"><div>
@@ -64,8 +64,16 @@ function IssuesSheet({ o, onClose }: { o: Outlook; onClose: () => void }) {
                 <div className="s">vs normal</div></div>
             </div>
             <p className="line">{issue.fields_below.toLocaleString("en-GB")} pea fields on {issue.farms_below} farms in {REGION_NAME[issue.region]} fall 10 %+ below their normal yield. {issue.eur_at_risk ? `${issue.eur_at_risk} at risk.` : ""}</p>
+            {sols.data?.length ? (
+              <div className="helps">
+                <div className="eyebrow">What helps, from research</div>
+                <ul>{sols.data.slice(0, 3).map((x) => (
+                  <li key={x.id}><b>{x.title}</b><span className="muted"> · {x.evidence.length} source{x.evidence.length === 1 ? "" : "s"}</span></li>
+                ))}</ul>
+              </div>
+            ) : null}
             <div className="actions">
-              <button type="button" className="btn btn-primary" onClick={() => help(issue)}>What would help?</button>
+              <button type="button" className="btn btn-primary" onClick={() => help(issue)}>See every measure and its sources</button>
             </div>
             <div className="know">How do we know? {issue.sources.map((s) => <SourceChip key={s.node_id + s.label} s={s} />)}</div>
           </aside>

@@ -10,7 +10,7 @@ import { MODE_ICON, TurnView } from "./Turns";
 
 const MODES: { key: Mode; title: string; promise: string; starters: string[] }[] = [
   { key: "ask", title: "Ask", promise: "Answers from your data, with the receipt.",
-    starters: ["Where does the 2024 Scope 1 number come from?", "How did Swedish pea deliveries in 2026 compare with 2021?"] },
+    starters: ["What helps against drought at flowering in pea?", "How did Swedish pea deliveries in 2026 compare with 2021?"] },
   { key: "simulate", title: "Simulate", promise: "Runs the yield model on a plan you describe.",
     starters: ["What if we irrigate the driest pea fields?", "What if we plant a heat-tolerant pea from 2030?"] },
   { key: "teach", title: "Teach", promise: "Tell it what you know, or let it interview the field team.",

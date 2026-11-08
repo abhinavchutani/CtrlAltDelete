@@ -78,3 +78,5 @@ export type Interview = S["Interview"];
 export type KnowledgeItem = S["KnowledgeItem"];
 export type Contract = S["Contract"];
 export type FarmBadYears = S["FarmBadYears"];
+export type Solution = S["Solution"];
+export type Citation = S["Citation"];

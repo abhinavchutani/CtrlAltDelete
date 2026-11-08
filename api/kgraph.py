@@ -43,7 +43,8 @@ DATA: list[tuple[str, str, list[str]]] = [
 ]
 MODELS = [("model:yield", "Yield model", [HUB]), ("model:plans", "Plan finder", ["model:yield"])]
 DOCS = [("doc:method", "Method note", ["model:yield"]), ("doc:reasoning", "Reasoning log", ["doc:method"]),
-        ("doc:options", "Adaptation options", ["model:plans"])]
+        ("doc:options", "Adaptation options", ["model:plans"]),
+        ("doc:solutions", "Adaptation research", [HUB, "doc:options"])]
 
 # Filing rules: words in a note → topic (first match wins).
 TOPICS: list[tuple[str, str]] = [
@@ -96,9 +97,38 @@ class SourceChip(BaseModel):
     detail: str | None = None
 
 
+class Citation(BaseModel):
+    source: str
+    publisher: str
+    year: int
+    title: str
+    url: str
+    kind: Literal["research", "guide"]
+    locator: str
+    quote: str
+    translation: str | None = None
+
+
+class Solution(BaseModel):  # one cited measure from kb/solutions.json (src.r_solutions)
+    id: str
+    hazards: list[str]
+    crops: list[str]
+    title: str
+    what: str
+    window: str
+    lead_time: str
+    cost: str
+    lever: str | None  # set when the yield model can also run it
+    limits: str
+    evidence: list[Citation]
+    reviewed: bool = False
+    model_saves: S.EurBand | None = None  # the plan finder's best single run of this lever, when it has run
+
+
 class RadarAskOut(S.AskOut):
     used_node_ids: list[str]
     sources: list[SourceChip]
+    solutions: list[Solution] = []
 
 
 class NoteIn(BaseModel):
@@ -237,8 +267,44 @@ def _node_for(e: dict) -> str | None:
     return None
 
 
+def _model_saves(climate: str = "ssp245", horizon_end: int = 2040) -> dict[str, S.EurBand]:
+    """Lever type → the best "saves" band among the plan finder's single-change runs (only if that run exists)."""
+    from api import insight
+    run = insight._RUNS.get((climate, horizon_end))  # noqa: SLF001 - read-only peek at a finished run
+    if run is None:
+        return {}
+    bands = list(S.EUR_BANDS)
+    best: dict[str, str] = {}
+    for ev in list(run.events):
+        c = ev.get("candidate") if ev.get("type") == "candidate" else None
+        if not c or c.get("phase") != "single" or not c.get("saves"):
+            continue
+        t = c["levers"][0]["type"]
+        if t not in best or bands.index(c["saves"]) > bands.index(best[t]):
+            best[t] = c["saves"]
+    return best  # type: ignore[return-value]
+
+
+def solutions(hazards: list[str], crop: str | None = "pea", climate: str = "ssp245") -> list[Solution]:
+    from src import r_solutions
+    saves = _model_saves(climate)
+    return [Solution(**s, model_saves=saves.get(s["lever"]) if s["lever"] else None) for s in r_solutions.for_problem(hazards, crop)]
+
+
 def ask(body: RadarAskIn) -> RadarAskOut:
     from api import layers as L
+    from src import r_solutions
+
+    sol = r_solutions.answer(body.question)
+    if sol:  # "what helps against …": answered from the cited solutions base, not the data tools
+        sols = solutions(r_solutions.match(body.question) or [])
+        pubs = list(dict.fromkeys(f"{e.publisher} ({e.year})" for x in sols for e in x.evidence))
+        chips = [SourceChip(node_id="doc:solutions", kind="doc", label="Adaptation research",
+                            detail=f"{len(pubs)} sources")]
+        if any(x.model_saves for x in sols):
+            chips.append(SourceChip(node_id="model:plans", kind="model", label="Plan finder", detail="model runs"))
+        return RadarAskOut(**{k: v for k, v in sol.items() if k != "solutions"}, solutions=sols, sources=chips,
+                           used_node_ids=["doc:solutions", HUB, "doc:options"] + (["model:plans"] if len(chips) > 1 else []))
 
     out = L.get("ask")(body.question, body.history)
     a = out if isinstance(out, dict) else out.model_dump()
