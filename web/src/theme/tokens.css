@@ -25,7 +25,7 @@
   /* ── motion: Apple-like springs approximated as curves ── */
   --ease-out: cubic-bezier(.22, 1, .36, 1);
   --ease-spring: cubic-bezier(.34, 1.36, .64, 1);
-  --dur-1: 120ms; --dur-2: 220ms; --dur-3: 380ms;
+  --dur-1: 120ms; --dur-2: 200ms; --dur-3: 320ms;
 
   /* ── palette: light ── */
   --bg: #EEF0EA;
@@ -66,7 +66,7 @@
   --mat-regular: rgba(255, 255, 255, .58);
   --mat-thick: rgba(255, 255, 255, .78);
   --mat-chrome: rgba(250, 251, 248, .70);
-  --mat-blur: 24px;
+  --mat-blur: 20px;
   --mat-saturate: 185%;
   --rim-hi: rgba(255, 255, 255, .95);
   --rim-lo: rgba(255, 255, 255, .25);

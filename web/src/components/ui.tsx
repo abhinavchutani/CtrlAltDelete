@@ -132,14 +132,15 @@ export function Sheet({ label, from, onClose, children, side = false }: {
     if (!el) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!from || reduce) { el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: "ease-out" }); return; }
+    // Grow out of the opener: a uniform scale from its centre (non-uniform scale squashes the text).
     const to = el.getBoundingClientRect();
-    const sx = from.width / to.width, sy = from.height / to.height;
-    const dx = from.left - to.left, dy = from.top - to.top;
-    el.style.transformOrigin = "top left";
+    const ox = from.left + from.width / 2 - to.left, oy = from.top + from.height / 2 - to.top;
+    el.style.transformOrigin = `${ox}px ${Math.max(0, Math.min(to.height, oy))}px`;
+    el.style.willChange = "transform, opacity";
     el.animate([
-      { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, opacity: 0.6 },
+      { transform: "scale(.92)", opacity: 0 },
       { transform: "none", opacity: 1 },
-    ], { duration: 280, easing: "cubic-bezier(.2,.8,.2,1)" }).onfinish = () => { el.style.transformOrigin = ""; };
+    ], { duration: 340, easing: "cubic-bezier(.22,1,.36,1)" }).onfinish = () => { el.style.transformOrigin = ""; el.style.willChange = ""; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
