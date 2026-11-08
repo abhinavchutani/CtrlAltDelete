@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useMonths } from "../api/hooks";
 import type { Climate, Outlook, Status } from "../api/types";
-import { REGION_NAME, StatusMark } from "../components/ui";
+import { REGION_NAME } from "../components/ui";
 import { typeLabel } from "./data";
 
 const CROP: Record<string, string> = { pea: "Pea", potato: "Potato", carrot: "Carrot", spinach: "Spinach", turnip_rape: "Turnip rape" };
@@ -62,7 +62,10 @@ export function SeasonHighlights({ o, climate }: { o: Outlook; climate: Climate 
     <div className="hl" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
       {h ? (
-        <p key={i} className="hl-text" aria-live="polite"><StatusMark status={h.status} size={16} /><span>{h.text}</span></p>
+        <p key={i} className="hl-text" aria-live="polite">
+          {/* two colours only: green = fine, red = needs attention (watch or bad); the sentence says which */}
+          <span className={`hl-dot ${h.status === "ok" ? "good" : "bad"}`} role="img" aria-label={h.status === "ok" ? "On track" : "Needs attention"} />
+          <span>{h.text}</span></p>
       ) : <span className="skeleton" style={{ height: 60, display: "block" }} />}
       <div className={`hl-dots ${paused ? "paused" : ""}`} role="tablist" aria-label="Headlines">
         {items.map((x, k) => (

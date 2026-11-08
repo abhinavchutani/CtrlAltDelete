@@ -228,6 +228,9 @@ button.source-chip:hover { border-color: var(--ink); }
 .hl-text { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: baseline; font: 500 18px/24px var(--font-display);
   min-height: 78px; animation: hl-in .5s ease-out; }
 .hl-text b { font-weight: 700; }
+.hl-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; transform: translateY(1px); }
+.hl-dot.good { background: var(--apetit); }
+.hl-dot.bad { background: var(--status-risk); }
 @keyframes hl-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .hl-dots { display: flex; gap: 8px; }
 .hl-dots button { height: 24px; border: 0; padding: 0; background: none; display: grid; place-items: center; }
