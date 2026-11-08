@@ -5,7 +5,7 @@ import type { Outlook, Status } from "../api/types";
 import {
   ArrowRight, Ring, Segmented, StatusMark, shortYear,
 } from "../components/ui";
-import { CLIMATES, climatePath, useStore, type SheetKind } from "../state/store";
+import { CLIMATES, useStore, type SheetKind } from "../state/store";
 import { BUCKET_LEVEL, cap, typeLabel, useBestPlan, useTodayOutlook } from "./data";
 import { OverviewSheets } from "./Sheets";
 import { SeasonHighlights } from "./SeasonHighlights";
@@ -111,10 +111,7 @@ export function Overview() {
   return (
     <main className="page" aria-label="Overview">
       <div className="ov-head">
-        <div>
-          <div className="eyebrow">Contract crop supply outlook</div>
-          <h1 className="ov-title">Next 15 seasons, {climatePath(climate)}</h1>
-        </div>
+        <h1 className="ov-title">Supply outlook</h1>
         <Segmented className="glass" label="Weather path" value={climate} onChange={setClimate}
           options={CLIMATES.map((c) => ({ key: c.key, label: c.label }))} />
       </div>
