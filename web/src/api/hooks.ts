@@ -2,7 +2,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, get, post, qs } from "./client";
 import type {
-  AdaptationOption, Climate, Filed, Graph, Health, Interview, IntentOut, KnowledgeItem, Lever, MonthsFrame, Outlook,
+  AdaptationOption, Climate, EntityView, Filed, Graph, Health, Interview, IntentOut, KnowledgeItem, Lever, MonthsFrame, Outlook,
   Provenance, RadarAskOut, Region, ScenarioSpec, SimResult,
 } from "./types";
 
@@ -61,6 +61,10 @@ export const useRadarAsk = (question: string, history: string[]) =>
     queryFn: () => post<RadarAskOut>("/api/radar/ask", { question, history: history.map((q) => ({ question: q })) }),
     ...forever,
   });
+
+/** Everything linked to one farm or site ID (tables, people's notes, open gaps); only fetched for an entity node. */
+export const useEntity = (id: string | null) =>
+  useQuery({ queryKey: ["entity", id], queryFn: () => get<EntityView>(`/api/entity/${encodeURIComponent(id!)}`), enabled: !!id, staleTime: 30_000 });
 
 export const useTopics = () => useQuery({ queryKey: ["topics"], queryFn: () => get<string[]>("/api/tacit/topics"), ...forever });
 

@@ -55,3 +55,21 @@ def test_gap_answer_is_filed_under_its_record(tmp_path, monkeypatch):
     f = G.file_note(G.NoteIn(text="The meter was swapped; the reading is on the paper log at the plant.",
                              contributed_by="X", gap_id=gaps[0].id))
     assert f.path[0] == "Energy" and "crop:pea" not in f.item.tags
+
+
+@needs_data
+def test_notes_and_gaps_group_around_entity_nodes(tmp_path, monkeypatch):
+    monkeypatch.setattr(K, "STORE", tmp_path / "k.jsonl")
+    f = G.file_note(G.NoteIn(text="F0112's lower field waterlogs most Aprils.", contributed_by="Liisa"))
+    assert "entity:F0112" in f.linked_node_ids and "data:clean_farm_registry" in f.linked_node_ids
+    g = G.graph()
+    farm = [n for n in g.nodes if n.id == "entity:F0112"]
+    assert len(farm) == 1 and farm[0].kind == "entity"
+    edges = {(e.source, e.target) for e in g.edges}
+    assert (f"tacit:{f.note_id}", "entity:F0112") in edges and ("entity:F0112", "data:clean_farm_registry") in edges
+    tacit = next(n for n in g.nodes if n.id == f"tacit:{f.note_id}")
+    assert tacit.by == "Liisa" and "topic:Sowing & drainage" in (tacit.tags or [])
+    v = G.entity("f0112")
+    assert v.id == "F0112" and v.tables and [k.knowledge_id for k in v.notes] == [f.note_id]
+    with pytest.raises(Exception):
+        G.entity("not-an-id")

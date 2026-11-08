@@ -74,6 +74,7 @@ export type GraphNode = S["Node"];
 export type RadarAskOut = S["RadarAskOut"];
 export type SourceChip = S["SourceChip"];
 export type Filed = S["Filed"];
+export type EntityView = S["EntityView"];
 export type Interview = S["Interview"];
 export type KnowledgeItem = S["KnowledgeItem"];
 export type Contract = S["Contract"];

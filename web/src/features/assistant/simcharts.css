@@ -3,7 +3,7 @@
 .simc figure { margin: 0; }
 .simc figcaption { font: 600 14px/20px var(--font-sans); margin-bottom: 6px; }
 .simc figcaption span { font-weight: 400; color: var(--ink-muted); }
-.simc svg { width: 100%; height: auto; display: block; overflow: visible; }
+.simc svg { width: 100%; height: auto; display: block; overflow: hidden; }
 .simc .ax { font: 400 10px var(--font-sans); fill: var(--ink-muted); }
 .simc .grid { stroke: var(--line); stroke-width: 1; }
 .simc .bad { stroke: var(--status-risk); stroke-width: 1; stroke-dasharray: 3 3; }

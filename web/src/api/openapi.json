@@ -579,6 +579,45 @@
     }
    }
   },
+  "/api/entity/{entity_id}": {
+   "get": {
+    "summary": "Entity",
+    "operationId": "entity_api_entity__entity_id__get",
+    "parameters": [
+     {
+      "name": "entity_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Entity Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EntityView"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/radar/ask": {
    "post": {
     "summary": "Radar Ask",
@@ -2309,6 +2348,152 @@
     ],
     "title": "Edge"
    },
+   "EntityGap": {
+    "properties": {
+     "gap_id": {
+      "type": "string",
+      "title": "Gap Id"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     }
+    },
+    "type": "object",
+    "required": [
+     "gap_id",
+     "label"
+    ],
+    "title": "EntityGap"
+   },
+   "EntityTable": {
+    "properties": {
+     "table": {
+      "type": "string",
+      "title": "Table"
+     },
+     "label": {
+      "type": "string",
+      "title": "Label"
+     },
+     "rows": {
+      "type": "integer",
+      "title": "Rows"
+     },
+     "years": {
+      "type": "string",
+      "title": "Years"
+     },
+     "issues": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Issues"
+     },
+     "corrections": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Corrections"
+     }
+    },
+    "type": "object",
+    "required": [
+     "table",
+     "label",
+     "rows",
+     "years"
+    ],
+    "title": "EntityTable"
+   },
+   "EntityView": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "kind": {
+      "type": "string",
+      "title": "Kind"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "tables": {
+      "items": {
+       "$ref": "#/components/schemas/EntityTable"
+      },
+      "type": "array",
+      "title": "Tables"
+     },
+     "issue_types": {
+      "items": {
+       "prefixItems": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ],
+       "type": "array",
+       "maxItems": 2,
+       "minItems": 2
+      },
+      "type": "array",
+      "title": "Issue Types",
+      "default": []
+     },
+     "notes": {
+      "items": {
+       "$ref": "#/components/schemas/KnowledgeItem"
+      },
+      "type": "array",
+      "title": "Notes",
+      "default": []
+     },
+     "gaps": {
+      "items": {
+       "$ref": "#/components/schemas/EntityGap"
+      },
+      "type": "array",
+      "title": "Gaps",
+      "default": []
+     },
+     "synthetic": {
+      "type": "boolean",
+      "title": "Synthetic",
+      "default": true
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "kind",
+     "name",
+     "tables"
+    ],
+    "title": "EntityView",
+    "description": "Everything linked to one farm or site ID (src.r_entity.entity_view), plus people's notes and open gaps."
+   },
    "EvidenceRef": {
     "properties": {
      "kind": {
@@ -3525,7 +3710,8 @@
        "model",
        "doc",
        "tacit",
-       "gap"
+       "gap",
+       "entity"
       ],
       "title": "Kind"
      },
@@ -3576,6 +3762,31 @@
        }
       ],
       "title": "Question"
+     },
+     "tags": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tags"
+     },
+     "by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "By"
      }
     },
     "type": "object",

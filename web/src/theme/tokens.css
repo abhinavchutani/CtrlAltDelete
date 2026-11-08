@@ -169,6 +169,7 @@
   --kg-model-soft: var(--blue-tint);
   --kg-doc: var(--gold);
   --kg-tacit: var(--purple);
+  --kg-entity: color-mix(in srgb, var(--blue) 45%, var(--green));
   --kg-tacit-soft: var(--purple-tint);
   --kg-tacit-line: var(--purple-line);
   --glass: var(--mat-regular);

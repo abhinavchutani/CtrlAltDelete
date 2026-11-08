@@ -10,12 +10,14 @@ const REGIONS = [{ key: "FI_SW", name: "SW Finland", cls: "fi", color: "var(--kg
 const BAD = -20; // a bad year: harvest 20 %+ below normal (the engine's farm rule)
 const tone = (band: string) => (band === "< €50k" || band === "€50–100k" ? "ok" : band === "€100–250k" ? "watch" : "risk");
 
+const FIRST = 2026, LAST = 2040; // the 15 seasons every view shows (a preset may run on to 2060)
 const pea = (rows: RegionYear[], region: string) =>
-  rows.filter((r) => r.crop === "pea" && r.region === region).sort((a, b) => a.year - b.year);
+  rows.filter((r) => r.crop === "pea" && r.region === region && r.year >= FIRST && r.year <= LAST).sort((a, b) => a.year - b.year);
 
 function HarvestLines({ plan, today, years }: { plan: SimResult; today?: SimResult; years: number[] }) {
-  const W = 560, H = 190, L = 34, R = 8, T = 10, B = 22;
-  const all = [...plan.regions, ...(today?.regions ?? [])].filter((r) => r.crop === "pea").map((r) => r.change_vs_baseline_pct);
+  const W = 560, H = 190, L = 34, R = 16, T = 10, B = 22;
+  const all = [...plan.regions, ...(today?.regions ?? [])].filter((r) => r.crop === "pea" && r.year >= FIRST && r.year <= LAST)
+    .map((r) => r.change_vs_baseline_pct);
   const lo = Math.min(BAD - 5, ...all), hi = Math.max(10, ...all) + 3;
   const x = (y: number) => L + ((y - years[0]) / Math.max(1, years[years.length - 1] - years[0])) * (W - L - R);
   const y = (v: number) => T + ((hi - v) / (hi - lo)) * (H - T - B);
@@ -92,7 +94,7 @@ function RiskStrip({ plan, today, years }: { plan: SimResult; today?: SimResult;
 export function SimCharts({ plan, climate }: { plan: SimResult; climate: Climate }) {
   const id = `current_plan_${climate ?? "ssp245"}`;
   const today = useQuery({ queryKey: ["scenario", id], queryFn: () => get<SimResult>(`/api/scenario/${id}`), staleTime: Infinity });
-  const years = plan.years.filter((y) => y <= 2040);
+  const years = plan.years.filter((y) => y >= FIRST && y <= LAST);
   return (
     <div className="simc">
       <HarvestLines plan={plan} today={today.data} years={years} />
