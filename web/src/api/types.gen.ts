@@ -279,6 +279,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/entity/{entity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Entity */
+        get: operations["entity_api_entity__entity_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/radar/ask": {
         parameters: {
             query?: never;
@@ -873,6 +890,65 @@ export interface components {
             /** Target */
             target: string;
         };
+        /** EntityGap */
+        EntityGap: {
+            /** Gap Id */
+            gap_id: string;
+            /** Label */
+            label: string;
+        };
+        /** EntityTable */
+        EntityTable: {
+            /** Table */
+            table: string;
+            /** Label */
+            label: string;
+            /** Rows */
+            rows: number;
+            /** Years */
+            years: string;
+            /** Issues */
+            issues?: number | null;
+            /** Corrections */
+            corrections?: number | null;
+        };
+        /**
+         * EntityView
+         * @description Everything linked to one farm or site ID (src.r_entity.entity_view), plus people's notes and open gaps.
+         */
+        EntityView: {
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string | null;
+            /** Tables */
+            tables: components["schemas"]["EntityTable"][];
+            /**
+             * Issue Types
+             * @default []
+             */
+            issue_types: [
+                string,
+                number
+            ][];
+            /**
+             * Notes
+             * @default []
+             */
+            notes: components["schemas"]["KnowledgeItem"][];
+            /**
+             * Gaps
+             * @default []
+             */
+            gaps: components["schemas"]["EntityGap"][];
+            /**
+             * Synthetic
+             * @default true
+             */
+            synthetic: boolean;
+        };
         /** EvidenceRef */
         EvidenceRef: {
             /**
@@ -1350,7 +1426,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "hub" | "data" | "model" | "doc" | "tacit" | "gap";
+            kind: "hub" | "data" | "model" | "doc" | "tacit" | "gap" | "entity";
             /** Label */
             label: string;
             /** Records */
@@ -1361,6 +1437,10 @@ export interface components {
             detail?: string | null;
             /** Question */
             question?: string | null;
+            /** Tags */
+            tags?: string[] | null;
+            /** By */
+            by?: string | null;
         };
         /** NoteIn */
         NoteIn: {
@@ -2286,6 +2366,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Graph"];
+                };
+            };
+        };
+    };
+    entity_api_entity__entity_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

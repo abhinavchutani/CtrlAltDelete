@@ -156,7 +156,7 @@ export function Overview() {
         </Widget>
 
         <Widget size="M" label="Yield optimizer"
-          right={plan.status === "done" ? `best of ${plan.tested} plans` : "testing plans…"}
+          right={plan.status === "done" ? undefined : "testing plans…"}
           cta={plan.status === "done" ? `See all ${plan.tested} plans` : "See the plans"} tour="plan" onOpen={open("plans")}>
           <div className="w-split">
             <div>
@@ -169,7 +169,6 @@ export function Overview() {
             </div>
             {best ? (
               <div className="minibars" role="img" aria-label={`Bad seasons (over €250k) to 2040: ${best.plan_costly_years} today, ${best.costly_years} with the plan`}>
-                <span className="mb-title">Bad seasons to 2040</span>
                 {[["Today", best.plan_costly_years, "risk"], ["With plan", best.costly_years, "apetit"]].map(([l, n, c]) => (
                   <div key={l as string} className="col">
                     <span className="n">{n}</span>

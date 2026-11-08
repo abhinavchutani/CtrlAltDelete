@@ -1,6 +1,6 @@
 // UI state only (what is selected / shown). Server data lives in react-query (api/hooks.ts).
 import { create } from "zustand";
-import type { Climate } from "../api/types";
+import type { Climate, Filed } from "../api/types";
 
 export type Tab = "overview" | "assistant";
 export type Mode = "ask" | "simulate" | "teach";
@@ -27,6 +27,8 @@ type State = {
   litNodes: string[]; // the knowledge-graph nodes the latest answer used
   newNodes: string[]; // notes filed this session (shown with a "New" pill)
   tourOpen: boolean;
+  filing: { f: Filed; at: number } | null; // the latest filed note, played as an animation in the graph
+  focus: string | null; // the graph node whose drawer is open
 };
 
 type Actions = {
@@ -42,6 +44,8 @@ type Actions = {
   light: (ids: string[]) => void;
   markNew: (id: string) => void;
   setTourOpen: (open: boolean) => void;
+  playFiling: (f: Filed | null) => void;
+  setFocus: (id: string | null) => void;
 };
 
 const hashTab = (): Tab => (typeof window !== "undefined" && window.location.hash.slice(1) === "assistant" ? "assistant" : "overview");
@@ -56,6 +60,8 @@ export const useStore = create<State & Actions>((set) => ({
   litNodes: [],
   newNodes: [],
   tourOpen: false,
+  filing: null,
+  focus: null,
   setTab: (tab) => set({ tab, sheet: null }),
   setClimate: (climate) => set({ climate }),
   openSheet: (kind, from = null, issueId) => set({ sheet: { kind, from, issueId } }),
@@ -71,4 +77,6 @@ export const useStore = create<State & Actions>((set) => ({
   light: (litNodes) => set({ litNodes }),
   markNew: (id) => set((s) => ({ newNodes: [...new Set([...s.newNodes, id])] })),
   setTourOpen: (tourOpen) => set({ tourOpen }),
+  playFiling: (f) => set((s) => (f && s.filing?.f.note_id === f.note_id ? {} : { filing: f ? { f, at: Date.now() } : null })),
+  setFocus: (focus) => set({ focus }),
 }));

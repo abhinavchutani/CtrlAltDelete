@@ -150,6 +150,11 @@ def graph() -> kgraph.Graph:
     return kgraph.graph()
 
 
+@app.get("/api/entity/{entity_id}", response_model=kgraph.EntityView)
+def entity(entity_id: str) -> kgraph.EntityView:
+    return kgraph.entity(entity_id)
+
+
 @app.post("/api/radar/ask", response_model=kgraph.RadarAskOut)
 def radar_ask(body: kgraph.RadarAskIn) -> kgraph.RadarAskOut:
     return kgraph.ask(body)

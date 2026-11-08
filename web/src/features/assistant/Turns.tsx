@@ -204,6 +204,7 @@ function TeachTurn({ t, latest }: { t: Turn; latest: boolean }) {
   const file = useFileNote();
   const light = useStore((s) => s.light);
   const markNew = useStore((s) => s.markNew);
+  const playFiling = useStore((s) => s.playFiling);
   const setMode = useStore((s) => s.setMode);
   const graph = useGraph();
   const gapId = t.context?.gap ?? null;
@@ -213,8 +214,8 @@ function TeachTurn({ t, latest }: { t: Turn; latest: boolean }) {
   const [sent, setSent] = useState<string | null>(null);
   useEffect(() => { setMode("teach"); }, [setMode]);
   useEffect(() => {
-    if (latest && file.data) { markNew(`tacit:${file.data.note_id}`); light(file.data.linked_node_ids); }
-  }, [latest, file.data, light, markNew]);
+    if (latest && file.data) { markNew(`tacit:${file.data.note_id}`); light(file.data.linked_node_ids); playFiling(file.data); }
+  }, [latest, file.data, light, markNew, playFiling]);
   const doFile = (text: string, name: string, role: string) =>
     file.mutate({ text, contributed_by: name, role, farm_id: null, gap_id: gapId });
 
