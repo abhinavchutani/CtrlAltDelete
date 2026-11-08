@@ -28,6 +28,37 @@ def _key(payload: dict) -> str:
     return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()
 
 
+RETRIES = 4
+MAX_WAIT_S = 30.0
+
+
+def _create(client: Any, kwargs: dict) -> Any:
+    """chat.completions.create, waiting out short rate limits (free tiers cap tokens per minute)."""
+    import re
+    import time
+
+    from openai import RateLimitError
+    for attempt in range(RETRIES + 1):
+        try:
+            return client.chat.completions.create(**kwargs)
+        except RateLimitError as e:
+            m = re.search(r"try again in ([\d.]+)\s*(ms|s)", str(e))
+            wait = (float(m.group(1)) / (1000 if m.group(2) == "ms" else 1) if m else 2.0 * 2 ** attempt) + 0.5
+            if attempt == RETRIES or wait > MAX_WAIT_S:
+                raise
+            time.sleep(wait)
+
+
+def _tool_call(t: Any) -> dict:
+    """A tool call as a plain dict. Provider extras ride along: Gemini 3 rejects the next turn unless each call's
+    `extra_content.google.thought_signature` is sent back unchanged."""
+    out = {"id": t.id, "type": "function", "function": {"name": t.function.name, "arguments": t.function.arguments}}
+    extra = getattr(t, "extra_content", None) or (getattr(t, "model_extra", None) or {}).get("extra_content")
+    if extra:
+        out["extra_content"] = extra
+    return out
+
+
 def chat(messages: list[dict], tools: list[dict] | None = None, cache_dir: Path = CACHE_DIR) -> dict:
     """One chat completion → the assistant message as a dict ({content, tool_calls}). Cached."""
     payload = {"model": env("LLM_MODEL"), "messages": messages, "tools": tools or [], "temperature": 0}
@@ -42,11 +73,9 @@ def chat(messages: list[dict], tools: list[dict] | None = None, cache_dir: Path 
     kwargs: dict[str, Any] = {"model": payload["model"], "messages": messages, "temperature": 0}
     if tools:
         kwargs["tools"] = tools
-    msg = client.chat.completions.create(**kwargs).choices[0].message
+    msg = _create(client, kwargs).choices[0].message
     out = {"role": "assistant", "content": msg.content or "",
-           "tool_calls": [{"id": t.id, "type": "function",
-                           "function": {"name": t.function.name, "arguments": t.function.arguments}}
-                          for t in (msg.tool_calls or [])]}
+           "tool_calls": [_tool_call(t) for t in (msg.tool_calls or [])]}
     cache_dir.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, ensure_ascii=False))
     return out

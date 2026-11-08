@@ -196,6 +196,30 @@ def route_energy_by_site_month(con, q: str) -> dict | None:
     return finish(q, md, [res, tot], sql_evidence(res), table_of(res), report=report, pending=n_corr > 0)
 
 
+HELP_RE = re.compile(r"^\s*(help|what can (you|i) (do|ask)|what do you (do|know)|who are you|how do (i|you) use"
+                     r"|what (questions|kind of questions)|what are you)\b")
+HELP_MD = (
+    "I answer questions about the synthetic Apetit data twin, and every number I give comes from a query I ran. "
+    "Things you can ask:\n"
+    "- **Emissions:** *What were total Scope 1 emissions in 2024?* or *Where does the 2024 Scope 2 market-based "
+    "number come from?*\n"
+    "- **Sites and energy:** *Which site used the most electricity in 2025?* or *Energy use per site per month in "
+    "2024 as a report*\n"
+    "- **Farms and deliveries:** *How many contract farms are in the Finnish farm registry?* or *Show farm F0123's "
+    "yield history*\n"
+    "- **Climate risk:** *What is the biggest risk in 2030?* or *What can we do about heat at flowering for peas?*\n"
+    "- **Data quality and rules:** *What data is missing for 2025?* or *What is the guarantee of origin rule?*\n\n"
+    "Use **Simulate** to test a plan (for example *irrigate dry pea fields under high emissions*) and **Teach** to "
+    "file field knowledge. Ask one question at a time; add *as a report* to get an Excel file.")
+
+
+def route_help(con, q: str) -> dict | None:
+    if not HELP_RE.search(q):
+        return None
+    return {"status": "answered", "answer_md": HELP_MD, "table": None, "evidence": [], "report": None,
+            "pending_approval": False}
+
+
 def route_rule(con, q: str) -> dict | None:
     if not re.search(r"\brule\b|how (do|does|should) we (count|treat|handle)|what does .* (say|require)", q):
         return None
@@ -362,7 +386,7 @@ def route_lineage(con, q: str) -> dict | None:
                   pending=any(r[7] == "draft" for r in top))
 
 
-ROUTES: list[Route] = [route_se_pea_deliveries, route_peat_as_mineral, route_energy_by_site_month,
+ROUTES: list[Route] = [route_help, route_se_pea_deliveries, route_peat_as_mineral, route_energy_by_site_month,
                        route_farm_yield_history, route_lineage, route_entity, route_gaps, route_options, route_rule,
                        route_v1_totals]
 

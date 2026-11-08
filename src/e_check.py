@@ -14,6 +14,8 @@ from typing import Any, Iterable
 EVIDENCE_MARK = "**Evidence**"
 _NUM = re.compile(r"(?<![\w.\-/:])(\d{1,3}(?:[,   ]\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?![\w])")
 
+_SCALED = re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)\s?(?:k|M|bn)\b")   # a figure written with a k / M / bn suffix
+
 
 LABELS = {"scope", "scopes", "category", "categories", "cat", "step", "steps", "phase", "tier", "page",
           "section", "§", "option", "options", "action", "actions", "part", "level", "row", "rows",
@@ -55,6 +57,7 @@ def tool_numbers(obj: Any) -> set[float]:
         out.add(float(obj))
     elif isinstance(obj, str):
         out |= {v for _, v, _ in numbers_in(obj)}
+        out |= {float(m.group(1)) for m in _SCALED.finditer(obj)}   # "€250k–1M" → 250, 1
     elif isinstance(obj, dict):
         for v in obj.values():
             out |= tool_numbers(v)
