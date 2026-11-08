@@ -5,7 +5,7 @@ import { useStore } from "../state/store";
 
 type Step = { target: string | null; title: string; body: string; tab: "overview" | "map" | "assistant" };
 const STEPS: Step[] = [
-  { tab: "overview", target: null, title: "Welcome to Field Radar",
+  { tab: "overview", target: null, title: "Welcome to Apetit Radar",
     body: "What the weather could cost the farms that grow for Apetit, season by season to 2040, and the changes that cut it. It runs on the challenge's synthetic data pack." },
   { tab: "overview", target: "money", title: "One number, then the reasons",
     body: "Each card gives one answer. Tap it to see what drives it, and at the bottom, how we know." },

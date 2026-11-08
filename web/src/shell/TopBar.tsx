@@ -1,5 +1,4 @@
 import { useHealth } from "../api/hooks";
-import { PodMark } from "../components/ui";
 import { useStore, type Tab } from "../state/store";
 
 const TABS: { key: Tab; label: string }[] = [
@@ -17,7 +16,7 @@ export function TopBar() {
   const status = health.error ? "API not reachable" : health.data?.mock ? "fixtures" : health.data?.warming ? "model warming up" : null;
   return (
     <header className="topbar glass">
-      <div className="brand"><PodMark /> Field Radar</div>
+      <div className="brand"><img src="/apetit-logo.png" alt="Apetit" height={30} /> Radar</div>
       <nav className="tabs" aria-label="Main">
         {TABS.map((t) => (
           <button key={t.key} type="button" className={`tab ${tab === t.key ? "on" : ""}`} onClick={() => setTab(t.key)}

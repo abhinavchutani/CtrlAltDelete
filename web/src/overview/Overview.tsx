@@ -144,7 +144,7 @@ export function Overview() {
       {q.error ? <p className="err" role="alert">Couldn't load the outlook: {String(q.error)}</p> : null}
 
       <div className={`grid ${sheet ? "dim" : ""}`} aria-hidden={sheet ? true : undefined}>
-        <Widget size="L" label="What weather shortfalls will cost us" icon={<EuroIcon />} cta="See what drives it" onOpen={open("money")} tour="money">
+        <Widget size="L" label="Crops at risk" icon={<EuroIcon />} cta="See what drives it" onOpen={open("money")} tour="money">
           {o ? (() => {
             const hit = o.next_contracts.filter((c) => c.status !== "ok");
             const tone = hit.some((c) => c.status === "risk") ? "fig-risk" : hit.length ? "fig-harvest" : "fig-leaf";
@@ -174,7 +174,8 @@ export function Overview() {
           <span className="w-sub">of pea fields have a bad year in {o ? `${o.near_years[0]}–${shortYear(o.near_years[1])}` : "…"}</span>
         </Widget>
 
-        <Widget size="M" label={plan.status === "done" ? `Best of ${plan.tested} plans` : "Finding the best plan"} icon={<SproutIcon />}
+        <Widget size="M" label="Yield optimizer" icon={<SproutIcon />}
+          right={plan.status === "done" ? `best of ${plan.tested} plans` : "testing plans…"}
           cta="Open the plan" tour="plan"
           onOpen={() => { if (best) { showPlan(best.levers, best.label); setPlanSheet(true); } else setPlanSheet(true); toMap(); }}>
           <div className="w-split">
@@ -187,11 +188,12 @@ export function Overview() {
               {best ? <span className="w-sub">a year · {cap(best.label.toLowerCase())}</span> : null}
             </div>
             {best ? (
-              <div className="minibars" role="img" aria-label={`Seasons over €250k: ${best.plan_costly_years} today, ${best.costly_years} with the plan`}>
+              <div className="minibars" role="img" aria-label={`Bad seasons (over €250k) to 2040: ${best.plan_costly_years} today, ${best.costly_years} with the plan`}>
+                <span className="mb-title">Bad seasons to 2040</span>
                 {[["Today", best.plan_costly_years, "risk"], ["With plan", best.costly_years, "apetit"]].map(([l, n, c]) => (
                   <div key={l as string} className="col">
                     <span className="n">{n}</span>
-                    <div className={`bar ${c}`} style={{ height: 12 + 10 * (n as number) }} />
+                    <div className={`bar ${c}`} style={{ height: 8 + 7 * (n as number) }} />
                     <span className="cap">{l}</span>
                   </div>
                 ))}
