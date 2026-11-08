@@ -35,7 +35,7 @@
 
   --label: #111611;
   --label-2: rgba(17, 22, 17, .62);
-  --label-3: rgba(17, 22, 17, .40);
+  --label-3: rgba(17, 22, 17, .52);
   --label-4: rgba(17, 22, 17, .20);
   --on-accent: #FFFFFF;
 
@@ -95,7 +95,7 @@
 
   --label: #F3F5F0;
   --label-2: rgba(235, 240, 230, .64);
-  --label-3: rgba(235, 240, 230, .40);
+  --label-3: rgba(235, 240, 230, .50);
   --label-4: rgba(235, 240, 230, .18);
   --on-accent: #0A1406;
 

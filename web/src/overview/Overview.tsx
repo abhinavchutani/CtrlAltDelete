@@ -5,7 +5,7 @@ import type { Outlook, Status } from "../api/types";
 import {
   ArrowRight, Ring, Segmented, StatusMark, shortYear,
 } from "../components/ui";
-import { CLIMATES, useStore, type SheetKind } from "../state/store";
+import { CLIMATES, HORIZON, START_YEAR, useStore, type SheetKind } from "../state/store";
 import { BUCKET_LEVEL, cap, typeLabel, useBestPlan, useTodayOutlook } from "./data";
 import { OverviewSheets } from "./Sheets";
 import { Problems, ProblemSheets } from "./Problems";
@@ -73,7 +73,7 @@ function RepeatFarms({ o }: { o: Outlook }) {
   return (
     <div className="repeat">
       <div>
-        <span className="w-fig fig-risk">{(two + more).toLocaleString("en-GB")} farms</span>
+        <span key={two + more} className="w-fig fig-risk">{(two + more).toLocaleString("en-GB")} farms</span>
         <span className="w-sub" style={{ display: "block" }}>hit 2 or more times by {o.repeat_years[1]}</span>
       </div>
       <div className="hbars" role="img" aria-label={rows.map((r) => `${r.n} farms with ${r.label}`).join(", ")}>
@@ -111,7 +111,7 @@ export function Overview() {
       <div className={sheet ? "dimwrap dim" : "dimwrap"} aria-hidden={sheet ? true : undefined}><Problems /></div>
 
       <div className="ov-head" id="radar">
-        <h1 className="ov-title">Supply outlook</h1>
+        <h1 className="ov-title">{view === "season" ? `The ${START_YEAR} season so far` : `Contract crop risk to ${HORIZON}`}</h1>
         <div className="ov-controls">
           <Segmented className="glass" label="View" value={view} onChange={setView} options={VIEWS} />
           <Segmented className="glass" label={view === "season" ? "Weather path after 2026" : "Weather path"} value={climate} onChange={setClimate}
@@ -126,7 +126,7 @@ export function Overview() {
           {o ? (() => {
             const hit = o.next_contracts.filter((c) => c.status !== "ok");
             const tone = hit.some((c) => c.status === "risk") ? "fig-risk" : hit.length ? "fig-harvest" : "fig-leaf";
-            return <span className={`w-fig ${tone}`}>{hit.length} of {o.next_contracts.length} crops</span>;
+            return <span key={`${climate}${hit.length}`} className={`w-fig ${tone}`}>{hit.length} of {o.next_contracts.length} crops</span>;
           })() : skel("70%", 64)}
           <span className="w-sub">at risk of costing €100k+ to buy in, next season ({o?.next_season ?? "…"})</span>
           {o ? <SeasonBars o={o} /> : null}
@@ -136,7 +136,7 @@ export function Overview() {
           <span className="w-row">
             <Ring size={88} stroke={13} label={`${risk} bad-year issues and ${watch} to watch`}
               parts={[{ value: watch, color: "var(--status-watch)" }, { value: risk, color: "var(--status-risk)" }]} />
-            <span className="w-fig">{o ? o.issues.length : "…"}</span>
+            <span key={`${climate}${o?.issues.length}`} className="w-fig">{o ? o.issues.length : "…"}</span>
           </span>
           <span className="w-sub">{[...byType.entries()].map(([t, n]) => `${n} ${typeLabel(t).toLowerCase().replace(" at flowering", "")}`).join(" · ")}{byType.size ? " at flowering" : ""}</span>
         </Widget>
@@ -145,7 +145,7 @@ export function Overview() {
           {o ? (
             <span className="w-row" style={{ gap: 14 }}>
               <Waffle share={o.near_fields_hit / Math.max(1, o.pea_fields)} />
-              <span className="w-fig fig-risk">{Math.round((100 * o.near_fields_hit) / Math.max(1, o.pea_fields))}%</span>
+              <span key={`${climate}${o.near_fields_hit}`} className="w-fig fig-risk">{Math.round((100 * o.near_fields_hit) / Math.max(1, o.pea_fields))}%</span>
             </span>
           ) : skel(80, 56)}
           <span className="w-sub">of pea fields have a bad year in {o ? `${o.near_years[0]}–${shortYear(o.near_years[1])}` : "…"}</span>
@@ -156,7 +156,7 @@ export function Overview() {
           cta={plan.status === "done" ? `See all ${plan.tested} plans` : "See the plans"} tour="plan" onOpen={open("plans")}>
           <div className="w-split">
             <div>
-              {best ? <span className="w-fig fig-leaf">Saves {best.saves}</span>
+              {best ? <span key={`${climate}${best.saves}`} className="w-fig fig-leaf">Saves {best.saves}</span>
                 : plan.status === "done" ? <span className="w-sub">No plan beat today's plan on this path.</span>
                   : plan.status === "error" ? <span className="w-sub err">{plan.error}</span>
                     : <><span className="w-sub">Simulating plan {Math.max(1, plan.done)} of {plan.total || "…"}</span>

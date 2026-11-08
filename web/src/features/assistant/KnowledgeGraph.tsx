@@ -3,6 +3,7 @@
 // Farms and sites are their own nodes, so notes and gaps about the same place group around one point.
 // A freshly filed note plays its filing: tag chips one by one, then the node drops in and its edges draw.
 // Clicking a node opens a drawer with everything linked to it (for a farm or site: src.r_entity.entity_view).
+import { CloseIcon } from "../../components/ui";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useEntity, useGraph } from "../../api/hooks";
 import type { Filed, Graph, GraphNode } from "../../api/types";
@@ -171,7 +172,7 @@ export function KnowledgeGraph() {
           <div className="kg-filing" role="status" key={filing.f.note_id}>
             <div className="kg-filing-head">
               <span>{playing ? "Filing it itself…" : "Filed itself"}</span>
-              <button type="button" className="kg-x" onClick={() => playFiling(null)} aria-label="Hide the filing">×</button>
+              <button type="button" className="kg-x" onClick={() => playFiling(null)} aria-label="Hide the filing"><CloseIcon size={16} /></button>
             </div>
             <div className="kg-chips">
               {chips.map(([k, v], i) => (
@@ -278,7 +279,7 @@ function NodeDrawer({ g, id, onClose, onPick }: { g: Graph; id: string; onClose:
           <div className={`kg-eyebrow ${n.kind}`}>{n.kind === "entity" ? (e ? (e.kind === "farm" ? "Contract farm" : "Site") : "Farm or site") : KIND_LABEL[n.kind]}</div>
           <h3>{title}</h3>
         </div>
-        <button ref={closeRef} type="button" className="kg-x" onClick={onClose} aria-label="Close">×</button>
+        <button ref={closeRef} type="button" className="kg-x" onClick={onClose} aria-label="Close"><CloseIcon size={16} /></button>
       </div>
 
       {n.kind === "tacit" ? (

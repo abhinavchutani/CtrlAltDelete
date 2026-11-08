@@ -9,7 +9,7 @@ import { glanceLine, SeasonGlance } from "./today/SeasonGlance";
 import { SinceYesterday } from "./today/SinceYesterday";
 import { TodaySheets } from "./today/TodaySheets";
 import { Unusual, unusualLine } from "./today/Unusual";
-import { CROP_NAME, longDate, pathNote, stageLine } from "./today/shared";
+import { CROP_NAME, pathNote, stageLine } from "./today/shared";
 import { rect, skel, Widget } from "./Widget";
 
 export function TodayView() {
@@ -25,10 +25,7 @@ export function TodayView() {
   return (
     <>
       <div className={`today-head ${sheet ? "dim" : ""}`}>
-        <div>
-          <h2 className="today-date">{t ? longDate(t.date) : skel(220, 30)}</h2>
-          <p className="ov-sub">{t ? `${stageLine(t)} · ${pathNote(t)}` : " "}</p>
-        </div>
+        <p className="ov-sub">{t ? `${stageLine(t)} · ${pathNote(t)}` : " "}</p>
         <DemoClock t={t} fetching={q.isFetching} />
       </div>
       {q.error ? <p className="err" role="alert">Couldn't load this season: {String(q.error)}</p> : null}

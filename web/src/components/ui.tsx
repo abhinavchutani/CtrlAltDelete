@@ -202,6 +202,16 @@ export const CheckCircle = ({ size = 20 }: P) => ic(<><circle cx={12} cy={12} r=
 export const EuroIcon = ({ size = 20 }: P) => ic(<><path d="M17 6.5A7 7 0 1 0 17 17.5" /><path d="M4 10h9M4 14h9" /></>, size);
 export const SearchIcon = ({ size = 20 }: P) => ic(<><circle cx={11} cy={11} r={6} /><path d="m20 20-4.5-4.5" /></>, size);
 export const TrendIcon = ({ size = 20 }: P) => ic(<path d="m3 17 6-6 4 4 8-8" />, size);
+export const ChevronLeft = ({ size = 20 }: P) => ic(<path d="m15 5-7 7 7 7" />, size);
+export const ChevronRight = ({ size = 20 }: P) => ic(<path d="m9 5 7 7-7 7" />, size);
+export const CloseIcon = ({ size = 20 }: P) => ic(<path d="M6 6l12 12M18 6 6 18" />, size);
+export const PlayIcon = ({ size = 20 }: P) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" /></svg>
+);
+export const PauseIcon = ({ size = 20 }: P) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x={6.5} y={5} width={4} height={14} rx={1.2} /><rect x={13.5} y={5} width={4} height={14} rx={1.2} /></svg>
+);
+export const CheckIcon = ({ size = 20 }: P) => ic(<path d="m5 12.5 4.5 4.5L19 7.5" />, size);
 export const ArrowRight = ({ size = 20 }: P) => ic(<path d="M5 12h14M13 6l6 6-6 6" />, size);
 export const PodMark = ({ size = 28 }: P) => (
   <svg width={size} height={size * 0.6} viewBox="0 0 40 24" aria-hidden="true">

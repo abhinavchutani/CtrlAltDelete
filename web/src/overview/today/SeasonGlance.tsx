@@ -5,7 +5,7 @@ import { REGION_NAME, STATUS_LABEL, StatusMark } from "../../components/ui";
 import { CROP_NAME, SEASON_DAYS, seasonDay, STAGE_WORD, useWidth } from "./shared";
 
 const MONTHS = [["Apr", 0], ["May", 30], ["Jun", 61], ["Jul", 91], ["Aug", 122], ["Sep", 153], ["Oct", 183]] as const;
-const FILL = { sown: "var(--leaf-soft)", flowering: "var(--apetit)", fill: "var(--status-ok)" } as const;
+const FILL = { sown: "color-mix(in srgb, var(--accent) 38%, transparent)", flowering: "var(--apetit)", fill: "var(--status-ok)" } as const;
 const ROW = 40, TOP = 4;
 type X = (d: number) => number;
 

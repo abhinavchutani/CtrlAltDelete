@@ -2,6 +2,7 @@
 // (one day per tick; it stops when a crop's status changes, so the viewer sees what moved).
 import { useEffect } from "react";
 import type { Today } from "../../api/types";
+import { ChevronLeft, ChevronRight, PauseIcon, PlayIcon } from "../../components/ui";
 import { useStore } from "../../state/store";
 import { addDays, longDate } from "./shared";
 
@@ -33,17 +34,17 @@ export function DemoClock({ t, fetching }: { t: Today | undefined; fetching: boo
   };
 
   return (
-    <div className="clock glass" role="group" aria-label="Demo clock">
-      <button type="button" className="clock-btn" aria-label="Previous day" onClick={() => step(-1)} disabled={!t || t.date <= first}>‹</button>
+    <div className="clock glass" role="group" aria-label="Demo clock" aria-busy={fetching || undefined}>
+      <button type="button" className="clock-btn" aria-label="Previous day" onClick={() => step(-1)} disabled={!t || t.date <= first}><ChevronLeft /></button>
       <label className="clock-date">
         <span className="sr-only">Day</span>
         <input type="date" value={t?.date ?? ""} min={first} max={last} disabled={!t}
           onChange={(e) => { if (e.target.value >= first && e.target.value <= last) setAsOf(e.target.value); }} />
         <span aria-hidden="true">{t ? longDate(t.date) : "…"}</span>
       </label>
-      <button type="button" className="clock-btn" aria-label="Next day" onClick={() => step(1)} disabled={!t || t.date >= last}>›</button>
+      <button type="button" className="clock-btn" aria-label="Next day" onClick={() => step(1)} disabled={!t || t.date >= last}><ChevronRight /></button>
       <button type="button" className="clock-play" aria-pressed={playing} aria-label={playing ? "Pause" : "Play the season"} onClick={play} disabled={!t}>
-        {playing ? "❚❚" : "▶"}
+        {playing ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
       </button>
     </div>
   );

@@ -6,6 +6,7 @@
 import { useState, type MouseEvent } from "react";
 import { useBrief, useInventoryReport, useIssues, type Brief } from "../api/brief";
 import { Crumbs, Segmented, Sheet } from "../components/ui";
+import { CheckIcon } from "../components/ui";
 import { useStore } from "../state/store";
 
 const n0 = (v: number) => v.toLocaleString("en-GB");
@@ -81,7 +82,7 @@ function DataSheet({ b, onClose }: { b: Brief; onClose: () => void }) {
         </div>
       </div>
       <div className="review-list" role="list">
-        {q.isLoading ? <p className="muted">Loading…</p> : null}
+        {q.isLoading ? [0, 1, 2, 3].map((k) => <div key={k} className="review-row skeleton" style={{ height: 76 }} />) : null}
         {q.data?.map((i) => (
           <div key={i.issue_id} className="review-row" role="listitem">
             <div className="rr-main">
@@ -141,10 +142,13 @@ function ReportSheet({ b, onClose }: { b: Brief; onClose: () => void }) {
           <span className="muted">Pack scorer: each line full marks within 0 % error, none at 5 %.</span>
         </div>
       </div>
-      <button type="button" className="btn btn-primary" disabled={report.isPending}
+      <button type="button" className={`btn btn-primary ${report.isSuccess ? "done" : ""}`} disabled={report.isPending} aria-live="polite"
         onClick={() => report.mutate(r.year, { onSuccess: (x) => { window.location.href = x.url; } })}>
-        {report.isPending ? "Building…" : `Download the ${r.year} inventory (Excel, with sources)`}
+        {report.isPending ? <><span className="spin" aria-hidden="true" />Building the workbook…</>
+          : report.isSuccess ? <><CheckIcon size={18} />Downloaded · download again</>
+            : `Download the ${r.year} inventory (Excel, with sources)`}
       </button>
+      {report.isError ? <p className="err" role="alert">Couldn't build the report: {String(report.error)}</p> : null}
     </Sheet>
   );
 }

@@ -14,7 +14,7 @@ export function SinceYesterday({ t }: { t: Today }) {
             { value: c.risk ?? 0, color: "var(--status-risk)" }]} />
         <span className="since-fig">
           <span className="w-fig">{t.changes.length}</span>
-          <span className="w-sub">{t.changes.length === 1 ? "change" : "changes"} since yesterday</span>
+          <span className="w-sub">of {n} region crops moved</span>
         </span>
       </span>
       {top.length ? (
