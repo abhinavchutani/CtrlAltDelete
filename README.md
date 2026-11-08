@@ -155,6 +155,24 @@ make web            # terminal 2: React app on http://localhost:5173 (proxies /a
   fills `decided_by`; a person types their name.
 - **Same data rule as v1:** the twin is synthetic, so the app shows a banner saying so. € values are shown as bands.
 
+## Deploy (Render, one Docker image)
+
+The API serves the built web app on the same port, so one container is the whole product. The data pack and
+`out/serve.duckdb` / `out/v2` are gitignored, so the image is built locally and pushed to a **private** registry;
+Render runs that image. Apetit's own workbook (`data/00_apetit_original`, not CC BY) is left out of the image.
+
+```bash
+make snapshot && make v2                                     # if out/serve.duckdb or out/v2 is missing
+docker login
+scripts/build_image.sh <dockerhub-user>/field-radar:latest --push
+```
+
+On Render: **New → Web Service → Existing image** → `docker.io/<dockerhub-user>/field-radar:latest` (add the
+registry credentials), instance type Free, health check path `/api/health`, and these env vars:
+`LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` (see `.env.example`) and `APP_PASSWORD` (one shared password for
+the whole app, so a public URL can't spend the LLM quota). Free instances sleep when idle: the first request
+after a nap takes about a minute. The disk is ephemeral (Teach notes and the LLM cache reset on redeploy).
+
 ## Working with AI agents
 
 Each of us can run an AI agent overnight. The agents coordinate through GitHub: one pinned **Agent chat** issue, task issues with claim labels, and PRs reviewed by another agent. Rules: [AGENTS.md](AGENTS.md). Human setup guide: [docs/AGENT_COLLAB.md](docs/AGENT_COLLAB.md).

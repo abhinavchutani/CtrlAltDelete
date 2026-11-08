@@ -36,6 +36,9 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="Navigator v2", version="0.1.0", lifespan=lifespan,
               description="Synthetic data: not Apetit's real figures. Contract: api/schemas.py.")
 app.add_middleware(GZipMiddleware, minimum_size=2048)
+if env("APP_PASSWORD"):  # deployed builds: one shared password (HTTP basic auth); local dev leaves it unset
+    from api.deploy import BasicAuthMiddleware
+    app.add_middleware(BasicAuthMiddleware, password=env("APP_PASSWORD"))
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
                    allow_methods=["*"], allow_headers=["*"])
 
@@ -49,7 +52,7 @@ def _found(x, what: str):
 # ── platform ───────────────────────────────────────────────────────
 @app.get("/api/health", response_model=S.Health)
 def health() -> S.Health:
-    llm = any(env(k) for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY"))
+    llm = any(env(k) for k in ("LLM_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY"))
     return S.Health(ok=True, mock=L.mock_mode(), serve_db=str(serve_db.serve_path()) if serve_db.exists() else None,
                     llm=llm, warming=P.warming(), layers={**L.available(), **L.live()})
 
@@ -305,3 +308,9 @@ def board(scenario_id: str) -> list[S.BoardRow]:
 @app.post("/api/board/{row_id}/decision", response_model=S.BoardRow)
 def decide(row_id: str, d: S.Decision) -> S.BoardRow:
     return _found(L.get("decide")(row_id, d), f"board row {row_id}")
+
+
+# ── deployed build: the React app from web/dist on the same origin (registered last, after every /api route) ──
+from api.deploy import mount_web  # noqa: E402
+
+mount_web(app)
