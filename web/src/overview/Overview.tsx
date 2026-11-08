@@ -10,7 +10,15 @@ import { BUCKET_LEVEL, cap, typeLabel, useBestPlan, useTodayOutlook } from "./da
 import { OverviewSheets } from "./Sheets";
 import { SeasonHighlights } from "./SeasonHighlights";
 
-const ASK_EXAMPLE = "What helps against drought at flowering in pea?";
+const ASK_FALLBACK = "What helps against drought at flowering in pea?";
+const REGION_SHORT: Record<string, string> = { FI_SW: "SW Finland", SE_SKANE: "Skåne" };
+/** The Ask tile's prompt, built from the next real issue on this weather path: its year, region and € at risk. */
+function askPrompt(o: Outlook | undefined): string {
+  const next = o?.issues.filter((i) => i.year >= o.next_season).sort((a, b) => a.year - b.year)[0];
+  if (!next || (next.type !== "drought" && next.type !== "heat")) return ASK_FALLBACK;
+  const what = next.type === "drought" ? "drought" : "heat";
+  return `${next.eur_at_risk ? `${next.eur_at_risk} at risk in ${next.year}: h` : "H"}ow do we protect ${REGION_SHORT[next.region]} peas from ${what} at flowering${next.eur_at_risk ? "" : ` in ${next.year}`}?`;
+}
 const BAR_H = { 1: 24, 2: 52, 3: 96 } as const;
 const rect = (e: MouseEvent) => (e.currentTarget as HTMLElement).getBoundingClientRect();
 
@@ -180,10 +188,10 @@ export function Overview() {
           {o ? <SeasonHighlights o={o} climate={climate} /> : skel("90%", 80)}
         </section>
 
-        <button type="button" className="w glass S ask-tile" onClick={() => prefill("ask", ASK_EXAMPLE)} data-tour="ask"
-          aria-label={`Ask. For example: ${ASK_EXAMPLE}`}>
+        <button type="button" className="w glass S ask-tile" onClick={() => prefill("ask", askPrompt(o))} data-tour="ask"
+          aria-label={`Ask. For example: ${askPrompt(o)}`}>
           <span className="ask-head"><span className="w-fig">Ask</span><span className="ask-arrow" aria-hidden="true"><ArrowRight size={36} /></span></span>
-          <span className="w-sub">“{ASK_EXAMPLE}”</span>
+          <span className="w-sub">“{askPrompt(o)}”</span>
         </button>
 
         <Widget size="M" label="Hit again and again"
