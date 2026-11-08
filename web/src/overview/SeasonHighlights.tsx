@@ -64,10 +64,13 @@ export function SeasonHighlights({ o, climate }: { o: Outlook; climate: Climate 
       {h ? (
         <p key={i} className="hl-text" aria-live="polite"><StatusMark status={h.status} size={16} /><span>{h.text}</span></p>
       ) : <span className="skeleton" style={{ height: 60, display: "block" }} />}
-      <div className="hl-dots" role="tablist" aria-label="Headlines">
+      <div className={`hl-dots ${paused ? "paused" : ""}`} role="tablist" aria-label="Headlines">
         {items.map((x, k) => (
           <button key={x.label} type="button" role="tab" aria-selected={k === i} aria-label={`Show headline ${k + 1}: ${x.label}`}
-            className={k === i ? "on" : ""} onClick={() => setI(k)} />
+            className={k === i ? "on" : ""} onClick={() => setI(k)}>
+            {/* the active dot fills over ROTATE_MS: a progress bar for when the next headline comes */}
+            {k === i ? <span key={i} className="fill" style={{ animationDuration: `${ROTATE_MS}ms` }} /> : null}
+          </button>
         ))}
       </div>
     </div>

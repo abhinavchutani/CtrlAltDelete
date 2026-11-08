@@ -3,7 +3,7 @@
 import { type MouseEvent } from "react";
 import type { Outlook, Status } from "../api/types";
 import {
-  ArrowRight, EuroIcon, FieldsIcon, PinIcon, Ring, Segmented, SproutIcon, StatusMark, WarnIcon, shortYear,
+  ArrowRight, Ring, Segmented, StatusMark, shortYear,
 } from "../components/ui";
 import { CLIMATES, climatePath, useStore, type SheetKind } from "../state/store";
 import { BUCKET_LEVEL, cap, typeLabel, useBestPlan, useTodayOutlook } from "./data";
@@ -14,13 +14,13 @@ const ASK_EXAMPLE = "How did Swedish pea deliveries in 2026 compare with 2021?";
 const BAR_H = { 1: 24, 2: 52, 3: 96 } as const;
 const rect = (e: MouseEvent) => (e.currentTarget as HTMLElement).getBoundingClientRect();
 
-function Widget({ size = "S", label, icon, right, cta, onOpen, children, tour }: {
-  size?: "S" | "M" | "L"; label: string; icon: React.ReactNode; right?: React.ReactNode; cta: string;
+function Widget({ size = "S", label, right, cta, onOpen, children, tour }: {
+  size?: "S" | "M" | "L"; label: string; right?: React.ReactNode; cta: string;
   onOpen: (e: MouseEvent) => void; children: React.ReactNode; tour?: string;
 }) {
   return (
     <button type="button" className={`w glass ${size}`} onClick={onOpen} data-tour={tour}>
-      <span className="w-label">{icon}{label}{right ? <span className="right">{right}</span> : null}</span>
+      <span className="w-label">{label}{right ? <span className="right">{right}</span> : null}</span>
       {children}
       <span className="w-cta">{cta} ›</span>
     </button>
@@ -80,7 +80,7 @@ function RepeatFarms({ o }: { o: Outlook }) {
       <div className="hbars" role="img" aria-label={rows.map((r) => `${r.n} farms with ${r.label}`).join(", ")}>
         {rows.map((r) => (
           <div key={r.label} className="hrow">
-            <span className="hl">{r.label}</span>
+            <span className="hlab">{r.label}</span>
             <span className="htrack"><span className={`bar ${r.s}`} style={{ width: `${Math.max(2, (100 * r.n) / max)}%` }} /></span>
             <span className="hn">{r.n}</span>
           </div>
@@ -121,7 +121,7 @@ export function Overview() {
       {q.error ? <p className="err" role="alert">Couldn't load the outlook: {String(q.error)}</p> : null}
 
       <div className={`grid ${sheet ? "dim" : ""}`} aria-hidden={sheet ? true : undefined}>
-        <Widget size="L" label="Crops at risk" icon={<EuroIcon />} cta="See what drives it" onOpen={open("money")} tour="money">
+        <Widget size="L" label="Crops at risk" cta="See what drives it" onOpen={open("money")} tour="money">
           {o ? (() => {
             const hit = o.next_contracts.filter((c) => c.status !== "ok");
             const tone = hit.some((c) => c.status === "risk") ? "fig-risk" : hit.length ? "fig-harvest" : "fig-leaf";
@@ -131,7 +131,7 @@ export function Overview() {
           {o ? <SeasonBars o={o} /> : null}
         </Widget>
 
-        <Widget label="Issues ahead" icon={<WarnIcon />} cta={o ? `See the ${o.issues.length}` : "See them"} onOpen={open("issues")} tour="issues">
+        <Widget label="Issues ahead" cta={o ? `See the ${o.issues.length}` : "See them"} onOpen={open("issues")} tour="issues">
           <span className="w-row">
             <Ring size={88} stroke={13} label={`${risk} bad-year issues and ${watch} to watch`}
               parts={[{ value: watch, color: "var(--status-watch)" }, { value: risk, color: "var(--status-risk)" }]} />
@@ -140,7 +140,7 @@ export function Overview() {
           <span className="w-sub">{[...byType.entries()].map(([t, n]) => `${n} ${typeLabel(t).toLowerCase().replace(" at flowering", "")}`).join(" · ")}{byType.size ? " at flowering" : ""}</span>
         </Widget>
 
-        <Widget label="Fields at risk soon" icon={<FieldsIcon />} cta="See the farms" onOpen={open("farms-near")}>
+        <Widget label="Fields at risk soon" cta="See the farms" onOpen={open("farms-near")}>
           {o ? (
             <span className="w-row" style={{ gap: 14 }}>
               <Waffle share={o.near_fields_hit / Math.max(1, o.pea_fields)} />
@@ -150,7 +150,7 @@ export function Overview() {
           <span className="w-sub">of pea fields have a bad year in {o ? `${o.near_years[0]}–${shortYear(o.near_years[1])}` : "…"}</span>
         </Widget>
 
-        <Widget size="M" label="Yield optimizer" icon={<SproutIcon />}
+        <Widget size="M" label="Yield optimizer"
           right={plan.status === "done" ? `best of ${plan.tested} plans` : "testing plans…"}
           cta={plan.status === "done" ? `See all ${plan.tested} plans` : "See the plans"} tour="plan" onOpen={open("plans")}>
           <div className="w-split">
@@ -178,7 +178,7 @@ export function Overview() {
         </Widget>
 
         <section className="w glass S season-tile" aria-label="Upcoming season">
-          <span className="w-label"><WarnIcon />Upcoming season<span className="right">{o?.next_season ?? "…"}</span></span>
+          <span className="w-label">Upcoming season<span className="right">{o?.next_season ?? "…"}</span></span>
           {o ? <SeasonHighlights o={o} climate={climate} /> : skel("90%", 80)}
           <span className="w-note" title="One plausible weather path on the chosen climate future, not a forecast">one weather path, not a forecast</span>
         </section>
@@ -189,7 +189,7 @@ export function Overview() {
           <span className="w-sub">“{ASK_EXAMPLE}”</span>
         </button>
 
-        <Widget size="M" label="Hit again and again" icon={<PinIcon />}
+        <Widget size="M" label="Hit again and again"
           right={o ? `${o.repeat_bins.reduce((x, y) => x + y, 0)} farms, ${o.repeat_years[0]}–${o.repeat_years[1]}` : undefined}
           cta="See the farms" onOpen={open("farms-repeat")}>
           {o ? <RepeatFarms o={o} /> : <div className="minimap skeleton" />}
