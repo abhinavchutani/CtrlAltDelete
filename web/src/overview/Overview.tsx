@@ -8,7 +8,6 @@ import {
 import { CLIMATES, HORIZON, START_YEAR, useStore, type SheetKind } from "../state/store";
 import { BUCKET_LEVEL, cap, typeLabel, useBestPlan, useTodayOutlook } from "./data";
 import { OverviewSheets } from "./Sheets";
-import { Problems, ProblemSheets } from "./Problems";
 import { SeasonHighlights } from "./SeasonHighlights";
 import { TodayView } from "./TodayView";
 import { rect, skel, Widget } from "./Widget";
@@ -108,7 +107,6 @@ export function Overview() {
 
   return (
     <main className="page" aria-label="Overview">
-      <div className={sheet ? "dimwrap dim" : "dimwrap"} aria-hidden={sheet ? true : undefined}><Problems /></div>
 
       <div className="ov-head" id="radar">
         <h1 className="ov-title">{view === "season" ? `The ${START_YEAR} season so far` : `Contract crop risk to ${HORIZON}`}</h1>
@@ -197,7 +195,6 @@ export function Overview() {
       </div>
       </>}
       {o ? <OverviewSheets o={o} /> : null}
-      <ProblemSheets />
     </main>
   );
 }

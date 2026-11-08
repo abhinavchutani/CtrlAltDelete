@@ -4,7 +4,7 @@ import type { Climate, Filed } from "../api/types";
 
 export type Tab = "overview" | "assistant";
 export type Mode = "ask" | "simulate" | "teach";
-export type SheetKind = "issues" | "money" | "plans" | "farms-near" | "farms-repeat" | "data" | "report" | "changes" | "unusual";
+export type SheetKind = "issues" | "money" | "plans" | "farms-near" | "farms-repeat" | "changes" | "unusual";
 /** One turn in the assistant. `context` carries what the user came from (a gap to fill). */
 export type Turn = { id: number; mode: Mode; text: string; history: string[]; context?: { gap?: string } };
 
