@@ -31,6 +31,7 @@ REAL: dict[str, tuple[str, str]] = {
     "hedge": ("api.prediction", "hedge"),
     "pathways": ("api.prediction", "pathways"),
     "intent": ("src.p_parse", "parse"),
+    "sbti_pathway": ("src.b_sbti", "serve"),  # #130: deterministic, reads serve.duckdb + the pack
     # retrieval (lane A), served from fixtures while on hold
     "ask": ("src.r_agent", "ask"),
     "options": ("src.r_options", "options"),

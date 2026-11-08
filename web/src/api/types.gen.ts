@@ -470,6 +470,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sbti/pathway": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sbti Pathway
+         * @description Base year 2025 → SBTi near-term targets, BAU under a transition scenario, and the chosen levers' effect.
+         */
+        post: operations["sbti_pathway_api_sbti_pathway_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ask": {
         parameters: {
             query?: never;
@@ -1724,6 +1744,198 @@ export interface components {
             /** Bad Year */
             bad_year: boolean;
         };
+        /** SbtiBase */
+        SbtiBase: {
+            /** Year */
+            year: number;
+            /** By Bucket */
+            by_bucket: {
+                [key: string]: number;
+            };
+            /** Total */
+            total: number;
+            /** Scope1 */
+            scope1: number;
+            /** Scope2 Market */
+            scope2_market: number;
+            /** Scope3 */
+            scope3: number;
+            /** Flag Share Pct */
+            flag_share_pct: number;
+            /** Sources */
+            sources: components["schemas"]["EvidenceRef"][];
+        };
+        /** SbtiCell */
+        SbtiCell: {
+            /** Bau T */
+            bau_t: number;
+            /** Abated T */
+            abated_t: number;
+            /** With Levers T */
+            with_levers_t: number;
+            /** Target T */
+            target_t: number | null;
+        };
+        /** SbtiGap */
+        SbtiGap: {
+            /** Gap T */
+            gap_t: number;
+            /** Needed T */
+            needed_t: number;
+            /** Closed Pct */
+            closed_pct: number;
+        };
+        /** SbtiHistory */
+        SbtiHistory: {
+            /** Year */
+            year: number;
+            /** Total T */
+            total_t: number;
+            /** Scope3 Restated */
+            scope3_restated: boolean;
+            /** Note */
+            note: string;
+        };
+        /** SbtiLever */
+        SbtiLever: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Class
+             * @enum {string}
+             */
+            class: "reduction" | "measurement" | "structural" | "removal";
+            /** Bucket */
+            bucket: ("s12" | "s3" | "flag") | null;
+            /** Abatement T Design */
+            abatement_t_design: number;
+            /** Eur Per T */
+            eur_per_t: number | null;
+            /** Start */
+            start: number;
+            /** Ramp Years */
+            ramp_years: number;
+            /** Confidence */
+            confidence: string;
+            /** Note */
+            note: string | null;
+            /** Selected */
+            selected: boolean;
+            source: components["schemas"]["EvidenceRef"];
+        };
+        /** SbtiPathway */
+        SbtiPathway: {
+            /**
+             * Scenario
+             * @enum {string}
+             */
+            scenario: "current_policies" | "net_zero_2050" | "below_2c" | "delayed_transition" | "ndcs" | "low_demand" | "fragmented_world";
+            base: components["schemas"]["SbtiBase"];
+            targets: components["schemas"]["SbtiTargets"];
+            /** Years */
+            years: components["schemas"]["SbtiYear"][];
+            /** Gap */
+            gap: {
+                [key: string]: components["schemas"]["SbtiGap"];
+            };
+            /** Levers */
+            levers: components["schemas"]["SbtiLever"][];
+            /** Counted Lever Ids */
+            counted_lever_ids: string[];
+            /** Ignored Lever Ids */
+            ignored_lever_ids: string[];
+            /** Lever Cost Eur Per Yr */
+            lever_cost_eur_per_yr: number;
+            /** History */
+            history: components["schemas"]["SbtiHistory"][];
+            /** Warnings */
+            warnings: components["schemas"]["SbtiWarning"][];
+            /** Sources */
+            sources: components["schemas"]["EvidenceRef"][];
+            /** Synthetic */
+            synthetic: boolean;
+        };
+        /** SbtiPathwayIn */
+        SbtiPathwayIn: {
+            /**
+             * Scenario
+             * @default current_policies
+             * @enum {string}
+             */
+            scenario: "current_policies" | "net_zero_2050" | "below_2c" | "delayed_transition" | "ndcs" | "low_demand" | "fragmented_world";
+            /**
+             * Levers
+             * @default []
+             */
+            levers: string[];
+            /**
+             * Target Year
+             * @default 2030
+             * @enum {integer}
+             */
+            target_year: 2030 | 2031 | 2032 | 2033 | 2034 | 2035;
+        };
+        /** SbtiTarget */
+        SbtiTarget: {
+            /** Label */
+            label: string;
+            /** Rate Pct Per Yr */
+            rate_pct_per_yr: number;
+            /** Ambition */
+            ambition: string;
+            /** Base T */
+            base_t: number;
+            /** Target T */
+            target_t: number;
+            /** Cut Pct */
+            cut_pct: number;
+        };
+        /** SbtiTargets */
+        SbtiTargets: {
+            /** Base Year */
+            base_year: number;
+            /** Target Year */
+            target_year: number;
+            /** By Bucket */
+            by_bucket: {
+                [key: string]: components["schemas"]["SbtiTarget"];
+            };
+            /** Flag Target Required */
+            flag_target_required: boolean;
+            /** Sources */
+            sources: components["schemas"]["EvidenceRef"][];
+        };
+        /** SbtiWarning */
+        SbtiWarning: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Body */
+            body: string;
+            /** Sources */
+            sources: components["schemas"]["EvidenceRef"][];
+        };
+        /** SbtiYear */
+        SbtiYear: {
+            /** Year */
+            year: number;
+            /** Demand Index */
+            demand_index: number;
+            s12: components["schemas"]["SbtiCell"];
+            s3: components["schemas"]["SbtiCell"];
+            flag: components["schemas"]["SbtiCell"];
+            /** Bau T */
+            bau_t: number;
+            /** Abated T */
+            abated_t: number;
+            /** With Levers T */
+            with_levers_t: number;
+            /** Target T */
+            target_t: number | null;
+        };
         /** ScenarioPreset */
         ScenarioPreset: {
             /** Scenario Id */
@@ -2740,6 +2952,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Gap"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sbti_pathway_api_sbti_pathway_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SbtiPathwayIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SbtiPathway"];
                 };
             };
             /** @description Validation Error */
